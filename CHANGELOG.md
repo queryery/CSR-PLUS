@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.3
+
+- Fixed the server address not copying — it now copies reliably, and you can
+  click the address to copy it if the browser blocks the automatic copy.
+- Fixed invisible button text in the player popup on the light/mono theme.
+
 ## 0.0.2
 
 - Match Found window is now properly centered.

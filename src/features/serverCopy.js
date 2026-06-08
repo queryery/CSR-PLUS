@@ -6,11 +6,18 @@
   const CSRP = (window.CSRP = window.CSRP || {});
   let lastCopied = '';
 
-  // Find the connect string element: a font-mono <p> inside the connect box.
+  // Find the connect string element. Prefer the font-mono <p> the site uses,
+  // but fall back to any small element whose text looks like a connect command.
   function findConnectText() {
-    for (const p of document.querySelectorAll('p.font-mono')) {
+    for (const p of document.querySelectorAll('p.font-mono, .font-mono')) {
       const t = p.textContent.trim();
-      if (t) return { el: p, text: t };
+      if (t && looksReady(t)) return { el: p, text: t };
+    }
+    // Fallback: scan short text nodes for an ip:port / connect command.
+    for (const el of document.querySelectorAll('p, span, code, div')) {
+      if (el.children.length) continue; // leaf nodes only
+      const t = el.textContent.trim();
+      if (t.length <= 80 && looksReady(t)) return { el, text: t };
     }
     return null;
   }
@@ -34,29 +41,51 @@
     setTimeout(() => { t.classList.remove('csrp-toast-show'); setTimeout(() => t.remove(), 400); }, 2600);
   }
 
+  // execCommand path works without async-clipboard permission, as long as the
+  // document is focused. Try the modern API first, then fall back.
   async function copy(text) {
     try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      // Fallback for clipboard permission edge cases.
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select();
-        const ok = document.execCommand('copy');
-        ta.remove();
-        return ok;
-      } catch { return false; }
-    }
+      if (navigator.clipboard && document.hasFocus()) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch { /* fall through to execCommand */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch { return false; }
+  }
+
+  // If auto-copy was blocked (no page focus / gesture), let the user finish it
+  // by clicking the connect string itself.
+  function armClickToCopy(el, text) {
+    if (el.dataset.csrpClickCopy === '1') return;
+    el.dataset.csrpClickCopy = '1';
+    el.style.cursor = 'pointer';
+    el.title = 'Click to copy connect string';
+    el.addEventListener('click', async () => {
+      const ok = await copy(text);
+      CSRP.sound?.play(ok ? 'on' : 'cancel');
+      toast(ok ? 'Server copied to clipboard' : 'Press Ctrl+C to copy');
+    });
   }
 
   function tick() {
     if (!CSRP.store.get('autoCopyServer')) return;
     const found = findConnectText();
-    if (!found) { return; }
+    if (!found) return;
     const text = found.text;
     if (!looksReady(text)) return;
+
+    // Always make the element click-to-copy as a reliable manual fallback.
+    armClickToCopy(found.el, text);
+
     if (text === lastCopied) return;
     lastCopied = text;
     copy(text).then((ok) => {
@@ -64,6 +93,10 @@
         CSRP.sound?.play('on');
         toast('Server copied to clipboard');
         CSRP.log('server copied:', text);
+      } else {
+        // Auto-copy blocked (page not focused). Prompt the click fallback.
+        toast('Click the server address to copy');
+        CSRP.log('server auto-copy blocked; click-to-copy armed');
       }
     });
   }

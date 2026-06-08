@@ -10,6 +10,7 @@
   --csrp-fg: #f3f0ea;
   --csrp-fg-dim: rgba(243, 240, 234, 0.55);
   --csrp-accent: #d2222b;
+  --csrp-on-accent: #ffffff; /* readable text on an accent-filled surface */
   --csrp-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -22,6 +23,7 @@
   --csrp-fg: #f4f4f6;
   --csrp-fg-dim: rgba(244, 244, 246, 0.52);
   --csrp-accent: #e9e9ec;
+  --csrp-on-accent: #0a0a0c; /* dark text on the near-white accent */
 }
 
 /* ── Strength badge ─────────────────────────────────────────────── */
@@ -418,7 +420,7 @@
   width: 100%;
   padding: 8px;
   background: var(--csrp-accent);
-  color: #fff;
+  color: var(--csrp-on-accent);
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -967,7 +969,7 @@
   flex: 1;
   padding: 9px;
   background: var(--csrp-accent);
-  color: #fff;
+  color: var(--csrp-on-accent);
   border: none;
   font-weight: 700;
   font-size: 12px;
@@ -1067,7 +1069,7 @@
 .csrp-cd-go {
   background: var(--csrp-accent);
   border-color: var(--csrp-accent);
-  color: #fff;
+  color: var(--csrp-on-accent);
 }
 
 .csrp-cd-go:hover {

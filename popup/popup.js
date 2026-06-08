@@ -273,6 +273,8 @@
       if (cached && Date.now() - cached.at < 3600e3) return cached;
     }
     const r = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
+    // 404 = the repo simply has no published release yet (not an error).
+    if (r.status === 404) return { none: true, at: Date.now() };
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     const latest = { tag: String(data.tag_name || '').replace(/^v/i, ''), url: data.html_url, at: Date.now() };
@@ -289,7 +291,9 @@
       if (manual) toast('Could not reach GitHub — try again later.');
       return;
     }
-    if (latest.tag && cmpVer(latest.tag, current) > 0) {
+    if (latest.none) {
+      if (manual) toast('No releases published yet.');
+    } else if (latest.tag && cmpVer(latest.tag, current) > 0) {
       openUpdateModal(latest);
     } else if (manual) {
       toast(`You're on the latest version (v${current}).`);

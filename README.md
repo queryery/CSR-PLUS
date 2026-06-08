@@ -23,11 +23,22 @@ directly in the lobby, without changing how the site works.
 - A clean profile view with the full statistics grid and win/loss match history.
 - Quick links to the player's Steam, SteamDB and FaceitFinder pages.
 
-## Install (developer mode)
-1. Open `chrome://extensions`.
+CSR+ runs on any modern browser — Chrome, Edge, Brave, Opera and Firefox — from a
+single shared codebase (Manifest V3).
+
+## Install on Chrome / Edge / Brave / Opera (developer mode)
+1. Open `chrome://extensions` (Edge: `edge://extensions`, Brave: `brave://extensions`).
 2. Enable **Developer mode**.
 3. Choose **Load unpacked** and select this folder.
 4. Visit `https://csrestored.fun/app`, sign in, then open the toolbar popup to configure.
+
+## Install on Firefox
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click **Load Temporary Add-on…** and pick this folder's `manifest.json`.
+3. Visit `https://csrestored.fun/app`, sign in, then open the toolbar popup.
+
+> Temporary add-ons are removed when Firefox restarts. For a permanent install,
+> the extension must be signed through [addons.mozilla.org](https://addons.mozilla.org).
 
 ## Updates
 The popup checks GitHub for newer releases and shows a notice when one is

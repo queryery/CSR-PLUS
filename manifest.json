@@ -10,7 +10,14 @@
     "https://api.github.com/*"
   ],
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "src/background.js",
+    "scripts": ["src/background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "csr-plus@queryery.github.io",
+      "strict_min_version": "115.0"
+    }
   },
   "action": {
     "default_popup": "popup/popup.html",

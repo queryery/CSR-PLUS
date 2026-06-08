@@ -1,0 +1,15 @@
+{
+  "addons": {
+    "csr-plus@queryery.github.io": {
+      "updates": [
+        {
+          "version": "0.0.2",
+          "update_link": "https://github.com/queryery/CSR-PLUS/releases/download/v0.0.2/csr_plus-0.0.2.xpi",
+          "applications": {
+            "gecko": { "strict_min_version": "115.0" }
+          }
+        }
+      ]
+    }
+  }
+}

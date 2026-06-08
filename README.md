@@ -41,8 +41,24 @@ single shared codebase (Manifest V3).
 > the extension must be signed through [addons.mozilla.org](https://addons.mozilla.org).
 
 ## Updates
-The popup checks GitHub for newer releases and shows a notice when one is
-available. See [CHANGELOG.md](CHANGELOG.md) for release notes.
+On Chromium browsers the popup checks GitHub for newer releases and shows a
+notice when one is available. See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+### Firefox self-distributed auto-update
+The manifest points Firefox at [`updates.json`](updates.json) via
+`browser_specific_settings.gecko.update_url`. Firefox polls that file and
+installs newer versions automatically — but **only signed `.xpi` files install
+on release Firefox**. To cut a Firefox update:
+
+1. Build the `.xpi` (zip the extension folder, rename to `.xpi`).
+2. Submit it to [addons.mozilla.org](https://addons.mozilla.org) as an
+   **unlisted** add-on to get it Mozilla-signed, then download the signed file.
+3. Attach the signed `.xpi` to the matching GitHub release as
+   `csr_plus-<version>.xpi`.
+4. Bump the `version` and `update_link` in `updates.json` and push to `main`.
+
+Firefox reads `updates.json` from the repo's `main` branch and offers the new
+version to installed users.
 
 ## Project layout
 ```

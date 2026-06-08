@@ -16,7 +16,8 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "csr-plus@queryery.github.io",
-      "strict_min_version": "115.0"
+      "strict_min_version": "115.0",
+      "update_url": "https://raw.githubusercontent.com/queryery/CSR-PLUS/main/updates.json"
     }
   },
   "action": {

@@ -28,6 +28,8 @@
     autoBan: false,
     autoCopyServer: true, // copy the connect string when the server is ready
     autoUpdate: true,     // check GitHub for new releases and surface an update prompt
+    acceptInstant: false, // skip the countdown and accept the match immediately
+    acceptDelay: 10,      // countdown length before auto-accept (seconds, 1..30)
     // Per-friend auto-accept allow list { id: true }. Empty => accept all.
     inviteFriends: {},
     // Ordered list of map names, lowest priority (first to ban) at the top.

@@ -38,7 +38,7 @@
       <div class="side-foot">
         <span class="status-dot"></span>
         <span class="status-tx">ONLINE</span>
-        <span class="status-ver" id="side-ver">v0.0.1</span>
+        <span class="status-ver" id="side-ver">v0.0.2</span>
       </div>
     </aside>
 
@@ -77,8 +77,16 @@
 
         <div class="grp-h"><span>Accepting</span></div>
         <div class="set" data-key="autoMatch">
-          <div class="set-txt"><div class="set-t">Accept ready check</div><div class="set-d">Accepts automatically — a 10-second countdown lets you cancel first.</div></div>
+          <div class="set-txt"><div class="set-t">Accept ready check</div><div class="set-d">Accepts the match automatically when one is found.</div></div>
           <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="acceptInstant">
+          <div class="set-txt"><div class="set-t">Accept instantly</div><div class="set-d">Skip the countdown and accept the moment a match appears.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set vol-set" id="delay-set">
+          <div class="set-txt"><div class="set-t">Countdown delay</div><div class="set-d">Seconds to wait — and let you cancel — before auto-accepting. <b id="delay-val" class="mono">10s</b></div></div>
+          <input type="range" id="delay" min="1" max="30" class="vol" />
         </div>
         <div class="set" data-key="autoQueue">
           <div class="set-txt"><div class="set-t">Accept queue start</div><div class="set-d">Confirms the queue prompt so searching begins without a click.</div></div>
@@ -174,7 +182,7 @@
         <div class="about">
           <div class="about-icon"><img src="../assets/icon256.png" alt="" width="56" height="56" /></div>
           <div class="about-name" data-glitch="CSR+">CSR<span>+</span></div>
-          <div class="about-ver" id="about-ver">v0.0.1</div>
+          <div class="about-ver" id="about-ver">v0.0.2</div>
           <p class="about-p">A match assistant for csrestored.fun: auto-accept, smart
             map banning, and player stats at a glance.</p>
           <div class="about-links">

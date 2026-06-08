@@ -13,11 +13,17 @@
   const { h } = CSRP.dom;
 
   let panel = null;       // our injected block inside the match-found window
+  let host = null;        // full-screen centering wrapper around the panel
   let lastSig = '';
   let cancelledLatch = false;
+  let dragPos = null;     // { x, y } offset from centre, kept for the session
 
   // ── countdown state (shared with autoAccept) ──────────────────────────
-  const COUNTDOWN_MS = 10000;
+  // Delay is configurable in Automation settings (seconds, clamped 1..30).
+  function countdownMs() {
+    const s = Number(CSRP.store.get('acceptDelay'));
+    return Math.max(1, Math.min(30, s || 10)) * 1000;
+  }
   let countdown = null;
 
   // Build one player row from { id, avatarSrc }. Stats fetched via getAgg.
@@ -178,23 +184,77 @@
     return content;
   }
 
-  // Ensure our centered overlay panel exists (mounted on <body>; the native
-  // dialog is hidden separately so ours takes its place in the center).
+  // Ensure our overlay exists: a full-screen host that centres the panel, with
+  // the native dialog hidden separately so ours takes its place. The panel can
+  // be dragged by its bar; the offset is remembered for the session.
   function ensurePanel() {
     if (panel && panel.isConnected) return panel;
+    const bar = h('div', { class: 'csrp-mf-bar' }, [
+      h('span', { class: 'csrp-mf-grip', title: 'Drag to move' }, '⠿'),
+      h('span', { class: 'csrp-mf-logo' }, ['CSR', h('span', { class: 'csrp-mf-plus' }, '+')]),
+      h('span', { class: 'csrp-mf-tag-lbl' }, 'Match Found'),
+      h('h1', { class: 'csrp-mf-timer' }, ''),
+      h('div', { class: 'csrp-mf-actions' }),
+    ]);
     panel = h('div', { class: 'csrp-mf csrp-mf-center' }, [
-      h('div', { class: 'csrp-mf-bar' }, [
-        h('span', { class: 'csrp-mf-logo' }, ['CSR', h('span', { class: 'csrp-mf-plus' }, '+')]),
-        h('span', { class: 'csrp-mf-tag-lbl' }, 'Match Found'),
-        h('h1', { class: 'csrp-mf-timer' }, ''),
-        h('div', { class: 'csrp-mf-actions' }),
-      ]),
+      bar,
       h('div', { class: 'csrp-mf-content' }),
       h('div', { class: 'csrp-mf-foot' }),
     ]);
-    document.body.appendChild(panel);
+    host = h('div', { class: 'csrp-mf-host' }, [panel]);
+    document.body.appendChild(host);
+    applyDragPos();
+    enableDrag(bar);
     requestAnimationFrame(() => panel && panel.classList.add('csrp-mf-open'));
     return panel;
+  }
+
+  function applyDragPos() {
+    if (!panel) return;
+    panel.style.setProperty('--csrp-dx', (dragPos ? dragPos.x : 0) + 'px');
+    panel.style.setProperty('--csrp-dy', (dragPos ? dragPos.y : 0) + 'px');
+  }
+
+  // Drag the panel by its bar. We move via a transform offset from centre, so
+  // it stays centred by default and the open animation is unaffected.
+  function enableDrag(handle) {
+    let startX = 0, startY = 0, baseX = 0, baseY = 0, dragging = false;
+    const onMove = (e) => {
+      if (!dragging) return;
+      const nx = baseX + (e.clientX - startX);
+      const ny = baseY + (e.clientY - startY);
+      dragPos = clampToViewport(nx, ny);
+      applyDragPos();
+    };
+    const onUp = () => {
+      dragging = false;
+      panel && panel.classList.remove('csrp-mf-dragging');
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    handle.addEventListener('pointerdown', (e) => {
+      // Ignore drags that start on interactive controls inside the bar.
+      if (e.target.closest('button, a, input')) return;
+      e.preventDefault();
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      baseX = dragPos ? dragPos.x : 0; baseY = dragPos ? dragPos.y : 0;
+      panel && panel.classList.add('csrp-mf-dragging');
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  }
+
+  // Keep most of the panel on-screen as it's dragged.
+  function clampToViewport(x, y) {
+    if (!panel) return { x, y };
+    const r = panel.getBoundingClientRect();
+    const maxX = Math.max(0, (window.innerWidth - r.width) / 2 - 8);
+    const maxY = Math.max(0, (window.innerHeight - r.height) / 2 - 8);
+    return {
+      x: Math.max(-maxX, Math.min(maxX, x)),
+      y: Math.max(-maxY, Math.min(maxY, y)),
+    };
   }
 
   // Build / refresh the footer: a big Accept button that drives the native one.
@@ -236,18 +296,20 @@
   function startCountdown(acceptBtn) {
     if (countdown) return;
     // Mount the countdown into our panel bar if present, else float it.
-    let host = panel && panel.isConnected ? panel.querySelector('.csrp-mf-actions') : null;
-    const floating = !host;
+    const totalMs = countdownMs();
+    const startSec = Math.ceil(totalMs / 1000);
+    let mount = panel && panel.isConnected ? panel.querySelector('.csrp-mf-actions') : null;
+    const floating = !mount;
     const widget = h('div', { class: 'csrp-cd' + (floating ? ' csrp-cd-float' : '') }, [
-      h('span', { class: 'csrp-cd-ring' }, [h('span', { class: 'csrp-cd-num' }, '10')]),
+      h('span', { class: 'csrp-cd-ring' }, [h('span', { class: 'csrp-cd-num' }, String(startSec))]),
       h('span', { class: 'csrp-cd-txt' }, 'Auto-accepting'),
       h('button', { class: 'csrp-cd-go', title: 'Accept now' }, 'Accept now'),
       h('button', { class: 'csrp-cd-x', title: 'Cancel auto-accept' }, '✕ Cancel'),
     ]);
-    (host || document.body).appendChild(widget);
+    (mount || document.body).appendChild(widget);
 
     const startedAt = Date.now();
-    countdown = { startedAt, cancelled: false, timer: null, widget, acceptBtn, lastSec: 11 };
+    countdown = { startedAt, cancelled: false, timer: null, widget, acceptBtn, lastSec: startSec + 1, totalMs };
     CSRP.sound?.play('alert');
 
     const numEl = widget.querySelector('.csrp-cd-num');
@@ -271,11 +333,11 @@
 
     countdown.timer = setInterval(() => {
       const elapsed = Date.now() - startedAt;
-      const remain = Math.max(0, COUNTDOWN_MS - elapsed);
+      const remain = Math.max(0, totalMs - elapsed);
       const secs = Math.ceil(remain / 1000);
       numEl.textContent = String(secs);
       if (secs < countdown.lastSec && secs > 0) { countdown.lastSec = secs; CSRP.sound?.play('tick'); }
-      const frac = elapsed / COUNTDOWN_MS;
+      const frac = elapsed / totalMs;
       ring.style.background = `conic-gradient(var(--csrp-accent) ${frac * 360}deg, rgba(255,255,255,0.12) 0deg)`;
       if (remain <= 0 && !countdown.cancelled) accept();
     }, 100);
@@ -305,7 +367,8 @@
   }
 
   function removePanel() {
-    if (panel) { panel.remove(); panel = null; }
+    if (host) { host.remove(); host = null; }
+    panel = null;
     restoreNative();
     lastSig = '';
     footState = null;

@@ -6,6 +6,7 @@
     masterEnabled: true,
     autoMatch: true, autoInvite: true, autoQueue: true, autoBan: false,
     autoCopyServer: true, autoUpdate: true,
+    acceptInstant: false, acceptDelay: 10,
     inviteFriends: {},
     banPriority: ['Vertigo', 'Overpass', 'Anubis', 'Train', 'Ancient', 'Dust2', 'Nuke', 'Inferno', 'Mirage', 'Cobblestone'],
     showBadges: true, showWinProb: true,
@@ -75,6 +76,7 @@
         snd(v ? 'on' : 'off');
         if (key === 'autoInvite') reflectInvite();
         if (key === 'masterEnabled') reflectMaster();
+        if (key === 'acceptInstant' && bindAccept._sync) bindAccept._sync();
       });
     });
   }
@@ -116,6 +118,27 @@
       snd('click');
       sync();
     });
+  }
+
+  // ── accept settings (countdown delay) ────────────────────────────────
+  function bindAccept() {
+    const delay = $('#delay');
+    const val = $('#delay-val');
+    const sync = () => {
+      val.textContent = `${state.acceptDelay}s`;
+      // The delay only matters when not accepting instantly.
+      $('#delay-set').style.opacity = state.acceptInstant ? '0.4' : '1';
+      delay.disabled = !!state.acceptInstant;
+    };
+    delay.value = state.acceptDelay;
+    sync();
+    delay.addEventListener('input', () => {
+      save('acceptDelay', Number(delay.value));
+      val.textContent = `${delay.value}s`;
+    });
+    delay.addEventListener('change', () => snd('click'));
+    // Re-sync when the instant toggle flips (handled in bindToggles callback).
+    bindAccept._sync = sync;
   }
 
   // ── sound controls ───────────────────────────────────────────────────
@@ -339,6 +362,7 @@
     bindToggles();
     bindPeriod();
     bindTheme();
+    bindAccept();
     bindSound();
     renderMaps();
     reflectMaster();

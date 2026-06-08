@@ -250,13 +250,13 @@
   margin-left: 6px;
   padding: 1px 7px;
   font-size: 9px;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--csrp-accent);
   border: 1px solid rgba(226, 58, 69, 0.4);
-  border-radius: 4px;
   background: rgba(226, 58, 69, 0.08);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 }
 
 /* ── Profile slide-in panel ─────────────────────────────────────── */
@@ -531,12 +531,20 @@
   animation: csrp-fade 0.4s var(--csrp-ease) both;
 }
 
+/* Full-screen host that centers the panel (so the panel's own transform stays
+   free for the open animation + drag offset). */
+.csrp-mf-host {
+  position: fixed; inset: 0; z-index: 2147483040;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; pointer-events: none;
+}
+.csrp-mf-host > .csrp-mf { pointer-events: auto; }
+
 /* Centered overlay variant — replaces the hidden native dialog. */
 .csrp-mf-center {
-  position: fixed;
-  top: 50%; left: 50%;
+  position: relative;
   width: min(940px, 94vw);
-  max-height: 88vh;
+  max-height: calc(100vh - 48px);
   display: flex; flex-direction: column;
   margin: 0;
   background:
@@ -544,13 +552,22 @@
     rgba(7, 7, 9, 0.97);
   backdrop-filter: blur(16px) saturate(1.15);
   box-shadow: 0 40px 110px rgba(0, 0, 0, 0.75), 0 0 50px rgba(210, 34, 43, 0.10);
-  z-index: 2147483040;
-  transform: translate(-50%, -50%) scale(0.96);
+  transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)) scale(0.96);
   opacity: 0;
   transition: opacity 0.4s var(--csrp-ease), transform 0.5s cubic-bezier(0.34, 1.35, 0.5, 1);
 }
-.csrp-mf-center.csrp-mf-open { opacity: 1; transform: translate(-50%, -50%); }
+.csrp-mf-center.csrp-mf-open { opacity: 1; transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)); }
+/* While dragging: kill the transition so it tracks the cursor 1:1. */
+.csrp-mf-center.csrp-mf-dragging { transition: none; cursor: grabbing; }
 .csrp-mf-center .csrp-mf-content { overflow-y: auto; }
+/* Drag handle affordance on the bar. */
+.csrp-mf-bar { cursor: grab; user-select: none; }
+.csrp-mf-bar .csrp-mf-actions,
+.csrp-mf-bar button { cursor: default; }
+.csrp-mf-grip {
+  width: 16px; text-align: center; color: var(--csrp-fg-dim);
+  letter-spacing: -2px; font-size: 13px; cursor: grab;
+}
 .csrp-mf-timer {
   font-family: "Rajdhani", var(--csrp-fg), sans-serif;
   font-size: 22px; font-weight: 800; color: var(--csrp-accent);
@@ -857,19 +874,25 @@
 /* ── Card popover (match room: click any card) ──────────────────── */
 .csrp-pop {
   position: fixed;
-  width: 240px;
+  width: 252px;
   z-index: 2147483200;
-  background: rgba(12, 12, 14, 0.98);
-  backdrop-filter: blur(10px);
+  background: rgba(10, 10, 13, 0.98);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--csrp-line-strong);
-  border-radius: 12px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.65), 0 0 26px rgba(210, 34, 43, 0.08);
   color: var(--csrp-fg);
-  padding: 12px;
+  padding: 13px;
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
   transition: opacity 0.2s var(--csrp-ease), transform 0.24s var(--csrp-ease);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+/* top accent strip */
+.csrp-pop::before {
+  content: "";
+  position: absolute; left: 0; top: 0; height: 2px; width: 46px;
+  background: var(--csrp-accent); box-shadow: 0 0 10px var(--csrp-accent);
 }
 
 .csrp-pop-open {
@@ -882,29 +905,31 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 
 .csrp-pop-name {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
+  letter-spacing: -0.01em;
 }
 
 .csrp-pop-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
   font-size: 10px;
   color: var(--csrp-fg-dim);
-  margin-bottom: 10px;
+  margin-bottom: 11px;
 }
 
 .csrp-pop-stats span {
   background: var(--csrp-bg-soft);
   border: 1px solid var(--csrp-line);
-  border-radius: 6px;
-  padding: 2px 6px;
+  padding: 3px 7px;
   font-variant-numeric: tabular-nums;
+  font-family: "Consolas", monospace;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
 }
 
 .csrp-pop-tag,
@@ -912,18 +937,20 @@
   width: 100%;
   background: var(--csrp-bg-soft);
   border: 1px solid var(--csrp-line);
-  border-radius: 8px;
   color: var(--csrp-fg);
-  padding: 7px 9px;
+  padding: 8px 10px;
   font-size: 12px;
   font-family: inherit;
   margin-bottom: 8px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
 
 .csrp-pop-tag:focus,
 .csrp-pop-note:focus {
   outline: none;
-  border-color: var(--csrp-line-strong);
+  border-color: var(--csrp-accent);
+  box-shadow: 0 0 0 1px var(--csrp-accent);
 }
 
 .csrp-pop-note {
@@ -938,19 +965,19 @@
 
 .csrp-pop-save {
   flex: 1;
-  padding: 8px;
+  padding: 9px;
   background: var(--csrp-accent);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
   cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
   transition: filter 0.2s, transform 0.15s var(--csrp-ease);
 }
 
 .csrp-pop-save:hover {
-  filter: brightness(1.12);
+  filter: brightness(1.15);
 }
 
 .csrp-pop-save:active {
@@ -960,13 +987,13 @@
 .csrp-pop-link {
   flex: 1;
   text-align: center;
-  padding: 8px;
-  border: 1px solid var(--csrp-line);
-  border-radius: 8px;
+  padding: 9px;
+  border: 1px solid var(--csrp-line-strong);
   color: var(--csrp-fg);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
   transition: border-color 0.2s, background 0.2s;
 }
 

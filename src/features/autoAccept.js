@@ -69,17 +69,22 @@
     if (cfg.autoMatch) {
       const matchBtn = findPrimaryCTA('Accept Match');
       if (matchBtn) {
-        // Route the match-accept through the countdown widget so the user can
-        // inspect the lobby and cancel. The widget clicks the button itself.
-        const mo = CSRP.matchOverlay;
-        if (mo && mo.countdownActive()) {
-          // countdown running — it owns the click; do nothing here.
-        } else if (mo && mo.countdownCancelled()) {
-          // user cancelled this round; don't re-arm until the button is gone.
-        } else if (mo) {
-          mo.startCountdown(matchBtn);
+        // Instant mode skips the countdown and accepts straight away.
+        if (cfg.acceptInstant) {
+          clickOnce(matchBtn, 'Accept Match (instant)');
         } else {
-          clickOnce(matchBtn, 'Accept Match');
+          // Route the match-accept through the countdown widget so the user can
+          // inspect the lobby and cancel. The widget clicks the button itself.
+          const mo = CSRP.matchOverlay;
+          if (mo && mo.countdownActive()) {
+            // countdown running — it owns the click; do nothing here.
+          } else if (mo && mo.countdownCancelled()) {
+            // user cancelled this round; don't re-arm until the button is gone.
+          } else if (mo) {
+            mo.startCountdown(matchBtn);
+          } else {
+            clickOnce(matchBtn, 'Accept Match');
+          }
         }
       } else if (CSRP.matchOverlay) {
         // Button gone (accepted / declined / left) → reset countdown state.

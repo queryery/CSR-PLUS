@@ -3,12 +3,6 @@
 .vscode/
 *.code-workspace
 
-# Claude Code local config
-.claude/settings.local.json
-
-# Build scaffolding / internal notes
-extension.txt
-
 # OS
 .DS_Store
 Thumbs.db

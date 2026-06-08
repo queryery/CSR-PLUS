@@ -17,7 +17,10 @@
     "gecko": {
       "id": "csr-plus@queryery.github.io",
       "strict_min_version": "115.0",
-      "update_url": "https://raw.githubusercontent.com/queryery/CSR-PLUS/main/updates.json"
+      "update_url": "https://raw.githubusercontent.com/queryery/CSR-PLUS/main/updates.json",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "action": {

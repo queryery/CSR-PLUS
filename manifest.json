@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "CSR+ — Enhanced Match Suite",
+  "version": "0.0.1",
+  "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
+  "permissions": ["storage", "clipboardWrite"],
+  "host_permissions": [
+    "https://csrestored.fun/*",
+    "https://api.csrestored.fun/*",
+    "https://api.github.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "CSR+",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png",
+    "256": "assets/icon256.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://csrestored.fun/*"],
+      "js": [
+        "src/lib/constants.js",
+        "src/lib/store.js",
+        "src/lib/api.js",
+        "src/lib/stats.js",
+        "src/lib/dom.js",
+        "src/lib/sound.js",
+        "src/features/playerBadges.js",
+        "src/features/notes.js",
+        "src/features/matchOverlay.js",
+        "src/features/autoAccept.js",
+        "src/features/mapBan.js",
+        "src/features/winProbability.js",
+        "src/features/serverCopy.js",
+        "src/main.js"
+      ],
+      "css": ["src/styles/inject.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html"],
+      "matches": ["https://csrestored.fun/*"]
+    }
+  ]
+}

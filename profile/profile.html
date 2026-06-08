@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSR+ Profile</title>
+  <link rel="stylesheet" href="profile.css" />
+</head>
+<body>
+  <div class="fx-grid" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="../assets/icon256.png" width="24" height="24" alt="" />
+      <span class="brand-name">CSR<span>+</span></span>
+    </div>
+    <a class="site-link" id="site-link" target="_blank" rel="noopener">Open on csrestored.fun ↗</a>
+  </header>
+
+  <main id="app">
+    <!-- header card: avatar, name, flag, external links -->
+    <section class="profile-head" id="head">
+      <div class="ph-skel">Loading player…</div>
+    </section>
+
+    <!-- statistics grid -->
+    <section class="block" id="stats-block" hidden>
+      <h2 class="block-h">Statistics</h2>
+      <div class="stat-grid" id="stat-grid"></div>
+    </section>
+
+    <!-- match history -->
+    <section class="block" id="history-block" hidden>
+      <h2 class="block-h">History</h2>
+      <div class="hist" id="history"></div>
+    </section>
+  </main>
+
+  <footer class="foot">CSR+ · not affiliated with Valve or Counter-Strike: Restored</footer>
+
+  <script src="profile.js"></script>
+</body>
+</html>

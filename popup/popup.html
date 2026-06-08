@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="black">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSR+</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- animated backdrop layers -->
+  <div class="fx-grid" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
+  <div class="fx-noise" aria-hidden="true"></div>
+
+  <div class="app" id="app">
+    <!-- Sidebar -->
+    <aside class="side">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="../assets/icon256.png" alt="" width="30" height="30" />
+        </div>
+        <div class="brand-txt">
+          <div class="brand-name" data-glitch="CSR+">CSR<span>+</span></div>
+          <div class="brand-tag">MATCH&nbsp;SUITE</div>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-i active" data-tab="general"><span class="ni-ic">▞</span><span class="ni-tx">General</span><span class="ni-no">01</span></button>
+        <button class="nav-i" data-tab="automation"><span class="ni-ic">⚡</span><span class="ni-tx">Automation</span><span class="ni-no">02</span></button>
+        <button class="nav-i" data-tab="appearance"><span class="ni-ic">◧</span><span class="ni-tx">Appearance</span><span class="ni-no">03</span></button>
+        <button class="nav-i" data-tab="veto"><span class="ni-ic">⛒</span><span class="ni-tx">Map veto</span><span class="ni-no">04</span></button>
+        <button class="nav-i" data-tab="friends"><span class="ni-ic">◈</span><span class="ni-tx">Friends</span><span class="ni-no">05</span></button>
+        <button class="nav-i" data-tab="sound"><span class="ni-ic">♪</span><span class="ni-tx">Sound</span><span class="ni-no">06</span></button>
+        <button class="nav-i" data-tab="about"><span class="ni-ic">⌬</span><span class="ni-tx">About</span><span class="ni-no">07</span></button>
+      </nav>
+
+      <div class="side-foot">
+        <span class="status-dot"></span>
+        <span class="status-tx">ONLINE</span>
+        <span class="status-ver" id="side-ver">v0.0.1</span>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="content" id="content">
+      <!-- General -->
+      <section class="tab active" data-tab="general">
+        <div class="tab-head"><h2 class="tab-h">General</h2><span class="tab-idx">// 01</span></div>
+        <p class="tab-lead">Master switch and the extra intel CSR+ draws over the lobby.</p>
+
+        <div class="grp-h"><span>System</span></div>
+        <div class="set" data-key="masterEnabled">
+          <div class="set-txt"><div class="set-t">Enable CSR+</div><div class="set-d">Master switch. When off, the site is left completely untouched.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+
+        <div class="grp-h"><span>Overlay</span></div>
+        <div class="set" data-key="showBadges">
+          <div class="set-txt"><div class="set-t">Strength badges</div><div class="set-d">Tag every player card with a skill rating so you can read the lobby fast.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="showWinProb">
+          <div class="set-txt"><div class="set-t">Win probability</div><div class="set-d">A bar comparing each team's estimated chance to win.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="showMatchOverlay">
+          <div class="set-txt"><div class="set-t">Match overlay</div><div class="set-d">Replace the Match Found popup with a full per-player stat panel.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+      </section>
+
+      <!-- Automation -->
+      <section class="tab" data-tab="automation">
+        <div class="tab-head"><h2 class="tab-h">Automation</h2><span class="tab-idx">// 02</span></div>
+        <p class="tab-lead">Let CSR+ click through the repetitive parts of matchmaking.</p>
+
+        <div class="grp-h"><span>Accepting</span></div>
+        <div class="set" data-key="autoMatch">
+          <div class="set-txt"><div class="set-t">Accept ready check</div><div class="set-d">Accepts automatically — a 10-second countdown lets you cancel first.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="autoQueue">
+          <div class="set-txt"><div class="set-t">Accept queue start</div><div class="set-d">Confirms the queue prompt so searching begins without a click.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="autoInvite">
+          <div class="set-txt"><div class="set-t">Accept party invites</div><div class="set-d">Only from people on your Friends list. Empty list accepts everyone.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+
+        <div class="grp-h"><span>Maps</span></div>
+        <div class="set" data-key="autoBan">
+          <div class="set-txt"><div class="set-t">Auto-ban maps</div><div class="set-d">Bans maps using the order set in the Map veto tab.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+
+        <div class="grp-h"><span>Server</span></div>
+        <div class="set" data-key="autoCopyServer">
+          <div class="set-txt"><div class="set-t">Copy server address</div><div class="set-d">Copies the connect string the moment the server is ready.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+      </section>
+
+      <!-- Appearance -->
+      <section class="tab" data-tab="appearance">
+        <div class="tab-head"><h2 class="tab-h">Appearance</h2><span class="tab-idx">// 03</span></div>
+        <p class="tab-lead">Theme and the time range CSR+ bases its stats on.</p>
+
+        <div class="grp-h"><span>Theme</span></div>
+        <div class="set seg-set">
+          <div class="set-txt"><div class="set-t">Colour theme</div><div class="set-d">Switch between the dark and light cyber palettes.</div></div>
+          <div class="seg" id="theme">
+            <button data-v="black">Black</button>
+            <button data-v="mask">White</button>
+          </div>
+        </div>
+
+        <div class="grp-h"><span>Statistics</span></div>
+        <div class="set seg-set">
+          <div class="set-txt"><div class="set-t">Time range</div><div class="set-d">Period of matches used for badges and win probability.</div></div>
+          <div class="seg" id="period">
+            <button data-v="today">Today</button>
+            <button data-v="yesterday">Yest.</button>
+            <button data-v="all">All</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Veto -->
+      <section class="tab" data-tab="veto">
+        <div class="tab-head"><h2 class="tab-h">Map veto</h2><span class="tab-idx">// 04</span></div>
+        <p class="tab-lead">Drag to set your ban order. Top is banned first; the bottom map is the one you keep.</p>
+
+        <div class="grp-h"><span>Ban priority</span></div>
+        <ul class="maps" id="maps"></ul>
+        <div class="veto-note">
+          With auto-ban on, CSR+ bans your two lowest-priority maps each turn.
+          In the final round only two maps remain and the site runs a single-map
+          vote, so just one is banned.
+        </div>
+      </section>
+
+      <!-- Friends -->
+      <section class="tab" data-tab="friends">
+        <div class="tab-head"><h2 class="tab-h">Friends</h2><span class="tab-idx">// 05</span></div>
+        <p class="tab-lead">Pick whose party invites get accepted. With no one selected, every invite is accepted.</p>
+
+        <div class="grp-h"><span>Trusted friends</span></div>
+        <div class="friends" id="friends"></div>
+      </section>
+
+      <!-- Sound -->
+      <section class="tab" data-tab="sound">
+        <div class="tab-head"><h2 class="tab-h">Sound</h2><span class="tab-idx">// 06</span></div>
+        <p class="tab-lead">Short audio cues for toggles, match found, accept and cancel.</p>
+
+        <div class="grp-h"><span>UI sounds</span></div>
+        <div class="set" data-key="soundEnabled">
+          <div class="set-txt"><div class="set-t">Enable sounds</div><div class="set-d">Play a cue on toggles and when a match is found.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set vol-set">
+          <div class="set-txt"><div class="set-t">Volume</div><div class="set-d">Overall loudness of every UI sound.</div></div>
+          <input type="range" id="vol" min="0" max="100" class="vol" />
+        </div>
+        <button class="btn" id="test-sound"><span class="btn-fill"></span><span class="btn-tx">Play test sound</span></button>
+      </section>
+
+      <!-- About -->
+      <section class="tab" data-tab="about">
+        <div class="tab-head"><h2 class="tab-h">About</h2><span class="tab-idx">// 07</span></div>
+
+        <div class="about">
+          <div class="about-icon"><img src="../assets/icon256.png" alt="" width="56" height="56" /></div>
+          <div class="about-name" data-glitch="CSR+">CSR<span>+</span></div>
+          <div class="about-ver" id="about-ver">v0.0.1</div>
+          <p class="about-p">A match assistant for csrestored.fun: auto-accept, smart
+            map banning, and player stats at a glance.</p>
+          <div class="about-links">
+            <a class="btn btn-sm" id="gh-link" href="https://github.com/queryery/CSR-PLUS" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">GitHub</span></a>
+            <a class="btn btn-sm" href="https://github.com/queryery/CSR-PLUS/blob/main/PRIVACY.md" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">Privacy</span></a>
+            <a class="btn btn-sm" href="https://github.com/queryery/CSR-PLUS/blob/main/LICENSE" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">License</span></a>
+          </div>
+        </div>
+
+        <div class="grp-h"><span>Updates</span></div>
+        <div class="set" data-key="autoUpdate">
+          <div class="set-txt"><div class="set-t">Auto-update check</div><div class="set-d">Watch GitHub for new releases and prompt you when one is out.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <button class="btn btn-wide" id="check-update"><span class="btn-fill"></span><span class="btn-tx">Check for updates</span></button>
+
+        <div class="grp-h"><span>What's new</span></div>
+        <div class="changelog" id="changelog"><div class="cl-skel"></div></div>
+
+        <p class="about-foot">Not affiliated with Valve or Counter-Strike: Restored.</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- update popup (modal) -->
+  <div class="modal" id="update-modal" hidden>
+    <div class="modal-card">
+      <div class="modal-scan"></div>
+      <div class="modal-tag">SYSTEM // UPDATE</div>
+      <div class="modal-title" data-glitch="Update available">Update available</div>
+      <div class="modal-body">
+        A newer build <b id="modal-ver"></b> is ready. Open the release page to
+        grab it — your current settings stay intact.
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-later"><span class="btn-tx">Later</span></button>
+        <a class="btn btn-primary" id="modal-go" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">Open release ↗</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast stack -->
+  <div class="toasts" id="toasts"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

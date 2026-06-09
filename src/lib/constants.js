@@ -41,6 +41,24 @@
     soundEnabled: true,
     soundVolume: 0.6,
     theme: 'black', // 'black' (cyberpunk dark) | 'mask' (light)
+    // Auto-sell: irreversible. Ships OFF and un-armed (dry-run preview only
+    // until the user explicitly arms it). Sells items matching the filters via
+    // POST /inventory/sell/{item_id} in batches, on any page.
+    autoSell: {
+      enabled: false,            // run the auto-sell loop at all
+      armed: false,              // MUST be armed to actually sell; else dry-run
+      rarities: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false },
+      stattrak: 'keep',          // 'keep' (never sell ST) | 'sell' (allow) | 'only' (only ST)
+      wears: { FN: false, MW: false, FT: false, WW: false, BS: false },
+      sellNoFloat: false,        // items without a float (cases, capsules, agents)
+      maxFloat: 1,               // also require float <= this (1 = no extra gate)
+      protectKnivesGloves: true, // never auto-sell knives or gloves
+      protectNametag: true,      // never auto-sell name-tagged items
+      batchSize: 5,              // items per batch
+      intervalSec: 15,           // seconds between batches
+    },
+    // Written by the auto-sell loop so the popup can show the dry-run preview.
+    autoSellPreview: { count: 0, names: [], armed: false, at: 0 },
   };
 
   // Player tiers — consistency/peak based (not a single threshold).

@@ -57,6 +57,7 @@
         "src/features/winProbability.js",
         "src/features/serverCopy.js",
         "src/features/inventory.js",
+        "src/features/autoSell.js",
         "src/main.js"
       ],
       "css": ["src/styles/inject.css"],

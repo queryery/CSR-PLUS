@@ -13,6 +13,16 @@
     showMatchOverlay: true, statsPeriod: 'all',
     soundEnabled: true, soundVolume: 0.6,
     theme: 'black',
+    autoSell: {
+      enabled: false, armed: false,
+      rarities: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false },
+      stattrak: 'keep',
+      wears: { FN: false, MW: false, FT: false, WW: false, BS: false },
+      sellNoFloat: false, maxFloat: 1,
+      protectKnivesGloves: true, protectNametag: true,
+      batchSize: 5, intervalSec: 15,
+    },
+    autoSellPreview: { count: 0, names: [], armed: false, at: 0 },
   };
 
   let state = { ...DEFAULTS };
@@ -65,9 +75,11 @@
   }
 
   // ── toggles (.set rows with data-key) ────────────────────────────────
+  // Skips nested autoSell.* rows — those are owned by bindAutoSell().
   function bindToggles() {
     $$('.set[data-key]').forEach((el) => {
       const key = el.dataset.key;
+      if (key.includes('.')) return; // nested keys handled elsewhere
       el.classList.toggle('on', !!state[key]);
       el.addEventListener('click', () => {
         const v = !el.classList.contains('on');
@@ -139,6 +151,109 @@
     delay.addEventListener('change', () => snd('click'));
     // Re-sync when the instant toggle flips (handled in bindToggles callback).
     bindAccept._sync = sync;
+  }
+
+  // ── auto-sell tab ────────────────────────────────────────────────────
+  const RARITY_LABELS = {
+    1: 'Consumer', 2: 'Industrial', 3: 'Mil-Spec', 4: 'Restricted',
+    5: 'Classified', 6: 'Covert', 7: 'Contraband',
+  };
+  const RARITY_COLORS = {
+    1: '#b0c3d9', 2: '#5e98d9', 3: '#4b69ff', 4: '#8847ff',
+    5: '#d32ce6', 6: '#eb4b4b', 7: '#e4ae39',
+  };
+  const WEARS = ['FN', 'MW', 'FT', 'WW', 'BS'];
+
+  // Persist the whole autoSell object (it's nested, so save the object).
+  function saveSell() { save('autoSell', state.autoSell); }
+
+  function bindAutoSell() {
+    const s = state.autoSell;
+
+    // nested toggles (data-key="autoSell.x")
+    $$('.set[data-key^="autoSell."]').forEach((el) => {
+      const key = el.dataset.key.split('.')[1];
+      el.classList.toggle('on', !!s[key]);
+      el.addEventListener('click', () => {
+        const v = !el.classList.contains('on');
+        el.classList.toggle('on', v);
+        s[key] = v;
+        if (key === 'armed' && v) snd('alert'); else snd(v ? 'on' : 'off');
+        saveSell();
+        reflectSellPreview();
+      });
+    });
+
+    // rarity grid
+    const rg = $('#rar-grid');
+    rg.innerHTML = '';
+    Object.keys(RARITY_LABELS).forEach((r) => {
+      const on = !!s.rarities[r];
+      const b = document.createElement('button');
+      b.className = 'rar' + (on ? ' on' : '');
+      b.style.setProperty('--rc', RARITY_COLORS[r]);
+      b.innerHTML = `<span class="rar-dot"></span>${RARITY_LABELS[r]}`;
+      b.addEventListener('click', () => {
+        s.rarities[r] = !s.rarities[r];
+        b.classList.toggle('on', s.rarities[r]);
+        snd(s.rarities[r] ? 'on' : 'off');
+        saveSell(); reflectSellPreview();
+      });
+      rg.append(b);
+    });
+
+    // wear row
+    const wr = $('#wear-row');
+    wr.innerHTML = '';
+    WEARS.forEach((w) => {
+      const b = document.createElement('button');
+      b.className = 'wear' + (s.wears[w] ? ' on' : '');
+      b.textContent = w;
+      b.addEventListener('click', () => {
+        s.wears[w] = !s.wears[w];
+        b.classList.toggle('on', s.wears[w]);
+        snd(s.wears[w] ? 'on' : 'off');
+        saveSell(); reflectSellPreview();
+      });
+      wr.append(b);
+    });
+
+    // StatTrak mode segment
+    const seg = $('#st-mode');
+    const syncSt = () => $$('button', seg).forEach((b) => b.classList.toggle('on', b.dataset.v === s.stattrak));
+    syncSt();
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      s.stattrak = b.dataset.v; syncSt(); snd('click'); saveSell(); reflectSellPreview();
+    });
+
+    // batch size + interval sliders
+    const bs = $('#batch-size'), iv = $('#interval');
+    bs.value = s.batchSize; $('#bs-val').textContent = s.batchSize;
+    iv.value = s.intervalSec; $('#iv-val').textContent = `${s.intervalSec}s`;
+    bs.addEventListener('input', () => { s.batchSize = Number(bs.value); $('#bs-val').textContent = bs.value; saveSell(); });
+    iv.addEventListener('input', () => { s.intervalSec = Number(iv.value); $('#iv-val').textContent = `${iv.value}s`; saveSell(); });
+    bs.addEventListener('change', () => snd('click'));
+    iv.addEventListener('change', () => snd('click'));
+
+    reflectSellPreview();
+  }
+
+  // Show the live dry-run/armed preview written by the content script.
+  function reflectSellPreview() {
+    const stEl = $('#sp-state'), txEl = $('#sp-text');
+    if (!stEl) return;
+    const armed = !!state.autoSell.armed;
+    const enabled = !!state.autoSell.enabled;
+    const p = state.autoSellPreview || { count: 0, names: [] };
+    stEl.className = 'sp-state' + (armed ? ' armed' : '');
+    stEl.textContent = armed ? 'ARMED — selling' : 'Preview (dry-run)';
+    if (!enabled) { txEl.textContent = 'Enable to scan your inventory…'; return; }
+    if (!p.at) { txEl.textContent = 'Scanning your inventory…'; return; }
+    const names = (p.names || []).slice(0, 4).join(', ');
+    txEl.textContent = p.count
+      ? `${p.count} item${p.count > 1 ? 's' : ''} match${p.count > 1 ? '' : 'es'}${names ? ': ' + names + (p.count > 4 ? '…' : '') : ''}`
+      : 'No items match your current filters.';
   }
 
   // ── sound controls ───────────────────────────────────────────────────
@@ -405,12 +520,19 @@
     state = { ...DEFAULTS, ...data };
     state.inviteFriends = state.inviteFriends || {};
     state.banPriority = reconcileMaps(state.banPriority);
+    // Deep-merge nested autoSell so older saves gain any new keys.
+    state.autoSell = {
+      ...DEFAULTS.autoSell, ...(data.autoSell || {}),
+      rarities: { ...DEFAULTS.autoSell.rarities, ...((data.autoSell || {}).rarities || {}) },
+      wears: { ...DEFAULTS.autoSell.wears, ...((data.autoSell || {}).wears || {}) },
+    };
     applyTheme();
     bindNav();
     bindToggles();
     bindPeriod();
     bindTheme();
     bindAccept();
+    bindAutoSell();
     bindSound();
     renderMaps();
     reflectMaster();
@@ -418,6 +540,13 @@
     renderChangelog();
     bindModal();
     loadLiveUsers();
+    // Live-update the sell preview as the content script writes it.
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area === 'local' && ch.autoSellPreview) {
+        state.autoSellPreview = ch.autoSellPreview.newValue || state.autoSellPreview;
+        reflectSellPreview();
+      }
+    });
     if (state.autoUpdate) checkForUpdate(false);
   });
 })();

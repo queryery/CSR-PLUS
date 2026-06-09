@@ -30,9 +30,10 @@
         <button class="nav-i" data-tab="automation"><span class="ni-ic">⚡</span><span class="ni-tx">Automation</span><span class="ni-no">02</span></button>
         <button class="nav-i" data-tab="appearance"><span class="ni-ic">◧</span><span class="ni-tx">Appearance</span><span class="ni-no">03</span></button>
         <button class="nav-i" data-tab="veto"><span class="ni-ic">⛒</span><span class="ni-tx">Map veto</span><span class="ni-no">04</span></button>
-        <button class="nav-i" data-tab="friends"><span class="ni-ic">◈</span><span class="ni-tx">Friends</span><span class="ni-no">05</span></button>
-        <button class="nav-i" data-tab="sound"><span class="ni-ic">♪</span><span class="ni-tx">Sound</span><span class="ni-no">06</span></button>
-        <button class="nav-i" data-tab="about"><span class="ni-ic">⌬</span><span class="ni-tx">About</span><span class="ni-no">07</span></button>
+        <button class="nav-i" data-tab="autosell"><span class="ni-ic">$</span><span class="ni-tx">Auto sell</span><span class="ni-no">05</span></button>
+        <button class="nav-i" data-tab="friends"><span class="ni-ic">◈</span><span class="ni-tx">Friends</span><span class="ni-no">06</span></button>
+        <button class="nav-i" data-tab="sound"><span class="ni-ic">♪</span><span class="ni-tx">Sound</span><span class="ni-no">07</span></button>
+        <button class="nav-i" data-tab="about"><span class="ni-ic">⌬</span><span class="ni-tx">About</span><span class="ni-no">08</span></button>
       </nav>
 
       <div class="live-users" id="live-users" title="People using CSR+">
@@ -154,9 +155,72 @@
         </div>
       </section>
 
+      <!-- Auto sell -->
+      <section class="tab" data-tab="autosell">
+        <div class="tab-head"><h2 class="tab-h">Auto sell</h2><span class="tab-idx">// 05</span></div>
+        <p class="tab-lead">Automatically sells inventory items that match your filters — on any page. Selling is permanent.</p>
+
+        <div class="sell-warn">⚠ Selling can't be undone. Set your filters, review the preview, then arm it.</div>
+
+        <div class="grp-h"><span>Run</span></div>
+        <div class="set" data-key="autoSell.enabled">
+          <div class="set-txt"><div class="set-t">Enable auto-sell</div><div class="set-d">Run the matcher. While un-armed it only previews what would sell.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="autoSell.armed">
+          <div class="set-txt"><div class="set-t">Arm (sell for real)</div><div class="set-d">Off = dry-run preview only. On = actually sells matching items.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+
+        <div class="sell-preview" id="sell-preview">
+          <span class="sp-state" id="sp-state">Preview</span>
+          <span class="sp-text" id="sp-text">Enable to scan your inventory…</span>
+        </div>
+
+        <div class="grp-h"><span>Rarities to sell</span></div>
+        <div class="rar-grid" id="rar-grid"></div>
+
+        <div class="grp-h"><span>Wear to sell</span></div>
+        <div class="wear-row" id="wear-row"></div>
+        <div class="set" data-key="autoSell.sellNoFloat">
+          <div class="set-txt"><div class="set-t">Sell items without wear</div><div class="set-d">Cases, capsules, agents and other items that have no float.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+
+        <div class="grp-h"><span>StatTrak</span></div>
+        <div class="set seg-set">
+          <div class="set-txt"><div class="set-t">StatTrak items</div><div class="set-d">Whether StatTrak counts toward selling.</div></div>
+          <div class="seg" id="st-mode">
+            <button data-v="keep">Never</button>
+            <button data-v="sell">Allow</button>
+            <button data-v="only">Only</button>
+          </div>
+        </div>
+
+        <div class="grp-h"><span>Protections</span></div>
+        <div class="set" data-key="autoSell.protectKnivesGloves">
+          <div class="set-txt"><div class="set-t">Never sell knives / gloves</div><div class="set-d">Keeps your high-value items safe no matter the filters.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set" data-key="autoSell.protectNametag">
+          <div class="set-txt"><div class="set-t">Never sell name-tagged</div><div class="set-d">Items you've applied a name tag to are skipped.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+
+        <div class="grp-h"><span>Batching</span></div>
+        <div class="set vol-set">
+          <div class="set-txt"><div class="set-t">Batch size</div><div class="set-d">Items sold per run. <b id="bs-val" class="mono">5</b></div></div>
+          <input type="range" id="batch-size" min="1" max="25" class="vol" />
+        </div>
+        <div class="set vol-set">
+          <div class="set-txt"><div class="set-t">Interval</div><div class="set-d">Seconds between runs. <b id="iv-val" class="mono">15s</b></div></div>
+          <input type="range" id="interval" min="5" max="120" class="vol" />
+        </div>
+      </section>
+
       <!-- Friends -->
       <section class="tab" data-tab="friends">
-        <div class="tab-head"><h2 class="tab-h">Friends</h2><span class="tab-idx">// 05</span></div>
+        <div class="tab-head"><h2 class="tab-h">Friends</h2><span class="tab-idx">// 06</span></div>
         <p class="tab-lead">Pick whose party invites get accepted. With no one selected, every invite is accepted.</p>
 
         <div class="grp-h"><span>Trusted friends</span></div>

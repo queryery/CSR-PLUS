@@ -38,13 +38,14 @@
     if (uiBusy) return;
     if (CSRP.store.get('masterEnabled') === false) {
       // Tear down injected UI when the extension is master-disabled.
-      document.querySelectorAll('.csrp-badge-wrap, .csrp-wp, .csrp-mo, .csrp-tag-chip').forEach((n) => n.remove());
+      document.querySelectorAll('.csrp-badge-wrap, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv').forEach((n) => n.remove());
       return;
     }
     uiBusy = true;
     try {
       CSRP.playerBadges.tick();
       CSRP.notes.tick();
+      CSRP.inventory.tick();
       await CSRP.matchOverlay.tick();
       await CSRP.winProbability.tick();
     } catch (err) {

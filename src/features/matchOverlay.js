@@ -258,6 +258,9 @@
   }
 
   // Build / refresh the footer: a big Accept button that drives the native one.
+  // The native dialog re-renders under us, so we re-query the live accept button
+  // at click time instead of trusting a captured reference (that reference goes
+  // stale and is the reason manual accept stopped working with auto-accept off).
   let footState = null;
   function renderFoot(modal) {
     const foot = panel.querySelector('.csrp-mf-foot');
@@ -273,10 +276,22 @@
           if (accepted) return;
           CSRP.sound?.play('accept');
           finishCountdown();
-          modal.acceptBtn && modal.acceptBtn.click();
+          acceptNative();
         },
       }, accepted ? 'Match Accepted ✓' : 'Accept Match'),
     );
+  }
+
+  // Re-find the native accept button right now and click it for real.
+  function acceptNative() {
+    const live = CSRP.dom.findMatchFoundModal();
+    const btn = live?.acceptBtn;
+    if (!btn) { CSRP.log('accept: native button not found'); return; }
+    // Some React handlers ignore a bare .click(); dispatch real pointer events.
+    btn.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    btn.click();
   }
 
   // Mirror the native countdown timer (mm:ss) into our header.
@@ -319,7 +334,7 @@
       finishCountdown();
       CSRP.sound?.play('accept');
       CSRP.log('countdown → accept');
-      acceptBtn.click();
+      acceptNative();
     };
     widget.querySelector('.csrp-cd-go').addEventListener('click', accept);
     widget.querySelector('.csrp-cd-x').addEventListener('click', () => {

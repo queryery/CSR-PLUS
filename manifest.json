@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "CSR+ — Enhanced Match Suite",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
   "permissions": ["storage", "clipboardWrite"],
   "host_permissions": [
     "https://csrestored.fun/*",
     "https://api.csrestored.fun/*",
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://api.counterapi.dev/*"
   ],
   "background": {
     "service_worker": "src/background.js",
@@ -55,6 +56,7 @@
         "src/features/mapBan.js",
         "src/features/winProbability.js",
         "src/features/serverCopy.js",
+        "src/features/inventory.js",
         "src/main.js"
       ],
       "css": ["src/styles/inject.css"],
@@ -63,7 +65,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html"],
+      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html", "inventory/inventory.html"],
       "matches": ["https://csrestored.fun/*"]
     }
   ]

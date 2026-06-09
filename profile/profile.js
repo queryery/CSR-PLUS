@@ -89,6 +89,26 @@
   const mapIcon = (map) => `${SITE}/maps/icons/${(map || '').toLowerCase()}.png`;
   const mapLabel = (map) => (map || '').replace(/^de_/, '').replace(/^\w/, (c) => c.toUpperCase());
 
+  // Tab switching. The inventory tab lazily embeds the inventory page so its
+  // grid/search/sort are reused as-is.
+  let invLoaded = false;
+  function bindTabs() {
+    const tabs = document.querySelectorAll('.ptab');
+    const panels = document.querySelectorAll('.ptab-panel');
+    tabs.forEach((t) => t.addEventListener('click', () => {
+      const name = t.dataset.tab;
+      tabs.forEach((x) => x.classList.toggle('active', x === t));
+      panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === name));
+      if (name === 'inventory' && !invLoaded) {
+        invLoaded = true;
+        const frame = document.createElement('iframe');
+        frame.className = 'inv-frame';
+        frame.src = chrome.runtime.getURL(`inventory/inventory.html?id=${id}`);
+        $('#inv-frame-wrap').append(frame);
+      }
+    }));
+  }
+
   async function render() {
     if (!id) { $('#head').innerHTML = '<div class="ph-skel">No player selected.</div>'; return; }
     document.title = 'CSR+ Profile';
@@ -102,6 +122,9 @@
     const agg = aggregate(profile, rs);
     const avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${id}/${profile.avatar}.png?size=128` : '';
     const steam = profile.steam;
+
+    $('#ptabs').hidden = false;
+    bindTabs();
 
     // ── header card ────────────────────────────────────────────────────
     const head = $('#head');

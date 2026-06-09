@@ -91,6 +91,20 @@
 }
 .csrp-toast-show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ── "Watch inventory" button (injected on the player page) ──────── */
+.csrp-watch-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-left: 12px; padding: 10px 20px;
+  background: var(--csrp-accent); color: var(--csrp-on-accent);
+  border: 1px solid var(--csrp-accent); border-radius: 999px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: filter 0.18s, transform 0.15s var(--csrp-ease), box-shadow 0.2s;
+}
+.csrp-watch-btn:hover { filter: brightness(1.1); box-shadow: 0 0 16px rgba(210,34,43,0.4); transform: translateY(-1px); }
+.csrp-watch-btn:active { transform: translateY(0) scale(0.98); }
+.csrp-wb-ic { font-size: 13px; }
+
 /* Tier colors: bright-green → green → yellow → orange → red → grey */
 .csrp-t-vstrong      { color: #2bff88; border-color: rgba(43, 255, 136, 0.55); }
 .csrp-t-consistent   { color: #57d977; border-color: rgba(87, 217, 119, 0.5); }
@@ -542,21 +556,31 @@
 }
 .csrp-mf-host > .csrp-mf { pointer-events: auto; }
 
-/* Centered overlay variant — replaces the hidden native dialog. */
+/* Centered overlay variant — replaces the hidden native dialog. Cyberpunk
+   console look: angular panel, grid texture, neon edge. */
 .csrp-mf-center {
   position: relative;
   width: min(940px, 94vw);
   max-height: calc(100vh - 48px);
   display: flex; flex-direction: column;
-  margin: 0;
+  margin: 0; overflow: hidden;
+  border: 1px solid var(--csrp-line-strong);
   background:
-    radial-gradient(120% 50% at 50% 0%, rgba(210, 34, 43, 0.14), transparent 55%),
-    rgba(7, 7, 9, 0.97);
+    linear-gradient(var(--csrp-grid, rgba(255,255,255,0.04)) 1px, transparent 1px) 0 0 / 30px 30px,
+    linear-gradient(90deg, var(--csrp-grid, rgba(255,255,255,0.04)) 1px, transparent 1px) 0 0 / 30px 30px,
+    radial-gradient(120% 50% at 50% 0%, rgba(210, 34, 43, 0.12), transparent 55%),
+    rgba(7, 7, 9, 0.98);
   backdrop-filter: blur(16px) saturate(1.15);
-  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.75), 0 0 50px rgba(210, 34, 43, 0.10);
+  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.8), 0 0 50px rgba(210, 34, 43, 0.12);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
   transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)) scale(0.96);
   opacity: 0;
   transition: opacity 0.4s var(--csrp-ease), transform 0.5s cubic-bezier(0.34, 1.35, 0.5, 1);
+}
+/* neon top edge */
+.csrp-mf-center::before {
+  content: ""; position: absolute; left: 0; top: 0; height: 2px; width: 120px;
+  background: var(--csrp-accent); box-shadow: 0 0 14px var(--csrp-accent); z-index: 2;
 }
 .csrp-mf-center.csrp-mf-open { opacity: 1; transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)); }
 /* While dragging: kill the transition so it tracks the cursor 1:1. */
@@ -580,18 +604,20 @@
   display: flex; justify-content: center;
 }
 .csrp-mf-accept {
-  min-width: 280px; padding: 13px 28px;
-  background: linear-gradient(180deg, #ff3b42, var(--csrp-accent));
-  color: #fff; border: none; border-radius: 999px;
-  font-size: 15px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer;
-  box-shadow: 0 8px 24px rgba(210, 34, 43, 0.4);
+  min-width: 280px; padding: 14px 28px;
+  background: var(--csrp-accent); color: var(--csrp-on-accent);
+  border: none; font-size: 15px; font-weight: 800; letter-spacing: 0.04em;
+  text-transform: uppercase; cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  box-shadow: 0 0 26px rgba(210, 34, 43, 0.45);
   transition: filter 0.2s, transform 0.15s var(--csrp-ease), box-shadow 0.2s;
 }
-.csrp-mf-accept:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 12px 30px rgba(210, 34, 43, 0.5); }
+.csrp-mf-accept:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 0 36px rgba(210, 34, 43, 0.6); }
 .csrp-mf-accept:active { transform: scale(0.98); }
 .csrp-mf-accept-done {
   background: var(--csrp-bg-soft); color: #56d68a;
   border: 1px solid rgba(86, 214, 138, 0.4); box-shadow: none; cursor: default;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
 }
 
 .csrp-mf-bar {

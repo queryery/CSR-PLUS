@@ -24,16 +24,32 @@
       <div class="ph-skel">Loading player…</div>
     </section>
 
-    <!-- statistics grid -->
-    <section class="block" id="stats-block" hidden>
-      <h2 class="block-h">Statistics</h2>
-      <div class="stat-grid" id="stat-grid"></div>
+    <!-- tab nav -->
+    <nav class="ptabs" id="ptabs" hidden>
+      <button class="ptab active" data-tab="overview"><span class="pt-ic">◧</span>Overview</button>
+      <button class="ptab" data-tab="history"><span class="pt-ic">≡</span>History</button>
+      <button class="ptab" data-tab="inventory"><span class="pt-ic">▦</span>Inventory</button>
+    </nav>
+
+    <!-- Overview -->
+    <section class="ptab-panel active" data-panel="overview">
+      <section class="block" id="stats-block" hidden>
+        <h2 class="block-h">Statistics</h2>
+        <div class="stat-grid" id="stat-grid"></div>
+      </section>
     </section>
 
-    <!-- match history -->
-    <section class="block" id="history-block" hidden>
-      <h2 class="block-h">History</h2>
-      <div class="hist" id="history"></div>
+    <!-- History -->
+    <section class="ptab-panel" data-panel="history">
+      <section class="block" id="history-block" hidden>
+        <h2 class="block-h">History</h2>
+        <div class="hist" id="history"></div>
+      </section>
+    </section>
+
+    <!-- Inventory (embeds the inventory page) -->
+    <section class="ptab-panel" data-panel="inventory">
+      <div class="inv-frame-wrap" id="inv-frame-wrap"></div>
     </section>
   </main>
 

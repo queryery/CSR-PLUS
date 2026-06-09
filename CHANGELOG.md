@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.4
+
+- New inventory viewer: open any player's skins with icons, float, pattern seed
+  and StatTrak, with search, sorting and type filters.
+- Added a "Watch inventory" button on player pages.
+- Custom profile page now has Overview / History / Inventory tabs.
+- Fixed not being able to accept a match manually when auto-accept was off.
+- Fixed server address copy — it reads the real address from the connect link
+  and shows a confirmation when copied; click the address to copy any time.
+- Match Found window restyled to match the app.
+- Added a community user counter in the popup.
+
 ## 0.0.3
 
 - Fixed the server address not copying — it now copies reliably, and you can

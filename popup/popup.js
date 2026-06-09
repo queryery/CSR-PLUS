@@ -253,6 +253,33 @@
     return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   }
 
+  // ── live users counter ───────────────────────────────────────────────
+  // Free hosted counter. Increments once per popup open (throttled to 1/hour
+  // per install) and shows the community total. Fails silent.
+  async function loadLiveUsers() {
+    const numEl = $('#lu-num');
+    if (!numEl) return;
+    numEl.classList.add('loading');
+    try {
+      const last = Number(localStorage.getItem('csrp:counted') || 0);
+      const fresh = Date.now() - last > 3600e3;
+      const action = fresh ? 'up' : '';
+      const url = `https://api.counterapi.dev/v1/csrplus-ext/online${action ? '/up' : ''}`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      if (fresh) localStorage.setItem('csrp:counted', String(Date.now()));
+      const n = Number(data.count || 0);
+      numEl.textContent = n.toLocaleString();
+    } catch {
+      // hide the row entirely if the counter is unreachable
+      const row = $('#live-users');
+      if (row) row.style.display = 'none';
+    } finally {
+      numEl.classList.remove('loading');
+    }
+  }
+
   // ── about: version, links, changelog ─────────────────────────────────
   const REPO = 'queryery/CSR-PLUS';
 
@@ -369,6 +396,7 @@
     showVersion();
     renderChangelog();
     bindModal();
+    loadLiveUsers();
     if (state.autoUpdate) checkForUpdate(false);
   });
 })();

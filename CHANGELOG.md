@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.5
+
+- Fixed inventory icons showing the wrong skin.
+- Fixed the map veto list jumping around (and playing sounds repeatedly) while
+  reordering — dragging is smooth now.
+- Added UI sounds to the profile and inventory pages.
+- Added a Back button to the profile and inventory pages.
+
 ## 0.0.4
 
 - New inventory viewer: open any player's skins with icons, float, pattern seed

@@ -6,6 +6,44 @@
   const id = new URLSearchParams(location.search).get('id');
   const period = new URLSearchParams(location.search).get('period') || 'all';
 
+  // ── UI sound (reads soundEnabled / soundVolume from storage) ──────────
+  let sndCfg = { soundEnabled: true, soundVolume: 0.6 };
+  try {
+    chrome.storage.local.get(['soundEnabled', 'soundVolume'], (d) => {
+      if (d && typeof d.soundEnabled === 'boolean') sndCfg.soundEnabled = d.soundEnabled;
+      if (d && typeof d.soundVolume === 'number') sndCfg.soundVolume = d.soundVolume;
+    });
+  } catch { /* ignore */ }
+  const sndCache = {};
+  function snd(name) {
+    if (!sndCfg.soundEnabled) return;
+    try {
+      let a = sndCache[name];
+      if (!a) { a = new Audio(chrome.runtime.getURL(`assets/sounds/${name}.wav`)); sndCache[name] = a; }
+      const n = a.cloneNode(true);
+      n.volume = sndCfg.soundVolume;
+      n.play().catch(() => {});
+    } catch { /* ignore */ }
+  }
+
+  // Back button: go back through history if possible, otherwise close the tab
+  // (these pages open in a new tab, so closing returns focus to the site).
+  function bindBack() {
+    const btn = $('#back-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      snd('click');
+      if (history.length > 1) {
+        const here = location.href;
+        history.back();
+        // If history.back() didn't navigate (fresh tab), close instead.
+        setTimeout(() => { if (location.href === here) window.close(); }, 150);
+      } else {
+        window.close();
+      }
+    });
+  }
+
   function api(path) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ type: 'csrp:api', path }, (resp) => {
@@ -95,8 +133,11 @@
   function bindTabs() {
     const tabs = document.querySelectorAll('.ptab');
     const panels = document.querySelectorAll('.ptab-panel');
-    tabs.forEach((t) => t.addEventListener('click', () => {
+    tabs.forEach((t) => {
+      t.addEventListener('mouseenter', () => snd('hover'));
+      t.addEventListener('click', () => {
       const name = t.dataset.tab;
+      snd('click');
       tabs.forEach((x) => x.classList.toggle('active', x === t));
       panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === name));
       if (name === 'inventory' && !invLoaded) {
@@ -106,10 +147,12 @@
         frame.src = chrome.runtime.getURL(`inventory/inventory.html?id=${id}`);
         $('#inv-frame-wrap').append(frame);
       }
-    }));
+      });
+    });
   }
 
   async function render() {
+    bindBack();
     if (!id) { $('#head').innerHTML = '<div class="ph-skel">No player selected.</div>'; return; }
     document.title = 'CSR+ Profile';
     $('#site-link').href = `${SITE}/app/user/${id}`;

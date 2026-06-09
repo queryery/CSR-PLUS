@@ -204,6 +204,7 @@
   }
 
   // ── map priority drag list ───────────────────────────────────────────
+  let dragBound = false;
   function renderMaps() {
     const ul = $('#maps');
     ul.innerHTML = '';
@@ -217,26 +218,46 @@
         <span class="pri">${i === 0 ? 'ban first' : i === last ? 'keep' : ''}</span>`;
       ul.appendChild(li);
     });
-    bindDrag(ul);
+    bindDrag(ul); // binds exactly once (guarded), refreshes labels every render
   }
+
+  // Update rank numbers + first/last labels after a reorder, without rebuilding
+  // the DOM (rebuilding mid-interaction is what made every row jump).
+  function refreshMapLabels(ul) {
+    const items = $$('.map', ul);
+    const last = items.length - 1;
+    items.forEach((li, i) => {
+      li.querySelector('.rank').textContent = i + 1;
+      li.querySelector('.pri').textContent = i === 0 ? 'ban first' : i === last ? 'keep' : '';
+    });
+  }
+
   function bindDrag(ul) {
+    if (dragBound) return; // listeners must be attached only once
+    dragBound = true;
     let dragEl = null;
-    ul.addEventListener('dragstart', (e) => { dragEl = e.target.closest('.map'); dragEl.classList.add('drag'); });
+    ul.addEventListener('dragstart', (e) => {
+      dragEl = e.target.closest('.map');
+      if (dragEl) dragEl.classList.add('drag');
+    });
     ul.addEventListener('dragend', () => {
-      dragEl?.classList.remove('drag');
+      if (!dragEl) return;
+      dragEl.classList.remove('drag');
       $$('.map', ul).forEach((m) => m.classList.remove('over'));
-      const order = $$('.map', ul).map((m) => m.dataset.map);
-      save('banPriority', order);
+      dragEl = null;
+      state.banPriority = $$('.map', ul).map((m) => m.dataset.map);
+      refreshMapLabels(ul);
+      save('banPriority', state.banPriority);
       snd('click');
-      renderMaps();
     });
     ul.addEventListener('dragover', (e) => {
       e.preventDefault();
+      if (!dragEl) return;
       const after = afterEl(ul, e.clientY);
       $$('.map', ul).forEach((m) => m.classList.remove('over'));
-      if (after) after.classList.add('over');
-      if (!dragEl) return;
-      if (after == null) ul.appendChild(dragEl); else ul.insertBefore(dragEl, after);
+      if (after && after !== dragEl) after.classList.add('over');
+      if (after == null) ul.appendChild(dragEl);
+      else if (after !== dragEl) ul.insertBefore(dragEl, after);
     });
   }
   function afterEl(ul, y) {

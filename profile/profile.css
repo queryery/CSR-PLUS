@@ -45,6 +45,16 @@ body { min-height: 100vh; position: relative; overflow-x: hidden; }
   padding: 14px 28px; border-bottom: 1px solid var(--line);
   background: rgba(5, 5, 7, 0.8); backdrop-filter: blur(8px);
 }
+.tb-left { display: flex; align-items: center; gap: 14px; }
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--panel); border: 1px solid var(--line-2); color: var(--fg);
+  padding: 7px 13px; font-size: 12px; font-weight: 700; cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  transition: background 0.18s, border-color 0.18s, transform 0.15s var(--ease);
+}
+.back-btn:hover { background: var(--panel-2); border-color: var(--accent); }
+.back-btn:active { transform: scale(0.97); }
 .brand { display: flex; align-items: center; gap: 9px; }
 .brand img { border-radius: 6px; }
 .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }

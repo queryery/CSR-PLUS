@@ -4,6 +4,27 @@
   'use strict';
   const $ = (s) => document.querySelector(s);
   const id = new URLSearchParams(location.search).get('id');
+  // Embedded in the profile page via iframe → don't double-play sounds there.
+  const embedded = window.self !== window.top;
+
+  let sndCfg = { soundEnabled: true, soundVolume: 0.6 };
+  try {
+    chrome.storage.local.get(['soundEnabled', 'soundVolume'], (d) => {
+      if (d && typeof d.soundEnabled === 'boolean') sndCfg.soundEnabled = d.soundEnabled;
+      if (d && typeof d.soundVolume === 'number') sndCfg.soundVolume = d.soundVolume;
+    });
+  } catch { /* ignore */ }
+  const sndCache = {};
+  function snd(name) {
+    if (embedded || !sndCfg.soundEnabled) return;
+    try {
+      let a = sndCache[name];
+      if (!a) { a = new Audio(chrome.runtime.getURL(`assets/sounds/${name}.wav`)); sndCache[name] = a; }
+      const n = a.cloneNode(true);
+      n.volume = sndCfg.soundVolume;
+      n.play().catch(() => {});
+    } catch { /* ignore */ }
+  }
 
   function api(path) {
     return new Promise((resolve) => {
@@ -14,9 +35,10 @@
     });
   }
 
-  // Skin icons come from the same CDN the site uses.
-  const iconUrl = (skinIndex) =>
-    skinIndex != null ? `https://cdn.csrestored.fun/skins/${skinIndex}.png` : null;
+  // Skin icons come from the same CDN the site uses, keyed by weapon_id (NOT
+  // skin_index — that's a different image of the wrong skin).
+  const iconUrl = (weaponId) =>
+    weaponId != null ? `https://cdn.csrestored.fun/skins/${weaponId}.png` : null;
 
   // item_type → readable category.
   const TYPES = {
@@ -65,15 +87,11 @@
     const { star, weapon, skin } = splitName(it.name);
     const rar = rarity(it.rarity);
     const w = wear(it.float);
-    const icon = iconUrl(it.skin_index);
+    const icon = iconUrl(it.weapon_id);
 
-    const c = el('a', 'card');
+    const c = el('div', 'card');
     c.style.setProperty('--rc', rar.c);
     c.style.animationDelay = Math.min(i * 0.015, 0.5) + 's';
-    if (it.skin_index != null) {
-      c.href = `https://csrestored.fun/skins/${it.skin_index}`;
-      c.target = '_blank'; c.rel = 'noopener';
-    }
 
     const st = it.stattrak ? `<span class="c-st">ST™${it.stattrak_count ? ' ' + it.stattrak_count : ''}</span>` : '';
     const wearTop = w ? `<span class="c-wear-code" style="color:${w.c}">${w.code}</span>` : '';
@@ -123,7 +141,7 @@
     box.innerHTML = '';
     const mk = (val, label, n) => {
       const b = el('button', 'chip' + (state.type === val ? ' on' : ''), `${label}<span class="chip-n">${n}</span>`);
-      b.addEventListener('click', () => { state.type = val; buildFilters(); applyView(); });
+      b.addEventListener('click', () => { state.type = val; snd('click'); buildFilters(); applyView(); });
       return b;
     };
     box.append(mk('all', 'All', items.length));
@@ -147,6 +165,7 @@
     $('#sort').addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
       state.sort = b.dataset.v;
+      snd('click');
       [...$('#sort').children].forEach((x) => x.classList.toggle('on', x === b));
       applyView();
     });
@@ -157,9 +176,27 @@
     grid.innerHTML = Array.from({ length: 18 }, () => '<div class="card-skel"></div>').join('');
   }
 
+  function bindBack() {
+    const btn = $('#back-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      snd('click');
+      if (history.length > 1) {
+        const here = location.href;
+        history.back();
+        setTimeout(() => { if (location.href === here) window.close(); }, 150);
+      } else {
+        window.close();
+      }
+    });
+  }
+
   async function render() {
+    // When embedded in the profile page, drop our own topbar (the profile owns it).
+    if (embedded) document.querySelector('.topbar')?.remove();
+    else bindBack();
     if (!id) { $('#head').innerHTML = '<div class="ih-skel">No player selected.</div>'; return; }
-    $('#site-link').href = `https://csrestored.fun/app/user/${id}`;
+    $('#site-link') && ($('#site-link').href = `https://csrestored.fun/app/user/${id}`);
     skeletons();
 
     // Profile (name/avatar) + inventory in parallel.

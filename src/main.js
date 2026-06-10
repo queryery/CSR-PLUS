@@ -27,7 +27,6 @@
       CSRP.autoAccept.tick();
       CSRP.mapBan.tick();
       CSRP.serverCopy.tick();
-      CSRP.autoSell.tick(); // self-throttled; runs on any page when enabled+armed
     } catch (err) {
       /* never let a tick kill the loop */
     }

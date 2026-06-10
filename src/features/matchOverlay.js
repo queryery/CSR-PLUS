@@ -16,6 +16,13 @@
   let host = null;        // full-screen centering wrapper around the panel
   let lastSig = '';
   let cancelledLatch = false;
+  // The avatar signature of the match the cancel latch applies to. When a new
+  // match appears (different sig) the latch is cleared automatically, so a
+  // cancel on one match never leaks into suppressing the next one.
+  let cancelledSig = '';
+  // The signature of the match we've already accepted, so the two accept paths
+  // (autoAccept tick + overlay button) don't both fire for the same match.
+  let acceptedMatchSig = '';
   let dragPos = null;     // { x, y } offset from centre, kept for the session
 
   // ── countdown state (shared with autoAccept) ──────────────────────────
@@ -274,24 +281,39 @@
         disabled: accepted ? '' : undefined,
         onclick: () => {
           if (accepted) return;
-          CSRP.sound?.play('accept');
-          finishCountdown();
-          acceptNative();
+          acceptNow('manual');
         },
       }, accepted ? 'Match Accepted ✓' : 'Accept Match'),
     );
   }
 
   // Re-find the native accept button right now and click it for real.
-  function acceptNative() {
+  // `force` (a real user click) bypasses the dedup guard — the user pressing the
+  // button must always go through, even if an auto path already fired.
+  function acceptNative(force) {
     const live = CSRP.dom.findMatchFoundModal();
     const btn = live?.acceptBtn;
     if (!btn) { CSRP.log('accept: native button not found'); return; }
+    if (live.accepted) { CSRP.log('accept: already accepted, skipping'); return; }
+    const sig = live.avatars.map((im) => CSRP.dom.idFromAvatar(im) || '?').join(',');
+    // Guard against the two AUTO paths (autoAccept tick + countdown) both firing
+    // for the same match. A manual click is exempt.
+    if (!force && sig && sig === acceptedMatchSig) { CSRP.log('accept: duplicate for match, skipping'); return; }
+    acceptedMatchSig = sig;
     // Some React handlers ignore a bare .click(); dispatch real pointer events.
     btn.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
     btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     btn.click();
+  }
+
+  // Accept the current match through the single guarded path. `reason === 'manual'`
+  // is a real user click and forces the accept through.
+  function acceptNow(reason) {
+    finishCountdown();
+    CSRP.sound?.play('accept');
+    if (reason) CSRP.log('accept →', reason);
+    acceptNative(reason === 'manual');
   }
 
   // Mirror the native countdown timer (mm:ss) into our header.
@@ -330,17 +352,13 @@
     const numEl = widget.querySelector('.csrp-cd-num');
     const ring = widget.querySelector('.csrp-cd-ring');
 
-    const accept = () => {
-      finishCountdown();
-      CSRP.sound?.play('accept');
-      CSRP.log('countdown → accept');
-      acceptNative();
-    };
+    const accept = () => acceptNow('countdown');
     widget.querySelector('.csrp-cd-go').addEventListener('click', accept);
     widget.querySelector('.csrp-cd-x').addEventListener('click', () => {
       if (!countdown) return;
       countdown.cancelled = true;
       cancelledLatch = true;
+      cancelledSig = currentSig();
       CSRP.sound?.play('cancel');
       finishCountdown();
       CSRP.log('countdown cancelled');
@@ -365,8 +383,21 @@
     countdown = null;
   }
   function countdownActive() { return !!countdown; }
-  function countdownCancelled() { return cancelledLatch; }
-  function resetCancelLatch() { cancelledLatch = false; }
+  // The latch only suppresses the match it was cancelled on. A new match
+  // (different avatar signature) clears it automatically.
+  function countdownCancelled() {
+    if (cancelledLatch && currentSig() !== cancelledSig) resetCancelLatch();
+    return cancelledLatch;
+  }
+  function resetCancelLatch() { cancelledLatch = false; cancelledSig = ''; }
+
+  // Stable identity for the current match, based on its avatars. Empty when no
+  // match modal is present.
+  function currentSig() {
+    const modal = CSRP.dom.findMatchFoundModal();
+    if (!modal) return '';
+    return modal.avatars.map((im) => CSRP.dom.idFromAvatar(im) || '?').join(',');
+  }
 
   let hiddenBox = null;
   function hideNative(box) {
@@ -387,6 +418,7 @@
     restoreNative();
     lastSig = '';
     footState = null;
+    acceptedMatchSig = '';
   }
 
   // ── main tick ─────────────────────────────────────────────────────────
@@ -425,5 +457,6 @@
     countdownActive,
     countdownCancelled,
     resetCancelLatch,
+    acceptNow,
   };
 })();

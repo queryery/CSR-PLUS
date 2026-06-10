@@ -93,15 +93,23 @@
     // Prefer the inner full-width column to mount into; fall back to the box.
     const inner = host.querySelector('.flex.h-full.w-full.flex-col') || host;
     // The native Accept button ("Accept Match" → "Match Accepted" when done).
+    // Prefer an exact text match; only fall back to a fuzzy "accept …" match
+    // when the button also carries the primary-CTA styling, so we don't grab
+    // unrelated buttons ("Accept invite", "Accept terms", etc.).
     let acceptBtn = null;
+    let fuzzyBtn = null;
     for (const btn of host.querySelectorAll('button')) {
       const t = btn.textContent.trim().toLowerCase();
-      if (t === 'accept match' || t === 'match accepted' || t.startsWith('accept')) {
-        acceptBtn = btn; break;
-      }
+      if (t === 'accept match' || t === 'match accepted') { acceptBtn = btn; break; }
+      if (
+        !fuzzyBtn &&
+        t.startsWith('accept') &&
+        btn.classList.contains('bg-theme-primary')
+      ) fuzzyBtn = btn;
     }
+    if (!acceptBtn) acceptBtn = fuzzyBtn;
     const accepted = !!acceptBtn && (acceptBtn.disabled ||
-      acceptBtn.textContent.trim().toLowerCase() === 'match accepted');
+      /accepted/.test(acceptBtn.textContent.trim().toLowerCase()));
     return { host, inner, avatars, acceptBtn, accepted };
   }
 

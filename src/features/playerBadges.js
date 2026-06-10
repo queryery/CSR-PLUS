@@ -14,7 +14,7 @@
     const p = (async () => {
       const period = CSRP.store.get('statsPeriod');
       const [profile, history] = await Promise.all([
-        CSRP.api.user(id),
+        CSRP.api.user(id),  
         CSRP.api.history(id),
       ]);
       pending.delete(id);

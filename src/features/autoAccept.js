@@ -69,13 +69,20 @@
     if (cfg.autoMatch) {
       const matchBtn = findPrimaryCTA('Accept Match');
       if (matchBtn) {
+        const mo = CSRP.matchOverlay;
         // Instant mode skips the countdown and accepts straight away.
         if (cfg.acceptInstant) {
-          clickOnce(matchBtn, 'Accept Match (instant)');
+          // When the overlay is shown it hides the native modal and owns the
+          // accept (with a dedup guard). Route through it so the two paths
+          // don't both click the same match. Direct-click only without overlay.
+          if (mo && mo.acceptNow && cfg.showMatchOverlay) {
+            mo.acceptNow('instant');
+          } else {
+            clickOnce(matchBtn, 'Accept Match (instant)');
+          }
         } else {
           // Route the match-accept through the countdown widget so the user can
           // inspect the lobby and cancel. The widget clicks the button itself.
-          const mo = CSRP.matchOverlay;
           if (mo && mo.countdownActive()) {
             // countdown running — it owns the click; do nothing here.
           } else if (mo && mo.countdownCancelled()) {

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CSR+ — Enhanced Match Suite",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
   "permissions": ["storage", "clipboardWrite"],
   "host_permissions": [
@@ -57,7 +57,6 @@
         "src/features/winProbability.js",
         "src/features/serverCopy.js",
         "src/features/inventory.js",
-        "src/features/autoSell.js",
         "src/main.js"
       ],
       "css": ["src/styles/inject.css"],

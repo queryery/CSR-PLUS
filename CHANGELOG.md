@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.6
+
+- Removed the inventory auto-seller.
+- Fixed the match accept firing twice — the countdown widget and auto-accept no
+  longer both click the same Accept Match button.
+- Each match now has its own cancel state, so cancelling one match's countdown
+  no longer suppresses the next match.
+
 ## 0.0.5
 
 - Fixed inventory icons showing the wrong skin.

@@ -11,6 +11,3 @@ Thumbs.db
 *.zip
 *.crx
 *.pem
-
-# Local console scratchpads / recon
-trade.js

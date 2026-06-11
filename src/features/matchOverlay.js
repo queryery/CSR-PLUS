@@ -16,14 +16,10 @@
   let host = null;        // full-screen centering wrapper around the panel
   let lastSig = '';
   let cancelledLatch = false;
-  // The avatar signature of the match the cancel latch applies to. When a new
-  // match appears (different sig) the latch is cleared automatically, so a
-  // cancel on one match never leaks into suppressing the next one.
-  let cancelledSig = '';
-  // The signature of the match we've already accepted, so the two accept paths
-  // (autoAccept tick + overlay button) don't both fire for the same match.
-  let acceptedMatchSig = '';
+  let acceptedLatch = false;   // set once we accept; blocks re-arming the countdown
   let dragPos = null;     // { x, y } offset from centre, kept for the session
+  let liveRows = [];      // all built player rows for the current content
+  let acceptHud = null;   // the "N / M accepted" progress element
 
   // ── countdown state (shared with autoAccept) ──────────────────────────
   // Delay is configurable in Automation settings (seconds, clamped 1..30).
@@ -54,10 +50,15 @@
     const kd = statCell('K/D', '—'), kr = statCell('K/R', '—'),
       adr = statCell('ADR', '—'), wr = statCell('WR', '—');
 
+    // Rank pill on the avatar — filled once we know each player's standing.
+    const rankEl = h('span', { class: 'csrp-mf-rank' }, '');
+    const avEl = member.avatarSrc
+      ? h('img', { class: 'csrp-mf-av', src: member.avatarSrc, onerror: function () { this.style.visibility = 'hidden'; } })
+      : h('div', { class: 'csrp-mf-av' });
+    const checkEl = h('span', { class: 'csrp-mf-check', title: 'Accepted' }, '✓');
+
     const row = h('div', { class: 'csrp-mf-row' }, [
-      member.avatarSrc
-        ? h('img', { class: 'csrp-mf-av', src: member.avatarSrc, onerror: function () { this.style.visibility = 'hidden'; } })
-        : h('div', { class: 'csrp-mf-av' }),
+      h('div', { class: 'csrp-mf-avwrap' }, [avEl, rankEl, checkEl]),
       h('div', { class: 'csrp-mf-id' }, [
         nameEl,
         h('div', { class: 'csrp-mf-sub' }, [badgeEl, eloEl]),
@@ -68,6 +69,33 @@
         onclick: (e) => { e.stopPropagation(); CSRP.notes.openProfile(id); },
       }, '↗') : null,
     ]);
+
+    // Mark this row's standing: rank 1 in its team gets a "TOP" pill; the single
+    // best player across both teams gets the gold BEST treatment.
+    function setRank(rank, isBest) {
+      row.classList.toggle('csrp-mf-row-top', rank === 1);
+      row.classList.toggle('csrp-mf-row-best', !!isBest);
+      if (isBest) { rankEl.textContent = 'BEST'; rankEl.className = 'csrp-mf-rank csrp-mf-rank-best'; }
+      else if (rank === 1) { rankEl.textContent = 'TOP'; rankEl.className = 'csrp-mf-rank csrp-mf-rank-top'; }
+      else { rankEl.textContent = '#' + rank; rankEl.className = 'csrp-mf-rank'; }
+    }
+
+    // Reflect the live accept state read off the native avatar.
+    let wasAccepted = false;
+    function refreshAccepted() {
+      const ok = avatarAccepted(member.nativeImg);
+      if (ok === wasAccepted) return;
+      wasAccepted = ok;
+      row.classList.toggle('csrp-mf-row-accepted', ok);
+      if (ok) {
+        // brief pop when this player accepts
+        row.classList.remove('csrp-mf-justaccepted');
+        void row.offsetWidth;
+        row.classList.add('csrp-mf-justaccepted');
+        CSRP.sound?.play('tick');
+      }
+      return ok;
+    }
 
     // Fast first paint from just the user profile (name + ELO).
     function updateProfile(profile) {
@@ -90,7 +118,7 @@
       wr.querySelector('.csrp-mf-statv').textContent = (agg.winrate * 100).toFixed(0) + '%';
       row.dataset.score = String(score);
     }
-    return { row, update, updateProfile, id };
+    return { row, update, updateProfile, setRank, refreshAccepted, id };
   }
 
   // Build a team block immediately; returns the wrap + a promise of aggs that
@@ -118,25 +146,58 @@
       })
     ).then((aggs) => {
       const good = aggs.filter(Boolean);
-      // Re-sort rows strongest-first once we have scores.
+      // Re-sort rows strongest-first once we have scores, then re-mount in order
+      // with a slide so the leaderboard visibly settles.
       const sorted = built.slice().sort((a, b) =>
         (Number(b.row.dataset.score) || 0) - (Number(a.row.dataset.score) || 0));
-      sorted.forEach((b) => teamEl.appendChild(b.row));
+      sorted.forEach((b, i) => {
+        // Each team's #1 is the gold BEST; everyone else gets a plain rank.
+        b.setRank(i + 1, i === 0);
+        b.row.style.setProperty('--csrp-rank-i', i);
+        b.row.classList.remove('csrp-mf-reorder');
+        // force reflow so re-adding the class restarts the animation
+        void b.row.offsetWidth;
+        b.row.classList.add('csrp-mf-reorder');
+        teamEl.appendChild(b.row);
+      });
       if (good.length) {
         const avg = Math.round(good.reduce((s, a) => s + a.elo, 0) / good.length);
         eloEl.textContent = 'Avg ' + avg;
       }
-      return good;
+      // Hand back the leader (built row + score) so buildContent can crown the
+      // single match MVP across both teams.
+      const topB = sorted[0];
+      const topScore = topB ? (Number(topB.row.dataset.score) || 0) : -1;
+      return { good, leader: topB, topScore };
     });
 
-    return { wrap: teamEl, name: title, aggsP };
+    return { wrap: teamEl, name: title, aggsP, built };
   }
 
   function membersFromAvatars(avatars) {
     return avatars.map((im) => ({
       id: CSRP.dom.idFromAvatar(im),
       avatarSrc: im.getAttribute('src') || '',
+      nativeImg: im,                 // kept to read live per-player accept state
     }));
+  }
+
+  // A native avatar reads as "accepted" when the site shows it at full strength
+  // (bright / no grayscale). Pending players are dimmed. We treat opacity and a
+  // grayscale filter as the signal, tolerant of either being used.
+  function avatarAccepted(img) {
+    if (!img) return false;
+    const cs = getComputedStyle(img);
+    const op = parseFloat(cs.opacity);
+    if (!Number.isNaN(op) && op < 0.85) return false;
+    if (/grayscale\((?!0\b)/i.test(cs.filter || '')) return false;
+    // Some markups dim a wrapper instead; check the immediate parent too.
+    const p = img.parentElement;
+    if (p) {
+      const po = parseFloat(getComputedStyle(p).opacity);
+      if (!Number.isNaN(po) && po < 0.85) return false;
+    }
+    return true;
   }
 
   function buildContent(avatars) {
@@ -161,6 +222,18 @@
     const a = buildTeam(groupA, 'Your Team');
     const b = buildTeam(groupB, 'Enemy Team');
 
+    // All rows, so the tick can poll each player's live accept state.
+    liveRows = [...a.built, ...b.built];
+
+    // accept progress HUD ("N / M ready")
+    acceptHud = h('div', { class: 'csrp-mf-accbar' }, [
+      h('div', { class: 'csrp-mf-accbar-h' }, [
+        h('span', { class: 'csrp-mf-accbar-lbl' }, 'Players ready'),
+        h('span', { class: 'csrp-mf-accbar-n' }, `0 / ${liveRows.length}`),
+      ]),
+      h('div', { class: 'csrp-mf-accbar-track' }, [h('div', { class: 'csrp-mf-accbar-fill' })]),
+    ]);
+
     // win probability bar
     const wp = h('div', { class: 'csrp-mf-wp' }, [
       h('div', { class: 'csrp-mf-wp-labels' }, [
@@ -172,11 +245,14 @@
     ]);
 
     const body = h('div', { class: 'csrp-mf-body' }, [a.wrap, h('div', { class: 'csrp-mf-vs' }, 'VS'), b.wrap]);
-    const content = h('div', { class: 'csrp-mf-content' }, [wp, body]);
+    const content = h('div', { class: 'csrp-mf-content' }, [acceptHud, wp, body]);
 
-    // Fill the win-prob bar once both teams' stats have streamed in.
-    Promise.all([a.aggsP, b.aggsP]).then(([aggA, aggB]) => {
+    // Fill the win-prob bar once both teams' stats are in. (Each team's BEST is
+    // crowned inside buildTeam as its rows settle, so nothing to do here.)
+    Promise.all([a.aggsP, b.aggsP]).then(([resA, resB]) => {
       if (!content.isConnected) return;
+      const aggA = resA.good, aggB = resB.good;
+
       if (aggA.length >= 2 && aggB.length >= 2) {
         const p = CSRP.stats.winProbability(aggA, aggB);
         const pa = Math.round(p * 100);
@@ -184,6 +260,7 @@
         wp.querySelector('.csrp-mf-wp-t').textContent = 'Win Probability';
         wp.querySelector('.csrp-mf-wp-a').textContent = `${a.name} · ${pa}%`;
         wp.querySelector('.csrp-mf-wp-b').textContent = `${100 - pa}% · ${b.name}`;
+        wp.dataset.fav = pa >= 50 ? 'a' : 'b';
       } else {
         wp.querySelector('.csrp-mf-wp-t').textContent = 'Not enough data';
       }
@@ -198,9 +275,16 @@
     if (panel && panel.isConnected) return panel;
     const bar = h('div', { class: 'csrp-mf-bar' }, [
       h('span', { class: 'csrp-mf-grip', title: 'Drag to move' }, '⠿'),
-      h('span', { class: 'csrp-mf-logo' }, ['CSR', h('span', { class: 'csrp-mf-plus' }, '+')]),
-      h('span', { class: 'csrp-mf-tag-lbl' }, 'Match Found'),
+      h('span', { class: 'csrp-mf-pulse' }),
+      h('div', { class: 'csrp-mf-brand' }, [
+        h('span', { class: 'csrp-mf-logo' }, ['CSR', h('span', { class: 'csrp-mf-plus' }, '+')]),
+        h('span', { class: 'csrp-mf-tag-lbl' }, 'Match Found'),
+      ]),
       h('h1', { class: 'csrp-mf-timer' }, ''),
+      h('button', {
+        class: 'csrp-mf-copy', title: 'Copy both teams to clipboard',
+        onclick: (e) => { e.stopPropagation(); copyLobby(e.currentTarget); },
+      }, '⧉ Copy'),
       h('div', { class: 'csrp-mf-actions' }),
     ]);
     panel = h('div', { class: 'csrp-mf csrp-mf-center' }, [
@@ -209,11 +293,36 @@
       h('div', { class: 'csrp-mf-foot' }),
     ]);
     host = h('div', { class: 'csrp-mf-host' }, [panel]);
+    // Swallow clicks that land on the backdrop (not the panel) so the page
+    // behind stays uninteractive while the match is being confirmed.
+    host.addEventListener('pointerdown', (e) => { if (e.target === host) e.preventDefault(); });
     document.body.appendChild(host);
+    lockPage();
     applyDragPos();
     enableDrag(bar);
     requestAnimationFrame(() => panel && panel.classList.add('csrp-mf-open'));
     return panel;
+  }
+
+  // While the overlay is up, block page scroll + the most common shortcut keys
+  // so nothing behind the glass can be triggered by accident.
+  let pageLocked = false;
+  let prevOverflow = '';
+  const blockScroll = (e) => { if (!panel || !panel.contains(e.target)) e.preventDefault(); };
+  function lockPage() {
+    if (pageLocked) return;
+    pageLocked = true;
+    prevOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    window.addEventListener('wheel', blockScroll, { passive: false, capture: true });
+    window.addEventListener('touchmove', blockScroll, { passive: false, capture: true });
+  }
+  function unlockPage() {
+    if (!pageLocked) return;
+    pageLocked = false;
+    document.documentElement.style.overflow = prevOverflow;
+    window.removeEventListener('wheel', blockScroll, { capture: true });
+    window.removeEventListener('touchmove', blockScroll, { capture: true });
   }
 
   function applyDragPos() {
@@ -281,25 +390,23 @@
         disabled: accepted ? '' : undefined,
         onclick: () => {
           if (accepted) return;
-          acceptNow('manual');
+          CSRP.sound?.play('accept');
+          finishCountdown();
+          acceptNative();
         },
       }, accepted ? 'Match Accepted ✓' : 'Accept Match'),
     );
   }
 
   // Re-find the native accept button right now and click it for real.
-  // `force` (a real user click) bypasses the dedup guard — the user pressing the
-  // button must always go through, even if an auto path already fired.
-  function acceptNative(force) {
+  function acceptNative() {
+    // Latch immediately so the auto-accept loop won't re-arm a new countdown
+    // while the match-found dialog is still on screen (button stays present
+    // until the server transitions away).
+    acceptedLatch = true;
     const live = CSRP.dom.findMatchFoundModal();
     const btn = live?.acceptBtn;
     if (!btn) { CSRP.log('accept: native button not found'); return; }
-    if (live.accepted) { CSRP.log('accept: already accepted, skipping'); return; }
-    const sig = live.avatars.map((im) => CSRP.dom.idFromAvatar(im) || '?').join(',');
-    // Guard against the two AUTO paths (autoAccept tick + countdown) both firing
-    // for the same match. A manual click is exempt.
-    if (!force && sig && sig === acceptedMatchSig) { CSRP.log('accept: duplicate for match, skipping'); return; }
-    acceptedMatchSig = sig;
     // Some React handlers ignore a bare .click(); dispatch real pointer events.
     btn.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
     btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
@@ -307,13 +414,51 @@
     btn.click();
   }
 
-  // Accept the current match through the single guarded path. `reason === 'manual'`
-  // is a real user click and forces the accept through.
-  function acceptNow(reason) {
-    finishCountdown();
-    CSRP.sound?.play('accept');
-    if (reason) CSRP.log('accept →', reason);
-    acceptNative(reason === 'manual');
+  // Copy both teams (name · ELO · strength) as shareable text. Reads the live
+  // rendered rows so it reflects whatever has loaded so far.
+  function copyLobby(btn) {
+    if (!panel) return;
+    const lines = [];
+    for (const team of panel.querySelectorAll('.csrp-mf-team')) {
+      const tName = team.querySelector('.csrp-mf-team-name')?.textContent.trim() || 'Team';
+      const tElo = team.querySelector('.csrp-mf-team-elo')?.textContent.trim();
+      lines.push(`▌ ${tName}${tElo ? ' — ' + tElo : ''}`);
+      for (const row of team.querySelectorAll('.csrp-mf-row')) {
+        const name = row.querySelector('.csrp-mf-name')?.textContent.trim().replace(/\s+/g, ' ') || 'Player';
+        const elo = row.querySelector('.csrp-mf-elo')?.textContent.trim();
+        const kd = row.querySelector('.csrp-mf-stats .csrp-mf-stat:nth-child(1) .csrp-mf-statv')?.textContent.trim();
+        const parts = [name];
+        if (elo) parts.push(elo);
+        if (kd && kd !== '—') parts.push('K/D ' + kd);
+        lines.push('  • ' + parts.join(' · '));
+      }
+      lines.push('');
+    }
+    const text = ('CSR+ — Match\n' + lines.join('\n')).trim();
+
+    const done = (ok) => {
+      if (!btn) return;
+      const prev = btn.textContent;
+      btn.textContent = ok ? '✓ Copied' : 'Copy failed';
+      btn.classList.toggle('csrp-mf-copy-done', ok);
+      setTimeout(() => { btn.textContent = prev; btn.classList.remove('csrp-mf-copy-done'); }, 1600);
+    };
+    if (navigator.clipboard && document.hasFocus()) {
+      navigator.clipboard.writeText(text).then(() => done(true)).catch(() => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+    CSRP.sound?.play('click');
+  }
+
+  function fallbackCopy(text, done) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove(); done(ok);
+    } catch { done(false); }
   }
 
   // Mirror the native countdown timer (mm:ss) into our header.
@@ -352,13 +497,17 @@
     const numEl = widget.querySelector('.csrp-cd-num');
     const ring = widget.querySelector('.csrp-cd-ring');
 
-    const accept = () => acceptNow('countdown');
+    const accept = () => {
+      finishCountdown();
+      CSRP.sound?.play('accept');
+      CSRP.log('countdown → accept');
+      acceptNative();
+    };
     widget.querySelector('.csrp-cd-go').addEventListener('click', accept);
     widget.querySelector('.csrp-cd-x').addEventListener('click', () => {
       if (!countdown) return;
       countdown.cancelled = true;
       cancelledLatch = true;
-      cancelledSig = currentSig();
       CSRP.sound?.play('cancel');
       finishCountdown();
       CSRP.log('countdown cancelled');
@@ -383,21 +532,10 @@
     countdown = null;
   }
   function countdownActive() { return !!countdown; }
-  // The latch only suppresses the match it was cancelled on. A new match
-  // (different avatar signature) clears it automatically.
-  function countdownCancelled() {
-    if (cancelledLatch && currentSig() !== cancelledSig) resetCancelLatch();
-    return cancelledLatch;
-  }
-  function resetCancelLatch() { cancelledLatch = false; cancelledSig = ''; }
-
-  // Stable identity for the current match, based on its avatars. Empty when no
-  // match modal is present.
-  function currentSig() {
-    const modal = CSRP.dom.findMatchFoundModal();
-    if (!modal) return '';
-    return modal.avatars.map((im) => CSRP.dom.idFromAvatar(im) || '?').join(',');
-  }
+  function countdownCancelled() { return cancelledLatch; }
+  function resetCancelLatch() { cancelledLatch = false; }
+  function alreadyAccepted() { return acceptedLatch; }
+  function resetAcceptLatch() { acceptedLatch = false; }
 
   let hiddenBox = null;
   function hideNative(box) {
@@ -415,16 +553,35 @@
   function removePanel() {
     if (host) { host.remove(); host = null; }
     panel = null;
+    unlockPage();
     restoreNative();
     lastSig = '';
     footState = null;
-    acceptedMatchSig = '';
+    liveRows = [];
+    acceptHud = null;
+  }
+
+  // ── desktop notification (fires once per match-found, even if the overlay
+  //    is disabled) ───────────────────────────────────────────────────────
+  let notifiedThisMatch = false;
+  function notifyMatchFound(modal) {
+    if (notifiedThisMatch) return;
+    notifiedThisMatch = true;
+    try {
+      const count = modal.avatars.length;
+      chrome.runtime.sendMessage({
+        type: 'csrp:notify',
+        title: 'CSR+ — Match found',
+        message: count ? `Your ${count}-player match is ready. Accept to play!` : 'Your match is ready. Accept to play!',
+      });
+    } catch (e) { /* ignore */ }
   }
 
   // ── main tick ─────────────────────────────────────────────────────────
   async function tick() {
     const modal = CSRP.dom.findMatchFoundModal();
-    if (!modal) { removePanel(); return; }
+    if (!modal) { removePanel(); notifiedThisMatch = false; return; }
+    notifyMatchFound(modal);
     if (!CSRP.store.get('showMatchOverlay')) { removePanel(); return; }
 
     // Hide the native dialog and show our centered panel in its place.
@@ -448,6 +605,25 @@
       const slot = panel.querySelector('.csrp-mf-content');
       if (slot) slot.replaceWith(content);
     }
+
+    // Poll each player's live accept state and update the ready HUD.
+    refreshAccepts();
+  }
+
+  // Re-read every row's native avatar and reflect how many have accepted.
+  function refreshAccepts() {
+    if (!liveRows.length || !acceptHud || !acceptHud.isConnected) return;
+    let n = 0;
+    for (const r of liveRows) if (r.refreshAccepted()) n++;
+    // refreshAccepted only returns truthy on a *change*; recompute the running
+    // total from current row classes so the HUD is always accurate.
+    n = liveRows.filter((r) => r.row.classList.contains('csrp-mf-row-accepted')).length;
+    const total = liveRows.length;
+    const numEl = acceptHud.querySelector('.csrp-mf-accbar-n');
+    const fillEl = acceptHud.querySelector('.csrp-mf-accbar-fill');
+    if (numEl) numEl.textContent = `${n} / ${total}`;
+    if (fillEl) fillEl.style.width = (total ? (n / total) * 100 : 0) + '%';
+    acceptHud.classList.toggle('csrp-mf-accbar-full', n === total && total > 0);
   }
 
   CSRP.matchOverlay = {
@@ -457,6 +633,7 @@
     countdownActive,
     countdownCancelled,
     resetCancelLatch,
-    acceptNow,
+    alreadyAccepted,
+    resetAcceptLatch,
   };
 })();

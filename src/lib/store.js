@@ -1,4 +1,7 @@
-/* CSR+ — settings store wrapper over chrome.storage.local with change events. */
+/* CSR+ — settings store. Backed by chrome.storage.sync so settings follow the
+ * browser account and survive extension reloads/reinstalls (local storage is
+ * wiped when an unpacked/temporary add-on is reloaded). Falls back to local if
+ * sync is unavailable, and migrates any pre-existing local settings once. */
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -7,18 +10,40 @@
   const listeners = new Set();
   let cache = { ...D };
 
-  function load() {
+  // Prefer sync; fall back to local where sync isn't available.
+  const area = (chrome.storage && chrome.storage.sync) ? chrome.storage.sync : chrome.storage.local;
+  const AREA_NAME = area === (chrome.storage && chrome.storage.sync) ? 'sync' : 'local';
+
+  // One-time migration: copy settings that only exist in local into sync, so
+  // upgrading users keep their config. Marked done via a flag in sync.
+  function migrateFromLocal() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(Object.keys(D), (data) => {
+      if (AREA_NAME !== 'sync') return resolve();
+      chrome.storage.sync.get(['__csrpMigrated'], (s) => {
+        if (s && s.__csrpMigrated) return resolve();
+        chrome.storage.local.get(Object.keys(D), (localData) => {
+          const toCopy = {};
+          for (const k of Object.keys(D)) if (k in localData) toCopy[k] = localData[k];
+          toCopy.__csrpMigrated = true;
+          chrome.storage.sync.set(toCopy, resolve);
+        });
+      });
+    });
+  }
+
+  async function load() {
+    await migrateFromLocal();
+    return new Promise((resolve) => {
+      area.get(Object.keys(D), (data) => {
         cache = { ...D, ...data };
         resolve(cache);
       });
     });
   }
 
-  // Reflect external changes (popup writes, other tabs) into the cache.
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local') return;
+  // Reflect external changes (popup writes, other tabs/devices) into the cache.
+  chrome.storage.onChanged.addListener((changes, changedArea) => {
+    if (changedArea !== AREA_NAME) return;
     let touched = false;
     for (const key in changes) {
       if (key in D) {
@@ -34,7 +59,7 @@
     get: (k) => (k ? cache[k] : cache),
     set(k, v) {
       cache[k] = v;
-      return new Promise((r) => chrome.storage.local.set({ [k]: v }, r));
+      return new Promise((r) => area.set({ [k]: v }, r));
     },
     onChange(fn) {
       listeners.add(fn);

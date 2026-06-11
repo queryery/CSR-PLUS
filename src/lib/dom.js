@@ -6,6 +6,10 @@
   const h = (tag, props = {}, children = []) => {
     const el = document.createElement(tag);
     for (const k in props) {
+      // null/undefined props are omitted, so `disabled: cond ? '' : undefined`
+      // toggles the attribute instead of setting it to the string "undefined"
+      // (which the DOM treats as present → e.g. a permanently disabled button).
+      if (props[k] == null) continue;
       if (k === 'class') el.className = props[k];
       else if (k === 'html') el.innerHTML = props[k];
       else if (k.startsWith('on') && typeof props[k] === 'function')
@@ -93,23 +97,15 @@
     // Prefer the inner full-width column to mount into; fall back to the box.
     const inner = host.querySelector('.flex.h-full.w-full.flex-col') || host;
     // The native Accept button ("Accept Match" → "Match Accepted" when done).
-    // Prefer an exact text match; only fall back to a fuzzy "accept …" match
-    // when the button also carries the primary-CTA styling, so we don't grab
-    // unrelated buttons ("Accept invite", "Accept terms", etc.).
     let acceptBtn = null;
-    let fuzzyBtn = null;
     for (const btn of host.querySelectorAll('button')) {
       const t = btn.textContent.trim().toLowerCase();
-      if (t === 'accept match' || t === 'match accepted') { acceptBtn = btn; break; }
-      if (
-        !fuzzyBtn &&
-        t.startsWith('accept') &&
-        btn.classList.contains('bg-theme-primary')
-      ) fuzzyBtn = btn;
+      if (t === 'accept match' || t === 'match accepted' || t.startsWith('accept')) {
+        acceptBtn = btn; break;
+      }
     }
-    if (!acceptBtn) acceptBtn = fuzzyBtn;
     const accepted = !!acceptBtn && (acceptBtn.disabled ||
-      /accepted/.test(acceptBtn.textContent.trim().toLowerCase()));
+      acceptBtn.textContent.trim().toLowerCase() === 'match accepted');
     return { host, inner, avatars, acceptBtn, accepted };
   }
 

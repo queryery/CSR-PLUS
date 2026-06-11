@@ -117,8 +117,18 @@
     return result;
   }
 
+  // Bypass all caches for a single path and refresh them with the result. Used
+  // by the ELO tracker, which needs the live value (the normal 30-min profile
+  // cache would hide a fresh match's ELO change).
+  async function getFresh(path) {
+    const data = await bgFetch(path);
+    if (data != null) { mem.set(path, data); writeSession(path, data); }
+    return data;
+  }
+
   CSRP.api = {
     user: (id) => get(`/users/${id}`),
+    userFresh: (id) => getFresh(`/users/${id}`),
     friends: () => get('/users/friends'),
     history,
     historyPage: (id, page = 0) => get(`/history/user/${id}/${page}`),

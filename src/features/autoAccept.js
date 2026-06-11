@@ -69,22 +69,18 @@
     if (cfg.autoMatch) {
       const matchBtn = findPrimaryCTA('Accept Match');
       if (matchBtn) {
-        const mo = CSRP.matchOverlay;
         // Instant mode skips the countdown and accepts straight away.
         if (cfg.acceptInstant) {
-          // When the overlay is shown it hides the native modal and owns the
-          // accept (with a dedup guard). Route through it so the two paths
-          // don't both click the same match. Direct-click only without overlay.
-          if (mo && mo.acceptNow && cfg.showMatchOverlay) {
-            mo.acceptNow('instant');
-          } else {
-            clickOnce(matchBtn, 'Accept Match (instant)');
-          }
+          clickOnce(matchBtn, 'Accept Match (instant)');
         } else {
           // Route the match-accept through the countdown widget so the user can
           // inspect the lobby and cancel. The widget clicks the button itself.
+          const mo = CSRP.matchOverlay;
           if (mo && mo.countdownActive()) {
             // countdown running — it owns the click; do nothing here.
+          } else if (mo && mo.alreadyAccepted()) {
+            // already accepted this match; the dialog lingers until the server
+            // transitions, so don't re-arm a fresh countdown.
           } else if (mo && mo.countdownCancelled()) {
             // user cancelled this round; don't re-arm until the button is gone.
           } else if (mo) {
@@ -94,9 +90,17 @@
           }
         }
       } else if (CSRP.matchOverlay) {
-        // Button gone (accepted / declined / left) → reset countdown state.
-        if (!CSRP.matchOverlay.countdownActive()) CSRP.matchOverlay.finishCountdown();
-        CSRP.matchOverlay.resetCancelLatch();
+        // The "Accept Match" CTA isn't present right now. That happens both when
+        // the match is truly over AND momentarily right after we accept (the
+        // dialog lingers, the button flips text/disables). Only reset the latches
+        // once the whole match-found dialog is actually gone — otherwise we'd
+        // re-arm a fresh countdown while the accepted dialog is still on screen.
+        const modalGone = !CSRP.dom.findMatchFoundModal();
+        if (modalGone) {
+          if (!CSRP.matchOverlay.countdownActive()) CSRP.matchOverlay.finishCountdown();
+          CSRP.matchOverlay.resetCancelLatch();
+          CSRP.matchOverlay.resetAcceptLatch();
+        }
       }
     }
     if (cfg.autoQueue) clickOnce(findPrimaryCTA('Accept'), 'Accept Queue');

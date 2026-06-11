@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSR+ Trade</title>
+  <link rel="stylesheet" href="trades.css" />
+</head>
+<body>
+  <div class="fx-grid" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="back-btn" id="back-btn" title="Go back">← Back</button>
+      <div class="brand">
+        <img src="../assets/icon256.png" width="24" height="24" alt="" />
+        <span class="brand-name">CSR<span>+</span></span>
+        <span class="brand-sep">/</span>
+        <span class="brand-mod">TRADE</span>
+      </div>
+    </div>
+    <a class="site-link" href="https://csrestored.fun/app/trades" target="_blank" rel="noopener">Open on csrestored.fun ↗</a>
+  </header>
+
+  <main id="app">
+    <section class="trade-head">
+      <h1 class="th-title" id="tv-title">Trade</h1>
+      <p class="th-sub" id="tv-sub">Loading…</p>
+    </section>
+
+    <div id="tv-body">
+      <div class="empty">Loading trade…</div>
+    </div>
+  </main>
+
+  <footer class="foot">CSR+ · not affiliated with Valve or Counter-Strike: Restored</footer>
+
+  <script src="trade-view.js"></script>
+</body>
+</html>

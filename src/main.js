@@ -18,6 +18,13 @@
   CSRP._friendsCache = [];
   window.addEventListener('csrp:matchdata', (e) => {
     CSRP._matchData = e.detail;
+    // Persist the logged-in user's id so detached extension pages (e.g. the
+    // trade composer) can load *our* inventory the same way they load a
+    // friend's — via /users/{id}/inventory.
+    const myId = e.detail && e.detail.myId;
+    if (myId) {
+      try { chrome.storage.local.set({ csrpMyId: String(myId) }); } catch { /* ignore */ }
+    }
   });
 
   // ── fast loop: auto-accept + map ban need low latency ──────────────────
@@ -38,7 +45,13 @@
     if (uiBusy) return;
     if (CSRP.store.get('masterEnabled') === false) {
       // Tear down injected UI when the extension is master-disabled.
-      document.querySelectorAll('.csrp-badge-wrap, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv').forEach((n) => n.remove());
+      document.querySelectorAll('.csrp-badge-wrap, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv, #csrp-open-trades, #csrp-lb-search, .csrp-lb-empty, .csrp-lb-remote, .csrp-cf').forEach((n) => n.remove());
+      // Un-hide any leaderboard rows we filtered.
+      document.querySelectorAll('div.grid.grid-cols-5.items-center[style*="display"]').forEach((r) => { r.style.display = ''; });
+      // Drop the creator glow classes off any cards/lobby slots.
+      document.querySelectorAll('.csrp-creator-card').forEach((n) => n.classList.remove('csrp-creator-card', 'csrp-creator-lobby'));
+      // Drop the lobby click affordance styling.
+      document.querySelectorAll('.csrp-lobby-card').forEach((n) => { n.classList.remove('csrp-lobby-card'); n.style.cursor = ''; });
       return;
     }
     uiBusy = true;
@@ -46,6 +59,9 @@
       CSRP.playerBadges.tick();
       CSRP.notes.tick();
       CSRP.inventory.tick();
+      CSRP.trades.tick();
+      CSRP.leaderboardSearch.tick();
+      CSRP.eloTracker.tick();
       await CSRP.matchOverlay.tick();
       await CSRP.winProbability.tick();
     } catch (err) {

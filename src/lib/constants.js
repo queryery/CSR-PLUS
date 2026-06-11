@@ -5,6 +5,9 @@
 
   CSRP.API_BASE = 'https://api.csrestored.fun';
 
+  // Discord id of the CSR+ creator — their player card gets a special glow+tag.
+  CSRP.CREATOR_ID = '1371203777817739505';
+
   // The maps available in the pool (used for ban ordering / priority UI).
   CSRP.MAPS = [
     'Mirage',
@@ -41,6 +44,8 @@
     soundEnabled: true,
     soundVolume: 0.6,
     theme: 'black', // 'black' (cyberpunk dark) | 'mask' (light)
+    useCsrpTrades: false,        // open the CSR+ trade composer from the site's Trades tab
+    tradesPromptDismissed: false, // user ticked "Don't ask again" on the trades prompt
   };
 
   // Player tiers — consistency/peak based (not a single threshold).

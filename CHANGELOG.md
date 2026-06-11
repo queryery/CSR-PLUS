@@ -1,12 +1,33 @@
 # Changelog
 
+## 0.0.7
+
+- New CSR+ Trades (beta): a redesigned trade screen — see a friend's item
+  floats/seed before you request them, search/sort/filter both inventories, and
+  browse your trade history with read-only previews.
+- Accept or reject incoming pending trades from CSR+.
+- Added a Feedback tab and a Report-a-bug button (Discord: 9uery).
+
 ## 0.0.6
 
-- Removed the inventory auto-seller.
-- Fixed the match accept firing twice — the countdown widget and auto-accept no
-  longer both click the same Accept Match button.
-- Each match now has its own cancel state, so cancelling one match's countdown
-  no longer suppresses the next match.
+- Each team's top player is now crowned BEST and highlighted in gold.
+- The page behind the Match Found window is locked while it's up, so a stray
+  click can't dodge or mis-click the lobby.
+- Added a Copy button to Match Found — copies both teams (name, ELO, K/D) to
+  your clipboard to paste in Discord.
+- New ELO tracker: a toast shows your ELO change after each match (▲/▼) along
+  with your running session total.
+- Desktop notification when a match is found, so you don't miss it while tabbed
+  out.
+- New leaderboard search — filter by username or user ID; searching an exact ID
+  that isn't on the board fetches that player on the fly.
+- Click any player's lobby card to open their CSR+ profile, with a subtle hover
+  lift.
+- Your settings now follow your browser account and survive extension reloads
+  and reinstalls.
+- Fixed the Accept Match button being unclickable in the Match Found window.
+- Fixed auto-accept re-showing the "Auto-accepting" countdown after a match was
+  already accepted.
 
 ## 0.0.5
 

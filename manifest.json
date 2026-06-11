@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "CSR+ — Enhanced Match Suite",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
-  "permissions": ["storage", "clipboardWrite"],
+  "permissions": ["storage", "clipboardWrite", "notifications"],
   "host_permissions": [
     "https://csrestored.fun/*",
     "https://api.csrestored.fun/*",
@@ -57,6 +57,9 @@
         "src/features/winProbability.js",
         "src/features/serverCopy.js",
         "src/features/inventory.js",
+        "src/features/trades.js",
+        "src/features/leaderboardSearch.js",
+        "src/features/eloTracker.js",
         "src/main.js"
       ],
       "css": ["src/styles/inject.css"],
@@ -65,7 +68,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html", "inventory/inventory.html"],
+      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html", "inventory/inventory.html", "trades/trades.html", "trades/trade-view.html"],
       "matches": ["https://csrestored.fun/*"]
     }
   ]

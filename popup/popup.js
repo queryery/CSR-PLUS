@@ -2,6 +2,10 @@
 (() => {
   'use strict';
 
+  // Settings live in storage.sync (survives reloads/reinstalls) — must match
+  // the content-script store. Falls back to local where sync is unavailable.
+  const SA = (chrome.storage && chrome.storage.sync) ? chrome.storage.sync : chrome.storage.local;
+
   const DEFAULTS = {
     masterEnabled: true,
     autoMatch: true, autoInvite: true, autoQueue: true, autoBan: false,
@@ -13,6 +17,7 @@
     showMatchOverlay: true, statsPeriod: 'all',
     soundEnabled: true, soundVolume: 0.6,
     theme: 'black',
+    useCsrpTrades: false, tradesPromptDismissed: false,
   };
 
   let state = { ...DEFAULTS };
@@ -34,7 +39,7 @@
 
   function save(key, value) {
     state[key] = value;
-    chrome.storage.local.set({ [key]: value });
+    SA.set({ [key]: value });
   }
 
   // ── toasts ───────────────────────────────────────────────────────────
@@ -148,6 +153,30 @@
     vol.addEventListener('input', () => { save('soundVolume', vol.value / 100); });
     vol.addEventListener('change', () => snd('click'));
     $('#test-sound').addEventListener('click', () => snd('accept'));
+  }
+
+  // ── feedback: copy Discord username ──────────────────────────────────
+  function bindFeedback() {
+    const btn = $('#fb-discord');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      snd('click');
+      const sub = $('#fb-discord-sub'), state = $('#fb-copy-state');
+      try {
+        await navigator.clipboard.writeText('9uery');
+        btn.classList.add('copied');
+        if (sub) sub.textContent = 'copied to clipboard!';
+        if (state) state.textContent = '✓';
+        toast('Copied 9uery to clipboard');
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          if (sub) sub.textContent = 'click to copy';
+          if (state) state.textContent = '⧉';
+        }, 1800);
+      } catch {
+        if (sub) sub.textContent = "it's 9uery";
+      }
+    });
   }
 
   // ── friends ──────────────────────────────────────────────────────────
@@ -401,7 +430,7 @@
   }
 
   // ── boot ─────────────────────────────────────────────────────────────
-  chrome.storage.local.get(Object.keys(DEFAULTS), (data) => {
+  SA.get(Object.keys(DEFAULTS), (data) => {
     state = { ...DEFAULTS, ...data };
     state.inviteFriends = state.inviteFriends || {};
     state.banPriority = reconcileMaps(state.banPriority);
@@ -412,6 +441,7 @@
     bindTheme();
     bindAccept();
     bindSound();
+    bindFeedback();
     renderMaps();
     reflectMaster();
     showVersion();

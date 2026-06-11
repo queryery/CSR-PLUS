@@ -580,7 +580,7 @@
   // ── main tick ─────────────────────────────────────────────────────────
   async function tick() {
     const modal = CSRP.dom.findMatchFoundModal();
-    if (!modal) { removePanel(); notifiedThisMatch = false; return; }
+    if (!modal) { finishCountdown(); removePanel(); notifiedThisMatch = false; return; }
     notifyMatchFound(modal);
     if (!CSRP.store.get('showMatchOverlay')) { removePanel(); return; }
 

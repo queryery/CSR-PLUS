@@ -14,7 +14,7 @@
     inviteFriends: {},
     banPriority: ['Vertigo', 'Overpass', 'Anubis', 'Train', 'Ancient', 'Dust2', 'Nuke', 'Inferno', 'Mirage', 'Cobblestone'],
     showBadges: true, showWinProb: true,
-    showMatchOverlay: true, statsPeriod: 'all',
+    showMatchOverlay: true, statsPeriod: 'last10',
     soundEnabled: true, soundVolume: 0.6,
     theme: 'black',
     useCsrpTrades: false, tradesPromptDismissed: false,
@@ -40,6 +40,16 @@
   function save(key, value) {
     state[key] = value;
     SA.set({ [key]: value });
+  }
+
+  // For sliders: they fire one input event per pixel, but storage.sync only
+  // allows ~120 writes/min — past that, writes fail silently and the final
+  // value is lost. Update local state immediately, trail the actual write.
+  const saveTimers = {};
+  function saveDebounced(key, value, ms = 250) {
+    state[key] = value;
+    clearTimeout(saveTimers[key]);
+    saveTimers[key] = setTimeout(() => SA.set({ [key]: value }), ms);
   }
 
   // ── toasts ───────────────────────────────────────────────────────────
@@ -138,7 +148,7 @@
     delay.value = state.acceptDelay;
     sync();
     delay.addEventListener('input', () => {
-      save('acceptDelay', Number(delay.value));
+      saveDebounced('acceptDelay', Number(delay.value));
       val.textContent = `${delay.value}s`;
     });
     delay.addEventListener('change', () => snd('click'));
@@ -150,7 +160,7 @@
   function bindSound() {
     const vol = $('#vol');
     vol.value = Math.round(state.soundVolume * 100);
-    vol.addEventListener('input', () => { save('soundVolume', vol.value / 100); });
+    vol.addEventListener('input', () => { saveDebounced('soundVolume', vol.value / 100); });
     vol.addEventListener('change', () => snd('click'));
     $('#test-sound').addEventListener('click', () => snd('accept'));
   }
@@ -434,6 +444,10 @@
     state = { ...DEFAULTS, ...data };
     state.inviteFriends = state.inviteFriends || {};
     state.banPriority = reconcileMaps(state.banPriority);
+    // Migrate the retired 'all' period (and anything unknown) to 'last10'.
+    if (!['today', 'yesterday', 'last10'].includes(state.statsPeriod)) {
+      save('statsPeriod', 'last10');
+    }
     applyTheme();
     bindNav();
     bindToggles();

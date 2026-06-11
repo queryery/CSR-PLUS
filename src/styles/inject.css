@@ -116,8 +116,10 @@
 .csrp-watch-btn:active { transform: translateY(0) scale(0.98); }
 .csrp-wb-ic { font-size: 13px; }
 
-/* Tier colors: bright-green → green → yellow → orange → red → grey */
+/* Tier colors: bright-green → ember → green → yellow → ice → orange → red → grey */
 .csrp-t-vstrong      { color: #2bff88; border-color: rgba(43, 255, 136, 0.55); }
+.csrp-t-hot          { color: #ff5e3a; border-color: rgba(255, 94, 58, 0.55); }
+.csrp-t-cold         { color: #6ec3ff; border-color: rgba(110, 195, 255, 0.5); }
 .csrp-t-consistent   { color: #57d977; border-color: rgba(87, 217, 119, 0.5); }
 .csrp-t-peak         { color: #ffd23f; border-color: rgba(255, 210, 63, 0.5); }
 .csrp-t-inconsistent { color: #ff9838; border-color: rgba(255, 152, 56, 0.5); }

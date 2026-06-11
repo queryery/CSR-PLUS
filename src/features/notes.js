@@ -218,7 +218,7 @@
 
   // Our custom in-extension profile page.
   function profileUrl(id) {
-    const period = CSRP.store?.get('statsPeriod') || 'all';
+    const period = CSRP.store?.get('statsPeriod') || 'last10';
     return chrome.runtime.getURL(`profile/profile.html?id=${id}&period=${period}`);
   }
 

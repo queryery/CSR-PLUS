@@ -4,7 +4,7 @@
   'use strict';
   const $ = (s) => document.querySelector(s);
   const id = new URLSearchParams(location.search).get('id');
-  const period = new URLSearchParams(location.search).get('period') || 'all';
+  const period = new URLSearchParams(location.search).get('period') || 'last10';
 
   // ── UI sound (reads soundEnabled / soundVolume from storage) ──────────
   let sndCfg = { soundEnabled: true, soundVolume: 0.6 };
@@ -53,11 +53,10 @@
     });
   }
   const user = (uid) => api(`/users/${uid}`);
+  // Periods cap at "last 10 games" now, so one history page is all we need.
   async function history(uid) {
-    const pages = await Promise.all([0, 1, 2].map((p) => api(`/history/user/${uid}/${p}`)));
-    const all = [];
-    for (const b of pages) if (Array.isArray(b)) all.push(...b);
-    return all;
+    const page = await api(`/history/user/${uid}/0`);
+    return Array.isArray(page) ? page : [];
   }
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -65,12 +64,13 @@
   const stdev = (a) => { if (a.length < 2) return 0; const m = mean(a); return Math.sqrt(mean(a.map((x) => (x - m) ** 2))); };
 
   function inPeriod(dateStr, p) {
-    if (p === 'all') return true;
+    // Only 'today'/'yesterday' are date windows; 'last10' (and the legacy
+    // 'all') are handled as a match-count cap in rows().
+    if (p !== 'today' && p !== 'yesterday') return true;
     const d = new Date(dateStr), now = new Date();
     const sToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     if (p === 'today') return d >= sToday;
-    if (p === 'yesterday') { const y = new Date(sToday - 864e5); return d >= y && d < sToday; }
-    return true;
+    const y = new Date(sToday - 864e5); return d >= y && d < sToday;
   }
 
   // Turn raw history into per-match rows for the current player.
@@ -93,6 +93,8 @@
         rounds: (sc[0] + sc[1]) || 1, won, myScore, oppScore, date: m.date, map: m.map, mode,
       });
     }
+    // Non-date periods = the most recent 10 matches (rows are newest-first).
+    if (p !== 'today' && p !== 'yesterday') return out.slice(0, 10);
     return out;
   }
 

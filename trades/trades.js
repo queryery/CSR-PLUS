@@ -55,14 +55,19 @@
   // one (low thousands). So we pick by magnitude, not by field name.
   //   item_type/rarity come back as strings ("9","3") → coerce to numbers.
   const num = (v) => (v == null || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+  // Instance ids can exceed Number.MAX_SAFE_INTEGER (the background quotes 16+
+  // digit ints for exactly this reason), so keep them as exact digit STRINGS
+  // and compare magnitude without ever going through Number.
+  const rawDigits = (v) => { const s = String(v ?? '').trim(); return /^\d+$/.test(s) ? s : null; };
+  const digitsGt = (a, b) => (a.length === b.length ? a > b : a.length > b.length);
   function instanceAndImage(it) {
-    const a = num(it.weapon_id);
-    const b = num(it.item_id);
+    const a = rawDigits(it.weapon_id);
+    const b = rawDigits(it.item_id);
     if (a == null && b == null) return { instance: null, image: null };
     if (a == null) return { instance: b, image: b };
     if (b == null) return { instance: a, image: a };
     // Larger = unique instance id (trade id); smaller = skin/image definition id.
-    return a >= b ? { instance: a, image: b } : { instance: b, image: a };
+    return digitsGt(a, b) ? { instance: a, image: b } : { instance: b, image: a };
   }
   function normalize(raw) {
     const it = raw || {};
@@ -183,7 +188,7 @@
     const w = wear(it.float);
     // Icon: try the image (small) id first, then the instance (large) id as a
     // fallback, since the CDN key isn't consistent across inventory endpoints.
-    const iconIds = [...new Set([it.weapon_id, num(it.id)].filter((x) => x != null))];
+    const iconIds = [...new Set([it.weapon_id, it.id].filter((x) => x != null).map(String))];
     const iconUrls = iconIds.map((x) => iconUrl(x));
 
     const c = el('div', 'card');
@@ -417,6 +422,9 @@
     state.themLoaded = true;
     if (state.activeSide === 'them') skeletons('them');
     const resp = await api(`/users/${id}/inventory`);
+    // Stale response: the user backed out or picked someone else while this
+    // was in flight — don't overwrite the current partner's inventory.
+    if (!state.partner || String(state.partner.id) !== String(id)) return;
     ingest('them', resp.ok ? resp.data : null);
     paintIfActive('them');
     const sub = $('#them-sub');
@@ -605,20 +613,21 @@
     // The API expects the item arrays as integer weapon_ids (not strings). Only
     // send ids that are actually present in the matching loaded inventory, so a
     // stale selection can't trigger "item doesn't belong to you".
+    // The ids can exceed Number.MAX_SAFE_INTEGER, so the JSON body is built by
+    // hand with the ids as raw (unquoted) integers — JSON.stringify would have
+    // to round them through Number first. The background sends string bodies
+    // through untouched.
     const ownIds = new Set(state.me.items.map((it) => String(it.id)));
     const theirIds = new Set(state.them.items.map((it) => String(it.id)));
-    const toInts = (arr, owned) => arr
-      .filter((x) => owned.has(String(x)))
-      .map((x) => Number(x))
-      .filter((n) => Number.isFinite(n));
-    const body = {
-      recipient_id: String(state.partner.id),
-      initiator_items: toInts(o.give.items, ownIds),   // weapon_ids of MY items I'm giving
-      initiator_coins: o.give.coins,
-      recipient_items: toInts(o.get.items, theirIds),  // weapon_ids of THEIR items I'm requesting
-      recipient_coins: o.get.coins,
-      client_ref: ref,
-    };
+    const idList = (arr, owned) => '[' +
+      arr.map(String).filter((x) => owned.has(x) && /^\d+$/.test(x)).join(',') + ']';
+    const body =
+      `{"recipient_id":"${String(state.partner.id).replace(/[^\d]/g, '')}",` +
+      `"initiator_items":${idList(o.give.items, ownIds)},` +
+      `"initiator_coins":${o.give.coins},` +
+      `"recipient_items":${idList(o.get.items, theirIds)},` +
+      `"recipient_coins":${o.get.coins},` +
+      `"client_ref":"${ref}"}`;
 
     const resp = await api('/api/trades', { method: 'POST', body });
     // Keep the loading state visible briefly so it never flashes by.

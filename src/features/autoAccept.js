@@ -97,7 +97,9 @@
         // re-arm a fresh countdown while the accepted dialog is still on screen.
         const modalGone = !CSRP.dom.findMatchFoundModal();
         if (modalGone) {
-          if (!CSRP.matchOverlay.countdownActive()) CSRP.matchOverlay.finishCountdown();
+          // Kill any still-running countdown — it would otherwise keep ticking
+          // (sounds and all) and "accept" a dialog that no longer exists.
+          CSRP.matchOverlay.finishCountdown();
           CSRP.matchOverlay.resetCancelLatch();
           CSRP.matchOverlay.resetAcceptLatch();
         }

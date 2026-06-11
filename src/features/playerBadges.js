@@ -29,9 +29,10 @@
   }
 
   function periodLabel() {
-    return { today: 'today', yesterday: 'yesterday', all: 'all' }[
+    // Legacy saved value 'all' (and anything unknown) means "last 10" now.
+    return { today: 'today', yesterday: 'yesterday', last10: 'last 10' }[
       CSRP.store.get('statsPeriod')
-    ];
+    ] || 'last 10';
   }
 
   function buildTooltip(a) {
@@ -40,18 +41,23 @@
       h('span', { class: 'csrp-tip-v' }, v),
     ]);
     const pct = (x) => (x * 100).toFixed(1) + '%';
+    const trend = a.formTrend ?? 0;
+    const trendTxt = trend > 0.05 ? `▲ improving` : trend < -0.05 ? `▼ declining` : '— steady';
+    const streak = a.streak ?? 0;
+    const streakTxt = streak > 0 ? `W${streak}` : streak < 0 ? `L${-streak}` : '—';
     return h('div', { class: 'csrp-tip' }, [
       h('div', { class: 'csrp-tip-head' }, [
         h('span', {}, a.name || 'Player'),
         h('span', { class: 'csrp-tip-elo' }, `${a.elo} ELO`),
       ]),
       row('Sample', `${a.games} games`),
+      row('Rating', (a.rating ?? 1).toFixed(2)),
       row('K/D', a.kd.toFixed(2)),
       row('K/R', a.kr.toFixed(2)),
       row('Winrate', pct(a.winrate)),
-      row('Rating', (CSRP.stats.strength(a) / 50).toFixed(2)),
+      row('Form', trendTxt),
+      row('Streak', streakTxt),
       row('K/D stability', pct(a.kdStability)),
-      row('K/R stability', pct(a.krStability)),
     ]);
   }
 

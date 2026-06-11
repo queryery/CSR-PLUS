@@ -278,9 +278,10 @@
       const label = kind === 'accept' ? accept.textContent : reject.textContent;
       (kind === 'accept' ? accept : reject).textContent = '…';
       snd('click');
-      const resp = await api(`/api/trades/${encodeURIComponent(t.id)}/${kind}`, { method: 'POST' });
+      // The API routes accept/reject as PATCH (POST returns 405).
+      const resp = await api(`/api/trades/${encodeURIComponent(t.id)}/${kind}`, { method: 'PATCH' });
       if (resp.ok) {
-        snd('accept');
+        snd(kind === 'accept' ? 'accept' : 'cancel');
         setMsg(kind === 'accept' ? 'Trade accepted ✓' : 'Trade rejected.', 'ok');
         bar.querySelector('.tv-act-btns').remove();
         // Reflect the new status in the header.

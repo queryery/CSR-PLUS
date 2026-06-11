@@ -96,9 +96,10 @@
   }
 
   // History is paginated by page number: /history/user/{id}/{page} (0,1,2…).
-  // We fetch the first 2 pages IN PARALLEL (fast) and merge them.
+  // The stats periods are now at most "last 10 games", so the first page is
+  // all we ever need — halves the request volume per lobby.
   const histCache = new Map();
-  const HIST_PAGES = 2;
+  const HIST_PAGES = 1;
   async function history(id) {
     if (histCache.has(id)) return histCache.get(id);
     const p = (async () => {

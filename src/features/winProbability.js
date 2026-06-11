@@ -38,6 +38,8 @@
     const [c1, c2] = cols;
     if (c1.cards.length < 2 || c2.cards.length < 2) return;
 
+    // The site's re-renders can drop our bar from the DOM; rebuild it then.
+    if (mounted && !mounted.isConnected) mounted = null;
     if (!mounted) {
       mounted = h('div', { class: 'csrp-wp' }, [
         h('div', { class: 'csrp-wp-labels' }, [

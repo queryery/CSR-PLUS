@@ -7,6 +7,27 @@
   browse your trade history with read-only previews.
 - Accept or reject incoming pending trades from CSR+.
 - Added a Feedback tab and a Report-a-bug button (Discord: 9uery).
+- Smarter stats engine: a real per-match impact rating, form trend (improving /
+  declining) and win/loss streak detection, with small samples weighted
+  cautiously so one lucky match can't mint a top badge.
+- Two new player badges: "On fire" (win streak + climbing form) and "Tilted"
+  (loss streak + sliding form). Badge tooltips now show Rating, Form and Streak.
+- Win probability now weighs star players more (carries decide pugs), factors
+  in momentum, and stays near 50% when there's little data on a lineup.
+- Stat periods are now Today / Yesterday / Last 10 games (replacing "All"), so
+  lobbies load with half the history requests.
+- Fixed accepting/rejecting trades failing with an error (wrong HTTP method).
+- Fixed a ghost auto-accept countdown that kept ticking (and "accepted")
+  after the match-found dialog had already closed.
+- Fixed the win-probability bar disappearing for good after the site
+  re-rendered the match room.
+- Fixed the trade composer showing the previous friend's inventory if you
+  switched friends while it was still loading.
+- Fixed high-value item ids being silently corrupted in trade offers
+  (number precision), which could make the server reject the trade.
+- Fixed the volume / accept-delay sliders sometimes not saving their final
+  value after a drag.
+- Rejecting a trade now plays the right sound.
 
 ## 0.0.6
 

@@ -1,0 +1,14 @@
+# Editor / IDE
+.history/
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Packaged builds
+*.zip
+*.crx
+*.pem
+*.xpi

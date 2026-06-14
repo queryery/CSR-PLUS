@@ -1,0 +1,77 @@
+{
+  "manifest_version": 3,
+  "name": "CSR+ — Enhanced Match Suite",
+  "version": "0.0.8",
+  "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
+  "permissions": ["storage", "clipboardWrite", "notifications"],
+  "host_permissions": [
+    "https://csrestored.fun/*",
+    "https://api.csrestored.fun/*",
+    "https://api.github.com/*",
+    "https://api.counterapi.dev/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "scripts": ["src/background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "csr-plus-listed@queryery.github.io",
+      "strict_min_version": "115.0",
+      "update_url": "https://raw.githubusercontent.com/queryery/CSR-PLUS/main/updates.json",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "CSR+",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png",
+    "256": "assets/icon256.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://csrestored.fun/*"],
+      "js": [
+        "src/lib/constants.js",
+        "src/lib/gems.js",
+        "src/lib/store.js",
+        "src/lib/api.js",
+        "src/lib/stats.js",
+        "src/lib/dom.js",
+        "src/lib/sound.js",
+        "src/features/playerBadges.js",
+        "src/features/notes.js",
+        "src/features/matchOverlay.js",
+        "src/features/autoAccept.js",
+        "src/features/mapBan.js",
+        "src/features/winProbability.js",
+        "src/features/serverCopy.js",
+        "src/features/inventory.js",
+        "src/features/trades.js",
+        "src/features/cases.js",
+        "src/features/leaderboardSearch.js",
+        "src/features/eloTracker.js",
+        "src/main.js"
+      ],
+      "css": ["src/styles/inject.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html", "inventory/inventory.html", "trades/trades.html", "trades/trade-view.html", "cases/cases.html"],
+      "matches": ["https://csrestored.fun/*"]
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSR+ Cases</title>
+  <link rel="stylesheet" href="../trades/trades.css" />
+  <link rel="stylesheet" href="cases.css" />
+</head>
+<body>
+  <div class="fx-grid" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="back-btn" id="back-btn" title="Go back">← Back</button>
+      <div class="brand">
+        <img src="../assets/icon256.png" width="24" height="24" alt="" />
+        <span class="brand-name">CSR<span>+</span></span>
+        <span class="brand-sep">/</span>
+        <span class="brand-mod">CASES</span>
+        <span class="beta-badge">BETA</span>
+      </div>
+    </div>
+    <div class="tb-right">
+      <span class="balance-chip" id="balance" title="Your coin balance"><span class="coin-mini"></span><b id="balance-n">—</b></span>
+      <a class="site-link" id="site-link" href="https://csrestored.fun/app/inventory/cases" target="_blank" rel="noopener">Open on csrestored.fun ↗</a>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- ════════════ CASE LIST ════════════ -->
+    <section id="page-list">
+      <section class="trade-head">
+        <h1 class="th-title">Cases &amp; Capsules</h1>
+        <p class="th-sub">Every container on the server — with the rare special drops the site doesn't show you.</p>
+      </section>
+
+      <div class="cs-tools">
+        <input type="search" id="cs-search" class="tb-search" placeholder="Search cases, skins, weapons, colors… (e.g. karambit, redline, gold)" autocomplete="off" spellcheck="false" />
+        <div class="seg" id="cs-sort">
+          <button data-v="price" class="on">Price ↑</button>
+          <button data-v="price-d">Price ↓</button>
+          <button data-v="name">Name</button>
+        </div>
+        <div class="seg" id="cs-kind">
+          <button data-v="all" class="on">All</button>
+          <button data-v="special">★ Drops special</button>
+          <button data-v="cases">Cases</button>
+          <button data-v="agents">Agents</button>
+          <button data-v="other">Capsules</button>
+        </div>
+        <span class="cs-count" id="cs-count"></span>
+      </div>
+
+      <div class="case-grid" id="case-grid">
+        <div class="empty">Loading cases…</div>
+      </div>
+    </section>
+
+    <!-- ════════════ SINGLE CASE ════════════ -->
+    <section id="page-case" hidden>
+      <button class="cs-back" id="cs-back">← All cases</button>
+
+      <div class="case-hero" id="case-hero"></div>
+
+      <div class="case-msg" id="case-msg" hidden></div>
+
+      <!-- contents (regular pool + the rare specials appended in gold) -->
+      <section class="contents" id="contents-block">
+        <h2 class="block-h">Case Contents</h2>
+        <div class="cs-grid" id="contents"></div>
+      </section>
+    </section>
+  </main>
+
+  <!-- ════════════ OPENING OVERLAY (CS:GO-style: case + reel) ════════════ -->
+  <div class="open-stage" id="open-stage" hidden>
+    <div class="os-vignette" aria-hidden="true"></div>
+    <div class="os-panel">
+      <div class="os-head">
+        <img class="os-case" id="os-case" alt="" />
+        <div class="os-title" id="os-title"></div>
+      </div>
+      <div class="reel-wrap">
+        <div class="reel-marker" aria-hidden="true"></div>
+        <div class="reel-window">
+          <div class="reel" id="reel"></div>
+        </div>
+        <div class="reel-fade reel-fade-l" aria-hidden="true"></div>
+        <div class="reel-fade reel-fade-r" aria-hidden="true"></div>
+      </div>
+      <div class="os-hint">click anywhere to skip</div>
+    </div>
+  </div>
+
+  <!-- ════════════ DROPPED ITEM OVERLAY ════════════ -->
+  <div class="reveal-overlay" id="reveal" hidden>
+    <div class="reveal-card" id="reveal-card">
+      <div class="rv-burst" aria-hidden="true"></div>
+      <div class="rv-head">
+        <h2 class="rv-title" id="rv-tag">Dropped Item</h2>
+        <button class="rv-x" id="rv-x" title="Close">✕</button>
+      </div>
+      <div class="rv-grid">
+        <div class="rv-artbox" id="rv-artbox">
+          <span class="rv-topline" id="rv-topline"></span>
+          <div class="rv-art" id="rv-art"></div>
+          <p class="rv-artname" id="rv-artname"></p>
+        </div>
+        <div class="rv-info">
+          <h1 class="rv-name" id="rv-name"></h1>
+          <div class="rv-chips" id="rv-chips"></div>
+          <div class="rv-stats" id="rv-stats"></div>
+          <div class="rv-floatblock" id="rv-floatblock" hidden>
+            <p class="rv-lbl">Item float:</p>
+            <div class="rv-floatbar">
+              <span class="fb" style="width:7%;background:#2dd4bf"></span><span class="fb" style="width:8%;background:#4ade80"></span><span class="fb" style="width:23%;background:#facc15"></span><span class="fb" style="width:7%;background:#fb923c"></span><span class="fb" style="width:55%;background:#f87171"></span>
+              <span class="rv-floatdot" id="rv-floatdot"></span>
+            </div>
+            <p class="rv-floattxt" id="rv-floattxt"></p>
+          </div>
+          <div class="rv-actions">
+            <button class="rv-btn rv-close" id="rv-close">Close</button>
+            <button class="rv-btn rv-sell" id="rv-sell" hidden></button>
+            <button class="rv-btn rv-again" id="rv-again">Open another</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/lib/gems.js"></script>
+  <script src="cases.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSR+ Profile</title>
+  <link rel="stylesheet" href="profile.css" />
+</head>
+<body>
+  <div class="fx-grid" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="tb-left">
+      <button class="back-btn" id="back-btn" title="Go back">← Back</button>
+      <div class="brand">
+        <img src="../assets/icon256.png" width="24" height="24" alt="" />
+        <span class="brand-name">CSR<span>+</span></span>
+        <span class="brand-sep">/</span>
+        <span class="brand-mod">PROFILE</span>
+        <span class="brand-sep">|</span>
+        <span class="brand-uid" id="brand-uid">…</span>
+      </div>
+    </div>
+    <a class="site-link" id="site-link" target="_blank" rel="noopener">Open on csrestored.fun ↗</a>
+  </header>
+
+  <main class="pwrap" id="app">
+    <!-- ═══ left rail: identity + vertical tabs ═══ -->
+    <aside class="pside">
+      <div class="ps-card" id="ps-card">
+        <div class="ps-skel">Loading player…</div>
+      </div>
+      <nav class="pnav" id="pnav">
+        <button class="pn-tab on" data-tab="overview"><span class="pn-ic">◧</span><span>Overview</span></button>
+        <button class="pn-tab" data-tab="performance"><span class="pn-ic">∿</span><span>Performance</span></button>
+        <button class="pn-tab" data-tab="history"><span class="pn-ic">≡</span><span>History</span></button>
+        <button class="pn-tab" data-tab="inventory"><span class="pn-ic">▦</span><span>Inventory</span></button>
+      </nav>
+      <div class="ps-note" id="ps-note"></div>
+    </aside>
+
+    <!-- ═══ main panels ═══ -->
+    <section class="pmain">
+      <!-- Overview -->
+      <section class="panel on" data-panel="overview">
+        <section class="profile-head" id="head"></section>
+        <section class="block" id="stats-block" hidden>
+          <h2 class="block-h">Statistics</h2>
+          <div class="stat-grid" id="stat-grid"></div>
+        </section>
+        <section class="block" id="form-block" hidden>
+          <h2 class="block-h">Recent form <span class="block-sub">last 10 matches</span></h2>
+          <div class="form-strip" id="form-strip"></div>
+        </section>
+      </section>
+
+      <!-- Performance: graphs -->
+      <section class="panel" data-panel="performance">
+        <section class="block">
+          <h2 class="block-h">ELO trend <span class="block-sub" id="elo-sub"></span></h2>
+          <div class="chart-box"><canvas id="chart-elo" height="190"></canvas></div>
+        </section>
+        <section class="block">
+          <h2 class="block-h">KDR per match <span class="block-sub">oldest → newest</span></h2>
+          <div class="chart-box"><canvas id="chart-kdr" height="170"></canvas></div>
+        </section>
+        <section class="block">
+          <h2 class="block-h">Kills / Deaths / Assists</h2>
+          <div class="chart-box"><canvas id="chart-kda" height="170"></canvas></div>
+        </section>
+        <section class="block" id="maps-block" hidden>
+          <h2 class="block-h">Map breakdown</h2>
+          <div class="map-rows" id="map-rows"></div>
+        </section>
+      </section>
+
+      <!-- History -->
+      <section class="panel" data-panel="history">
+        <section class="block">
+          <h2 class="block-h">Match history</h2>
+          <div class="hist" id="history"></div>
+          <button class="more-btn" id="hist-more" hidden>Load more matches</button>
+          <div class="hist-note" id="hist-note" hidden>No more matches on record.</div>
+        </section>
+      </section>
+
+      <!-- Inventory (native, merged — no extra tab) -->
+      <section class="panel" data-panel="inventory">
+        <section class="block">
+          <h2 class="block-h">Inventory <span class="block-sub" id="inv-sub"></span></h2>
+          <div class="toolbar" id="inv-toolbar" hidden>
+            <div class="tb-stats" id="tb-stats"></div>
+            <div class="tb-controls">
+              <input type="search" id="inv-search" class="tb-search" placeholder="Search skins, weapons, colors, gems… (e.g. doppler, sapphire, red, t1)" autocomplete="off" spellcheck="false" />
+              <div class="seg" id="inv-sort">
+                <button data-v="rarity" class="on">Rarity</button>
+                <button data-v="float">Float</button>
+                <button data-v="gem">★ Special</button>
+                <button data-v="name">Name</button>
+              </div>
+            </div>
+            <div class="tb-filters" id="inv-filters"></div>
+          </div>
+          <div class="grid" id="inv-grid"></div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <!-- ═══ weapon details (opens on item click) ═══ -->
+  <div class="wd-overlay" id="wd" hidden>
+    <div class="wd-card">
+      <div class="wd-head">
+        <h2>Weapon Details</h2>
+        <button class="wd-x" id="wd-x" title="Close">✕</button>
+      </div>
+      <div class="wd-grid">
+        <div class="wd-artbox" id="wd-artbox">
+          <span class="wd-topline"></span>
+          <div class="wd-art" id="wd-art"></div>
+          <p class="wd-artname" id="wd-artname"></p>
+        </div>
+        <div class="wd-info">
+          <h1 class="wd-name" id="wd-name"></h1>
+          <div class="wd-chips" id="wd-chips"></div>
+          <div class="wd-stats" id="wd-stats"></div>
+          <div class="wd-floatblock" id="wd-floatblock" hidden>
+            <p class="wd-lbl">Item float:</p>
+            <div class="wd-floatbar">
+              <span class="fb" style="width:7%;background:#2dd4bf"></span><span class="fb" style="width:8%;background:#4ade80"></span><span class="fb" style="width:23%;background:#facc15"></span><span class="fb" style="width:7%;background:#fb923c"></span><span class="fb" style="width:55%;background:#f87171"></span>
+              <span class="wd-floatdot" id="wd-floatdot"></span>
+            </div>
+            <p class="wd-floattxt" id="wd-floattxt"></p>
+          </div>
+          <p class="wd-nametag" id="wd-nametag" hidden></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">CSR+ · not affiliated with Valve or Counter-Strike: Restored</footer>
+
+  <script src="../src/lib/gems.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

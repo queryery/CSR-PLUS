@@ -1,0 +1,1722 @@
+/* CSR+ injected UI — dark surfaces, hairline borders, one restrained accent. */
+
+/* Default theme: dark surfaces with a red accent. */
+:root,
+[data-csrp-theme="mask"] {
+  --csrp-bg: #0c0c0e;
+  --csrp-bg-soft: #151518;
+  --csrp-line: rgba(243, 240, 234, 0.10);
+  --csrp-line-strong: rgba(243, 240, 234, 0.22);
+  --csrp-fg: #f3f0ea;
+  --csrp-fg-dim: rgba(243, 240, 234, 0.55);
+  --csrp-accent: #d2222b;
+  --csrp-on-accent: #ffffff; /* readable text on an accent-filled surface */
+  --csrp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Monochrome theme: near-white accent, no colour. */
+[data-csrp-theme="black"] {
+  --csrp-bg: #08080a;
+  --csrp-bg-soft: #131316;
+  --csrp-line: rgba(255, 255, 255, 0.09);
+  --csrp-line-strong: rgba(255, 255, 255, 0.20);
+  --csrp-fg: #f4f4f6;
+  --csrp-fg-dim: rgba(244, 244, 246, 0.52);
+  --csrp-accent: #e9e9ec;
+  --csrp-on-accent: #0a0a0c; /* dark text on the near-white accent */
+}
+
+/* ── Strength badge ─────────────────────────────────────────────── */
+.csrp-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.csrp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--csrp-fg);
+  background: var(--csrp-bg-soft);
+  border: 1px solid var(--csrp-line);
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: transform 0.25s var(--csrp-ease), border-color 0.25s var(--csrp-ease);
+  animation: csrp-pop 0.32s var(--csrp-ease) both;
+}
+
+.csrp-badge-wrap:hover .csrp-badge {
+  transform: translateY(-1px);
+}
+
+.csrp-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 7px currentColor;
+}
+
+.csrp-badge-period {
+  font-size: 8px;
+  opacity: 0.5;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+.csrp-badge-loading {
+  opacity: 0.5;
+  letter-spacing: 0.2em;
+}
+
+/* ── Toast (server copied, etc.) ────────────────────────────────── */
+.csrp-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 16px);
+  padding: 11px 20px; border-radius: 999px;
+  background: rgba(12,12,14,0.97); border: 1px solid var(--csrp-accent);
+  color: var(--csrp-fg); font-size: 13px; font-weight: 600;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 24px rgba(210,34,43,0.25);
+  z-index: 2147483250; opacity: 0; pointer-events: none;
+  transition: opacity 0.35s var(--csrp-ease), transform 0.4s var(--csrp-ease);
+}
+.csrp-toast-show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ELO change toast — tinted by direction, sits a bit higher (longer-lived). */
+.csrp-elo-toast { bottom: 70px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.csrp-elo-up {
+  border-color: rgba(86, 214, 138, 0.7); color: #aaffcb;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 24px rgba(86, 214, 138, 0.3);
+}
+.csrp-elo-down {
+  border-color: rgba(255, 93, 106, 0.7); color: #ffb3ba;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 24px rgba(255, 93, 106, 0.3);
+}
+
+/* ── "Watch inventory" button (injected on the player page) ──────── */
+.csrp-watch-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-left: 12px; padding: 10px 20px;
+  background: var(--csrp-accent); color: var(--csrp-on-accent);
+  border: 1px solid var(--csrp-accent); border-radius: 999px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: filter 0.18s, transform 0.15s var(--csrp-ease), box-shadow 0.2s;
+}
+.csrp-watch-btn:hover { filter: brightness(1.1); box-shadow: 0 0 16px rgba(210,34,43,0.4); transform: translateY(-1px); }
+.csrp-watch-btn:active { transform: translateY(0) scale(0.98); }
+.csrp-wb-ic { font-size: 13px; }
+
+/* Tier colors: bright-green → ember → green → yellow → ice → orange → red → grey */
+.csrp-t-vstrong      { color: #2bff88; border-color: rgba(43, 255, 136, 0.55); }
+.csrp-t-hot          { color: #ff5e3a; border-color: rgba(255, 94, 58, 0.55); }
+.csrp-t-cold         { color: #6ec3ff; border-color: rgba(110, 195, 255, 0.5); }
+.csrp-t-consistent   { color: #57d977; border-color: rgba(87, 217, 119, 0.5); }
+.csrp-t-peak         { color: #ffd23f; border-color: rgba(255, 210, 63, 0.5); }
+.csrp-t-inconsistent { color: #ff9838; border-color: rgba(255, 152, 56, 0.5); }
+.csrp-t-weak         { color: #ff4d57; border-color: rgba(255, 77, 87, 0.5); }
+.csrp-t-none         { color: #9a9aa2; border-color: rgba(154, 154, 162, 0.4); }
+
+@keyframes csrp-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.8) rotate(-4deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.06) rotate(1deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Tooltip ────────────────────────────────────────────────────── */
+.csrp-tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  min-width: 190px;
+  padding: 10px 12px;
+  background: rgba(12, 12, 14, 0.97);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--csrp-line-strong);
+  border-radius: 10px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+  color: var(--csrp-fg);
+  font-size: 11px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2147483000;
+  transition: opacity 0.2s var(--csrp-ease), transform 0.24s var(--csrp-ease);
+}
+
+.csrp-badge-wrap:hover .csrp-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.csrp-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(12, 12, 14, 0.97);
+}
+
+.csrp-tip-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--csrp-line);
+}
+
+.csrp-tip-elo {
+  color: var(--csrp-accent);
+  font-size: 10px;
+}
+
+.csrp-tip-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.csrp-tip-k {
+  color: var(--csrp-fg-dim);
+}
+
+.csrp-tip-v {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ── Win probability bar ────────────────────────────────────────── */
+.csrp-wp {
+  margin: 0 64px 18px;
+  animation: csrp-fade 0.4s var(--csrp-ease) both;
+}
+
+.csrp-wp-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--csrp-fg);
+  margin-bottom: 6px;
+}
+
+.csrp-wp-title {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--csrp-fg-dim);
+}
+
+.csrp-wp-a {
+  color: #8fb4ff;
+}
+
+.csrp-wp-b {
+  color: #ff5d6a;
+}
+
+.csrp-wp-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(143, 180, 255, 0.18), rgba(255, 93, 106, 0.18));
+  border: 1px solid var(--csrp-line);
+  overflow: hidden;
+}
+
+.csrp-wp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  background: linear-gradient(90deg, #6f86c9, #8fb4ff);
+  border-right: 2px solid var(--csrp-fg);
+  transition: width 0.9s var(--csrp-ease);
+}
+
+.csrp-wp-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-100%);
+  animation: csrp-sheen 2.6s ease-in-out infinite;
+}
+
+@keyframes csrp-sheen {
+  to {
+    transform: translateX(220%);
+  }
+}
+
+/* ── Tag chip ───────────────────────────────────────────────────── */
+.csrp-tag-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--csrp-accent);
+  border: 1px solid rgba(226, 58, 69, 0.4);
+  background: rgba(226, 58, 69, 0.08);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
+}
+
+/* ── Profile slide-in panel ─────────────────────────────────────── */
+.csrp-panel-bk {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--csrp-ease);
+  z-index: 2147483100;
+}
+
+.csrp-panel-bk.csrp-panel-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.csrp-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 380px;
+  max-width: 92vw;
+  padding: 22px 22px 30px;
+  overflow-y: auto;
+  background: var(--csrp-bg);
+  border-left: 1px solid var(--csrp-line-strong);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.6);
+  color: var(--csrp-fg);
+  transform: translateX(102%);
+  transition: transform 0.42s var(--csrp-ease);
+  z-index: 2147483101;
+  font-family: inherit;
+}
+
+.csrp-panel.csrp-panel-open {
+  transform: none;
+}
+
+.csrp-panel-skel {
+  color: var(--csrp-fg-dim);
+  padding-top: 40px;
+  text-align: center;
+}
+
+.csrp-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--csrp-line);
+  position: relative;
+}
+
+.csrp-panel-av {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--csrp-line-strong);
+}
+
+.csrp-panel-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.csrp-panel-sub {
+  font-size: 11px;
+  color: var(--csrp-fg-dim);
+  margin: 2px 0 6px;
+}
+
+.csrp-panel-x {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--csrp-fg-dim);
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s, transform 0.2s var(--csrp-ease);
+}
+
+.csrp-panel-x:hover {
+  color: var(--csrp-fg);
+  transform: rotate(90deg);
+}
+
+.csrp-panel-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.csrp-panel-stat {
+  padding: 10px 8px;
+  text-align: center;
+  background: var(--csrp-bg-soft);
+  border: 1px solid var(--csrp-line);
+  border-radius: 9px;
+  animation: csrp-fade 0.4s var(--csrp-ease) both;
+}
+
+.csrp-panel-statv {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.csrp-panel-statk {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--csrp-fg-dim);
+  margin-top: 2px;
+}
+
+.csrp-panel-h {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--csrp-fg-dim);
+  margin: 18px 0 8px;
+}
+
+.csrp-note-tag,
+.csrp-note-area {
+  width: 100%;
+  background: var(--csrp-bg-soft);
+  border: 1px solid var(--csrp-line);
+  border-radius: 8px;
+  color: var(--csrp-fg);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+
+.csrp-note-tag:focus,
+.csrp-note-area:focus {
+  outline: none;
+  border-color: var(--csrp-line-strong);
+}
+
+.csrp-note-area {
+  resize: vertical;
+  min-height: 64px;
+}
+
+.csrp-note-save {
+  width: 100%;
+  padding: 8px;
+  background: var(--csrp-accent);
+  color: var(--csrp-on-accent);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.15s var(--csrp-ease);
+}
+
+.csrp-note-save:hover {
+  filter: brightness(1.1);
+}
+
+.csrp-note-save:active {
+  transform: scale(0.97);
+}
+
+.csrp-hist-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto 18px;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  font-size: 12px;
+  border: 1px solid var(--csrp-line);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  border-left-width: 3px;
+}
+
+.csrp-hist-row.csrp-w {
+  border-left-color: #56d68a;
+}
+
+.csrp-hist-row.csrp-l {
+  border-left-color: var(--csrp-accent);
+}
+
+.csrp-hist-map {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.csrp-hist-kda,
+.csrp-hist-score {
+  color: var(--csrp-fg-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.csrp-hist-res {
+  font-weight: 700;
+  text-align: center;
+}
+
+.csrp-w .csrp-hist-res {
+  color: #56d68a;
+}
+
+.csrp-l .csrp-hist-res {
+  color: var(--csrp-accent);
+}
+
+.csrp-panel-empty {
+  color: var(--csrp-fg-dim);
+  font-size: 12px;
+}
+
+.csrp-panel-link {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  padding: 10px;
+  border: 1px solid var(--csrp-line);
+  border-radius: 8px;
+  color: var(--csrp-fg);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.csrp-panel-link:hover {
+  border-color: var(--csrp-line-strong);
+  background: var(--csrp-bg-soft);
+}
+
+@keyframes csrp-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Match Found rebuild (injected into the native confirm window) ── */
+.csrp-mf {
+  width: min(900px, 92vw);
+  margin: 18px auto 24px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(210, 34, 43, 0.10), transparent 55%),
+    rgba(9, 9, 11, 0.85);
+  border: 1px solid var(--csrp-line-strong);
+  border-radius: 16px;
+  color: var(--csrp-fg);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  animation: csrp-fade 0.4s var(--csrp-ease) both;
+}
+
+/* Full-screen host that centers the panel (so the panel's own transform stays
+   free for the open animation + drag offset). */
+.csrp-mf-host {
+  position: fixed; inset: 0;
+  /* Max int32 z-index — sits above EVERYTHING the site (or another extension)
+     can stack. `isolation` forces a fresh stacking context so a page element
+     with its own high z-index can't punch through. */
+  z-index: 2147483647;
+  isolation: isolate;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  perspective: 1600px;
+  /* Capture pointer + wheel so the page behind the overlay can't be clicked,
+     scrolled or interacted with while a match is being confirmed. */
+  pointer-events: auto;
+}
+/* Dim + blur + vignette the page behind the panel. Fades in under the panel. */
+.csrp-mf-host::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 100% at 50% 50%, transparent 38%, rgba(0, 0, 0, 0.55) 100%),
+    radial-gradient(80% 60% at 50% 42%, rgba(210, 34, 43, 0.10), transparent 70%),
+    rgba(4, 4, 6, 0.42);
+  -webkit-backdrop-filter: blur(7px) saturate(0.9) brightness(0.82);
+  backdrop-filter: blur(7px) saturate(0.9) brightness(0.82);
+  opacity: 0;
+  animation: csrp-mf-bg-in 0.45s var(--csrp-ease) forwards;
+}
+@keyframes csrp-mf-bg-in { to { opacity: 1; } }
+.csrp-mf-host > .csrp-mf { pointer-events: auto; }
+
+/* Centered overlay variant — replaces the hidden native dialog. Cyberpunk
+   console look: angular panel, grid texture, neon edge. */
+.csrp-mf-center {
+  position: relative;
+  width: min(1140px, 96vw);
+  max-height: calc(100vh - 40px);
+  display: flex; flex-direction: column;
+  margin: 0; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  /* cyberpunk glass: translucent dark pane, fine grid, red core glow + a cool
+     cyan counter-glow in the far corner, all behind a heavy backdrop blur. */
+  background:
+    linear-gradient(var(--csrp-grid, rgba(255,255,255,0.035)) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, var(--csrp-grid, rgba(255,255,255,0.035)) 1px, transparent 1px) 0 0 / 32px 32px,
+    radial-gradient(120% 60% at 50% -10%, rgba(210, 34, 43, 0.20), transparent 60%),
+    radial-gradient(90% 70% at 110% 120%, rgba(54, 220, 235, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(18, 18, 24, 0.72), rgba(8, 8, 11, 0.78));
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.3);
+  box-shadow:
+    0 50px 130px rgba(0, 0, 0, 0.85),
+    0 0 60px rgba(210, 34, 43, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 60px rgba(0, 0, 0, 0.4);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+  transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)) translateY(34px) scale(0.9) rotateX(8deg);
+  transform-origin: 50% 120%;
+  opacity: 0;
+  filter: blur(10px) brightness(1.4);
+  transition:
+    opacity 0.5s var(--csrp-ease),
+    filter 0.6s var(--csrp-ease),
+    transform 0.7s cubic-bezier(0.13, 1.1, 0.25, 1);
+}
+/* neon top edge */
+.csrp-mf-center::before {
+  content: ""; position: absolute; left: 0; top: 0; height: 2px; width: 120px;
+  background: var(--csrp-accent); box-shadow: 0 0 14px var(--csrp-accent); z-index: 4;
+  animation: csrp-mf-edge 2.6s var(--csrp-ease) infinite;
+}
+@keyframes csrp-mf-edge {
+  0%, 100% { width: 120px; opacity: 1; }
+  50% { width: 240px; opacity: 0.7; }
+}
+/* one-shot light sweep + scanline flash across the panel as it opens */
+.csrp-mf-center::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.10) 47%, rgba(210, 34, 43, 0.14) 50%, transparent 66%);
+  transform: translateX(-130%);
+  opacity: 0;
+}
+.csrp-mf-center.csrp-mf-open::after { animation: csrp-mf-sweep 1s var(--csrp-ease) 0.18s 1; }
+@keyframes csrp-mf-sweep {
+  0% { transform: translateX(-130%); opacity: 0; }
+  18% { opacity: 1; }
+  100% { transform: translateX(130%); opacity: 0; }
+}
+.csrp-mf-center.csrp-mf-open {
+  opacity: 1; filter: blur(0) brightness(1);
+  transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)) scale(1) rotateX(0deg);
+}
+/* While dragging: kill the transition so it tracks the cursor 1:1. */
+.csrp-mf-center.csrp-mf-dragging { transition: none; cursor: grabbing; }
+.csrp-mf-center .csrp-mf-content { overflow-y: auto; }
+/* Drag handle affordance on the bar. */
+.csrp-mf-bar { cursor: grab; user-select: none; }
+.csrp-mf-bar .csrp-mf-actions,
+.csrp-mf-bar button { cursor: default; }
+.csrp-mf-grip {
+  width: 16px; text-align: center; color: var(--csrp-fg-dim);
+  letter-spacing: -2px; font-size: 13px; cursor: grab;
+}
+.csrp-mf-timer {
+  font-family: "Rajdhani", var(--csrp-fg), sans-serif;
+  font-size: 22px; font-weight: 800; color: var(--csrp-accent);
+  font-variant-numeric: tabular-nums; letter-spacing: 0.04em; margin: 0 4px;
+}
+.csrp-mf-copy {
+  all: unset;
+  cursor: pointer;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--csrp-fg-dim);
+  padding: 5px 10px; border-radius: 7px;
+  border: 1px solid var(--csrp-line);
+  background: rgba(255, 255, 255, 0.03);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.csrp-mf-copy:hover { color: var(--csrp-fg); border-color: var(--csrp-line-strong); background: rgba(255,255,255,0.06); }
+.csrp-mf-copy-done { color: #7dffb0 !important; border-color: rgba(86,214,138,0.5) !important; }
+.csrp-mf-foot {
+  padding: 14px 18px 18px; border-top: 1px solid var(--csrp-line);
+  display: flex; justify-content: center;
+  background: linear-gradient(180deg, transparent, rgba(210, 34, 43, 0.05));
+}
+.csrp-mf-accept {
+  position: relative; overflow: hidden;
+  min-width: 300px; padding: 15px 30px;
+  background: linear-gradient(180deg, #e8313b, #b81d25);
+  color: #fff;
+  border: none; font-size: 15px; font-weight: 800; letter-spacing: 0.12em;
+  text-transform: uppercase; cursor: pointer;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  box-shadow: 0 0 30px rgba(210, 34, 43, 0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: filter 0.2s, transform 0.15s var(--csrp-ease), box-shadow 0.2s;
+  animation: csrp-mf-accept-pulse 1.8s ease-in-out infinite;
+}
+/* travelling shine on the accept button */
+.csrp-mf-accept::before {
+  content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-18deg);
+  animation: csrp-mf-accept-shine 2.4s ease-in-out infinite;
+}
+@keyframes csrp-mf-accept-shine { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes csrp-mf-accept-pulse {
+  0%, 100% { box-shadow: 0 0 26px rgba(210,34,43,0.45), inset 0 1px 0 rgba(255,255,255,0.25); }
+  50% { box-shadow: 0 0 42px rgba(210,34,43,0.7), inset 0 1px 0 rgba(255,255,255,0.25); }
+}
+.csrp-mf-accept:hover { filter: brightness(1.12); transform: translateY(-2px); }
+.csrp-mf-accept:active { transform: scale(0.97); }
+.csrp-mf-accept-done {
+  background: linear-gradient(180deg, rgba(86,214,138,0.18), rgba(86,214,138,0.06));
+  color: #7dffb0;
+  border: 1px solid rgba(86, 214, 138, 0.5); cursor: default;
+  box-shadow: 0 0 22px rgba(86, 214, 138, 0.25), inset 0 0 18px rgba(86,214,138,0.12);
+  animation: none;
+}
+.csrp-mf-accept-done::before { display: none; }
+
+.csrp-mf-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--csrp-line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent);
+}
+
+.csrp-mf-brand { display: flex; flex-direction: column; line-height: 1.15; }
+
+/* pulsing "live" dot next to the brand */
+.csrp-mf-pulse {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: var(--csrp-accent); box-shadow: 0 0 0 0 rgba(210,34,43,0.6);
+  animation: csrp-mf-pulse 1.6s ease-out infinite;
+}
+@keyframes csrp-mf-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(210,34,43,0.55); }
+  70% { box-shadow: 0 0 0 9px rgba(210,34,43,0); }
+  100% { box-shadow: 0 0 0 0 rgba(210,34,43,0); }
+}
+
+.csrp-mf-logo {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.csrp-mf-plus {
+  color: var(--csrp-accent);
+}
+
+.csrp-mf-tag-lbl {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--csrp-fg-dim);
+}
+
+.csrp-mf-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+/* ── accept-progress HUD (N / M players ready) ──────────────────────── */
+.csrp-mf-accbar { margin-bottom: 14px; }
+.csrp-mf-accbar-h {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 6px;
+}
+.csrp-mf-accbar-lbl {
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--csrp-fg-dim);
+}
+.csrp-mf-accbar-n {
+  font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--csrp-fg);
+}
+.csrp-mf-accbar-track {
+  position: relative; height: 6px; border-radius: 999px; overflow: hidden;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--csrp-line);
+}
+.csrp-mf-accbar-fill {
+  position: absolute; inset: 0 auto 0 0; width: 0%;
+  background: linear-gradient(90deg, #36dceb, #56d68a);
+  box-shadow: 0 0 12px rgba(86, 214, 138, 0.6);
+  transition: width 0.45s var(--csrp-ease);
+}
+.csrp-mf-accbar-full .csrp-mf-accbar-n { color: #7dffb0; }
+.csrp-mf-accbar-full .csrp-mf-accbar-fill { background: linear-gradient(90deg, #56d68a, #7dffb0); }
+
+.csrp-mf-content {
+  padding: 18px 22px 20px;
+}
+
+/* win probability */
+.csrp-mf-wp {
+  margin-bottom: 14px;
+}
+
+.csrp-mf-wp-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.csrp-mf-wp-t {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--csrp-fg-dim);
+}
+
+.csrp-mf-wp-a {
+  color: #8fb4ff;
+}
+
+.csrp-mf-wp-b {
+  color: #ff5d6a;
+}
+
+.csrp-mf-wp-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(143, 180, 255, 0.16), rgba(255, 93, 106, 0.16));
+  border: 1px solid var(--csrp-line);
+  overflow: hidden;
+}
+/* faint moving sheen along the whole track */
+.csrp-mf-wp-track::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+  transform: translateX(-100%);
+  animation: csrp-mf-wp-shine 2.8s linear infinite;
+}
+@keyframes csrp-mf-wp-shine { to { transform: translateX(100%); } }
+
+.csrp-mf-wp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  background: linear-gradient(90deg, #6f86c9, #8fb4ff);
+  border-right: 2px solid var(--csrp-fg);
+  box-shadow: 0 0 14px rgba(143, 180, 255, 0.55);
+  transition: width 1s cubic-bezier(0.16, 1.1, 0.3, 1), box-shadow 0.6s;
+}
+/* tint the favourite's side label brighter */
+.csrp-mf-wp[data-fav="a"] .csrp-mf-wp-a,
+.csrp-mf-wp[data-fav="b"] .csrp-mf-wp-b { text-shadow: 0 0 10px currentColor; }
+
+/* teams side by side */
+.csrp-mf-body {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.csrp-mf-vs {
+  align-self: center;
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--csrp-fg-dim);
+}
+
+@media (max-width: 900px) {
+  .csrp-mf-body {
+    grid-template-columns: 1fr;
+  }
+
+  .csrp-mf-vs {
+    writing-mode: horizontal-tb;
+    text-align: center;
+  }
+}
+
+.csrp-mf-team {
+  border: 1px solid var(--csrp-line);
+  border-radius: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.csrp-mf-team-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 2px 4px 8px;
+  border-bottom: 1px solid var(--csrp-line);
+  margin-bottom: 6px;
+}
+
+.csrp-mf-team-name {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.csrp-mf-team-elo {
+  font-size: 11px;
+  color: var(--csrp-accent);
+}
+
+/* player rows */
+.csrp-mf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 9px;
+  border-radius: 10px;
+  transition: background 0.2s var(--csrp-ease), transform 0.2s var(--csrp-ease);
+  animation: csrp-rowin 0.55s cubic-bezier(0.16, 1.1, 0.3, 1) both;
+}
+
+/* Cascade rows in after the panel has landed. Each team slides from its own
+   side (left team from the left, right team from the right). */
+.csrp-mf-team .csrp-mf-row:nth-child(2) { animation-delay: .26s }
+.csrp-mf-team .csrp-mf-row:nth-child(3) { animation-delay: .33s }
+.csrp-mf-team .csrp-mf-row:nth-child(4) { animation-delay: .40s }
+.csrp-mf-team .csrp-mf-row:nth-child(5) { animation-delay: .47s }
+.csrp-mf-team .csrp-mf-row:nth-child(6) { animation-delay: .54s }
+
+.csrp-mf-body > .csrp-mf-team:first-child .csrp-mf-row { animation-name: csrp-rowin-l; }
+.csrp-mf-body > .csrp-mf-team:last-child .csrp-mf-row { animation-name: csrp-rowin-r; }
+
+@keyframes csrp-rowin {
+  from { opacity: 0; transform: translateX(10px); filter: blur(2px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes csrp-rowin-l {
+  0% { opacity: 0; transform: translateX(-26px) scale(0.96); filter: blur(3px); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes csrp-rowin-r {
+  0% { opacity: 0; transform: translateX(26px) scale(0.96); filter: blur(3px); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: none; filter: blur(0); }
+}
+
+.csrp-mf-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: translateX(-2px);
+}
+/* keep the BEST row's gold wash on hover instead of a flat grey */
+.csrp-mf-row-best:hover {
+  background: linear-gradient(90deg, rgba(245, 183, 60, 0.22), rgba(245, 183, 60, 0.05) 60%, transparent);
+}
+
+.csrp-mf-av {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex: none;
+  border: 1px solid var(--csrp-line);
+  background: var(--csrp-bg-soft);
+}
+
+.csrp-mf-id {
+  min-width: 0;
+  flex: 1;
+}
+
+.csrp-mf-name {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.csrp-mf-tag {
+  margin-left: 0;
+}
+
+.csrp-mf-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.csrp-mf-badge {
+  transform: scale(0.82);
+  transform-origin: left;
+}
+
+/* ── avatar + rank pill ─────────────────────────────────────────────── */
+.csrp-mf-avwrap { position: relative; flex: none; width: 38px; height: 38px; }
+.csrp-mf-rank {
+  position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  font-size: 8px; font-weight: 800; letter-spacing: 0.04em;
+  line-height: 1; padding: 2px 4px; border-radius: 5px;
+  background: var(--csrp-bg-soft); color: var(--csrp-fg-dim);
+  border: 1px solid var(--csrp-line); white-space: nowrap;
+}
+.csrp-mf-rank-top {
+  color: #fff; background: rgba(210, 34, 43, 0.85);
+  border-color: rgba(255, 120, 128, 0.6); box-shadow: 0 0 10px rgba(210, 34, 43, 0.5);
+}
+.csrp-mf-rank-best {
+  color: #1c1400; background: linear-gradient(180deg, #ffe27a, #f5b73c);
+  border-color: rgba(255, 220, 130, 0.9); box-shadow: 0 0 12px rgba(245, 183, 60, 0.6);
+}
+
+/* ── top player + BEST row treatments ───────────────────────────────── */
+.csrp-mf-row-top {
+  background: linear-gradient(90deg, rgba(210, 34, 43, 0.12), transparent 70%);
+  box-shadow: inset 2px 0 0 var(--csrp-accent);
+}
+.csrp-mf-row-best {
+  background: linear-gradient(90deg, rgba(245, 183, 60, 0.16), rgba(245, 183, 60, 0.03) 60%, transparent);
+  box-shadow: inset 2px 0 0 #f5b73c, 0 0 20px rgba(245, 183, 60, 0.12);
+}
+.csrp-mf-row-best .csrp-mf-av { border-color: rgba(245, 183, 60, 0.8); box-shadow: 0 0 12px rgba(245, 183, 60, 0.45); }
+.csrp-mf-row-best .csrp-mf-name { color: #ffd96b; }
+
+/* ── per-player accept state ─────────────────────────────────────────── */
+/* Pending players sit slightly dim; the green check is hidden until they
+   accept, then the avatar brightens and the check pops in. */
+.csrp-mf-check {
+  position: absolute; right: -4px; top: -4px;
+  width: 15px; height: 15px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 900; color: #04210f;
+  background: linear-gradient(180deg, #7dffb0, #33c06f);
+  border: 1.5px solid rgba(8, 8, 11, 0.9);
+  box-shadow: 0 0 8px rgba(86, 214, 138, 0.7);
+  transform: scale(0); opacity: 0;
+  transition: transform 0.25s var(--csrp-ease), opacity 0.25s var(--csrp-ease);
+}
+.csrp-mf-row:not(.csrp-mf-row-accepted) { opacity: 0.72; }
+.csrp-mf-row:not(.csrp-mf-row-accepted) .csrp-mf-av { filter: grayscale(0.5) brightness(0.85); }
+.csrp-mf-row-accepted { opacity: 1; }
+.csrp-mf-row-accepted .csrp-mf-check { transform: scale(1); opacity: 1; }
+.csrp-mf-row-accepted .csrp-mf-av {
+  filter: none;
+  border-color: rgba(86, 214, 138, 0.55);
+  box-shadow: 0 0 10px rgba(86, 214, 138, 0.35);
+}
+/* pop the row when a player accepts. The extra :not(#_) bumps specificity so
+   this beats the side-entrance .csrp-mf-team .csrp-mf-row animation-name rule. */
+.csrp-mf-body .csrp-mf-team .csrp-mf-row.csrp-mf-justaccepted {
+  animation: csrp-mf-accpop 0.5s var(--csrp-ease) 1;
+}
+@keyframes csrp-mf-accpop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.025); background: rgba(86, 214, 138, 0.14); }
+  100% { transform: scale(1); }
+}
+
+/* settle-into-rank slide when the leaderboard re-sorts */
+.csrp-mf-body .csrp-mf-team .csrp-mf-row.csrp-mf-reorder {
+  animation: csrp-mf-settle 0.5s var(--csrp-ease) both;
+}
+@keyframes csrp-mf-settle {
+  from { opacity: 0.35; transform: translateY(-6px); filter: blur(1px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+.csrp-mf-elo {
+  font-size: 10px;
+  color: #ff9a6c;
+}
+
+.csrp-mf-stats {
+  display: flex;
+  gap: 12px;
+  flex: none;
+}
+
+.csrp-mf-stat {
+  text-align: center;
+  min-width: 34px;
+}
+
+.csrp-mf-statv {
+  font-size: 13.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.csrp-mf-statk {
+  font-size: 8.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--csrp-fg-dim);
+}
+
+.csrp-mf-prof {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--csrp-bg-soft);
+  border: 1px solid var(--csrp-line);
+  color: var(--csrp-fg-dim);
+  cursor: pointer;
+  font-size: 12px;
+  transition: color 0.2s, border-color 0.2s, transform 0.15s var(--csrp-ease);
+}
+
+.csrp-mf-prof:hover {
+  color: var(--csrp-fg);
+  border-color: var(--csrp-accent);
+  transform: translateY(-1px);
+}
+
+.csrp-mf-prof:active {
+  transform: scale(0.92);
+}
+
+/* ── Card popover (match room: click any card) ──────────────────── */
+.csrp-pop {
+  position: fixed;
+  width: 252px;
+  z-index: 2147483200;
+  background: rgba(10, 10, 13, 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--csrp-line-strong);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.65), 0 0 26px rgba(210, 34, 43, 0.08);
+  color: var(--csrp-fg);
+  padding: 13px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  transition: opacity 0.2s var(--csrp-ease), transform 0.24s var(--csrp-ease);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+/* top accent strip */
+.csrp-pop::before {
+  content: "";
+  position: absolute; left: 0; top: 0; height: 2px; width: 46px;
+  background: var(--csrp-accent); box-shadow: 0 0 10px var(--csrp-accent);
+}
+
+.csrp-pop-open {
+  opacity: 1;
+  transform: none;
+}
+
+.csrp-pop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.csrp-pop-name {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.csrp-pop-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--csrp-fg-dim);
+  margin-bottom: 11px;
+}
+
+.csrp-pop-stats span {
+  background: var(--csrp-bg-soft);
+  border: 1px solid var(--csrp-line);
+  padding: 3px 7px;
+  font-variant-numeric: tabular-nums;
+  font-family: "Consolas", monospace;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
+}
+
+.csrp-pop-tag,
+.csrp-pop-note {
+  width: 100%;
+  background: var(--csrp-bg-soft);
+  border: 1px solid var(--csrp-line);
+  color: var(--csrp-fg);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  margin-bottom: 8px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.csrp-pop-tag:focus,
+.csrp-pop-note:focus {
+  outline: none;
+  border-color: var(--csrp-accent);
+  box-shadow: 0 0 0 1px var(--csrp-accent);
+}
+
+.csrp-pop-note {
+  resize: vertical;
+  min-height: 52px;
+}
+
+.csrp-pop-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.csrp-pop-save {
+  flex: 1;
+  padding: 9px;
+  background: var(--csrp-accent);
+  color: var(--csrp-on-accent);
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  transition: filter 0.2s, transform 0.15s var(--csrp-ease);
+}
+
+.csrp-pop-save:hover {
+  filter: brightness(1.15);
+}
+
+.csrp-pop-save:active {
+  transform: scale(0.97);
+}
+
+.csrp-pop-link {
+  flex: 1;
+  text-align: center;
+  padding: 9px;
+  border: 1px solid var(--csrp-line-strong);
+  color: var(--csrp-fg);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 12px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.csrp-pop-link:hover {
+  border-color: var(--csrp-accent);
+  background: rgba(210, 34, 43, 0.1);
+}
+
+
+/* ── Countdown widget ───────────────────────────────────────────── */
+/* Floating fallback if the match-found window hasn't rendered our bar yet. */
+.csrp-cd-float {
+  position: fixed;
+  top: 78px;
+  right: 18px;
+  z-index: 2147483647;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+
+.csrp-cd {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 6px 4px 4px;
+  background: var(--csrp-bg-soft);
+  border: 1px solid rgba(226, 58, 69, 0.4);
+  border-radius: 999px;
+  animation: csrp-pop 0.3s var(--csrp-ease) both;
+}
+
+.csrp-cd-ring {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--csrp-accent) 0deg, rgba(255, 255, 255, 0.12) 0deg);
+  flex: none;
+}
+
+.csrp-cd-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--csrp-bg);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.csrp-cd-txt {
+  font-size: 11px;
+  color: var(--csrp-fg-dim);
+}
+
+.csrp-cd-go,
+.csrp-cd-x {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid var(--csrp-line);
+  background: transparent;
+  color: var(--csrp-fg);
+  transition: filter 0.2s, background 0.2s, transform 0.15s var(--csrp-ease);
+}
+
+.csrp-cd-go {
+  background: var(--csrp-accent);
+  border-color: var(--csrp-accent);
+  color: var(--csrp-on-accent);
+}
+
+.csrp-cd-go:hover {
+  filter: brightness(1.12);
+}
+
+.csrp-cd-x:hover {
+  background: var(--csrp-bg);
+}
+
+.csrp-cd-go:active,
+.csrp-cd-x:active {
+  transform: scale(0.95);
+}
+
+/* ── lobby player slot: clickable → profile, with a cyber hover lift ───────── */
+.csrp-lobby-card {
+  transition: transform 0.18s var(--csrp-ease, cubic-bezier(.22,1,.36,1)),
+              box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.csrp-lobby-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(210, 34, 43, 0.6) !important;
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.35),
+    0 0 9px rgba(210, 34, 43, 0.18);
+}
+/* The creator slot already glows white — keep its hover subtle too. */
+.csrp-lobby-card.csrp-creator-card:hover {
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 0 11px rgba(255, 255, 255, 0.16);
+}
+
+/* ── CSR+ creator card — popup-style monochrome cyberpunk (white) ─────────── */
+/* Matches the popup / profile / inventory / trades look: deep black panel, a
+   white neon frame, a slow holographic white conic sweep, faint scanlines and
+   angular white corner ticks. Strictly monochrome — white on black, no colour. */
+.csrp-creator-card {
+  position: relative;
+  border-radius: 0 !important;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  background:
+    radial-gradient(120% 90% at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(20, 20, 26, 0.6), rgba(10, 10, 13, 0.4)) !important;
+  box-shadow:
+    0 0 16px rgba(255, 255, 255, 0.2),
+    inset 0 0 18px rgba(255, 255, 255, 0.05);
+  /* single notched bottom-right corner — the inventory/profile card shape */
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+/* slow holographic white conic sweep behind the card content */
+.csrp-creator-card::after {
+  content: ""; position: absolute; inset: -45% -20%; z-index: 0; pointer-events: none;
+  opacity: 0.4;
+  background: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg, rgba(255, 255, 255, 0.26) 60deg,
+    transparent 130deg, rgba(255, 255, 255, 0.16) 230deg, transparent 320deg);
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 40%, #000 30%, transparent 78%);
+          mask-image: radial-gradient(70% 70% at 50% 40%, #000 30%, transparent 78%);
+  animation: csrp-creator-holo 14s linear infinite;
+}
+@keyframes csrp-creator-holo { to { transform: rotate(360deg); } }
+/* short centered white accent strip at the top (the inventory-card .c-strip) */
+.csrp-creator-card::before {
+  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 38%; height: 2px; z-index: 2; pointer-events: none;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+}
+/* keep all real content above the holo sweep */
+.csrp-creator-card > * { position: relative; z-index: 1; }
+/* Lobby slot adopts the same notched popup-card shape. */
+.csrp-creator-lobby:hover {
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.75),
+    0 0 22px rgba(255, 255, 255, 0.28) !important;
+}
+/* Center the chip under the name in the lobby slot. */
+.csrp-creator-chip-lobby {
+  margin-left: 0;
+  margin-top: 8px;
+  align-self: center;
+}
+/* ── corner frame: faint scanlines + a single top-left white corner tick ──── */
+.csrp-cf {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+  overflow: hidden;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px);
+}
+/* one angular white corner tick, top-left (matches the popup-card corners) */
+.csrp-cf::before {
+  content: ""; position: absolute; top: 6px; left: 6px; width: 13px; height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.85); border-right: none; border-bottom: none;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+}
+/* vertical kanji mark, top-right */
+.csrp-cf-kanji {
+  position: absolute; top: 6px; right: 9px;
+  writing-mode: vertical-rl;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 0 7px rgba(255, 255, 255, 0.5);
+  user-select: none;
+}
+.csrp-creator-lobby .csrp-cf-kanji { font-size: 13px; }
+
+/* ── cyberpunk avatar frame (matches the custom profile page .ph-av shape) ──── */
+/* Single notched bottom-right corner, clean thin edge, with a rotating conic
+   tracer glowing in the frame gap (white → crimson). */
+.csrp-avframe {
+  --csrp-av-clip: polygon(0 0, 100% 0, 100% 80%, 80% 100%, 0 100%);
+  position: relative;
+  display: inline-block;
+  flex: none;
+  isolation: isolate;
+  clip-path: var(--csrp-av-clip);
+  padding: 2px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(255,255,255,0.3));
+}
+/* the avatar image gets the same notched shape, sitting inside the ring */
+.csrp-avframe > img {
+  display: block;
+  position: relative; z-index: 1;
+  border-radius: 0 !important;
+  clip-path: var(--csrp-av-clip);
+}
+/* rotating conic tracer behind the image — the "frame" energy */
+.csrp-avframe-ring {
+  content: ""; position: absolute; inset: -40%;
+  z-index: 0; pointer-events: none;
+  background: conic-gradient(from 0deg,
+    transparent 0deg 200deg,
+    rgba(255,255,255,0.95) 300deg,
+    #d62638 340deg,
+    transparent 360deg);
+  animation: csrp-avframe-spin 4s linear infinite;
+}
+@keyframes csrp-avframe-spin { to { transform: rotate(360deg); } }
+/* Additive avatar frame (no reparenting — React-safe): the img is clipped in
+   place; the ring is an absolutely-positioned sibling behind it. */
+img.csrp-av-clip {
+  position: relative; z-index: 1;
+  border-radius: 0 !important;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 80% 100%, 0 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.55);
+}
+.csrp-av-ring {
+  position: absolute; z-index: 0; pointer-events: none;
+  background: conic-gradient(from 0deg,
+    transparent 0deg 200deg,
+    rgba(255,255,255,0.95) 300deg,
+    #d62638 340deg,
+    transparent 360deg);
+  animation: csrp-avframe-spin 4s linear infinite;
+}
+/* soft white halo + crisp inner edge around the whole frame */
+.csrp-avframe::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  clip-path: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6), inset 0 0 6px rgba(255,255,255,0.45);
+}
+
+/* Creator chip: popup-style white neon on near-black, angular clip, white
+   underline + a vertical kanji mark, with a slow white sheen sweep. */
+.csrp-creator-chip {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  color: #f4f4f6 !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 70%),
+    rgba(10, 10, 12, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow:
+    0 0 9px rgba(255, 255, 255, 0.3),
+    inset 0 0 8px rgba(255, 255, 255, 0.06);
+  text-shadow: 0 0 7px rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.12em;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 6px) 100%, 0 100%, 0 5px);
+}
+/* white underline */
+.csrp-creator-chip::before {
+  content: ""; position: absolute; left: 6px; right: 6px; bottom: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+}
+/* slow smooth white sheen across the chip */
+.csrp-creator-chip::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.24) 50%, transparent 58%);
+  transform: translateX(-130%);
+  animation: csrp-creator-chip-shine 5s linear infinite;
+}
+@keyframes csrp-creator-chip-shine {
+  0% { transform: translateX(-130%); }
+  100% { transform: translateX(130%); }
+}
+/* a small white kanji mark */
+.csrp-creator-spark {
+  display: inline-block;
+  margin-right: 5px;
+  color: #ffffff;
+  font-weight: 900;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
+}
+
+/* ── creator row inside the Match Found panel (monochrome white) ──────────── */
+.csrp-mf-row-creator {
+  position: relative;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09), transparent 60%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 14px rgba(255, 255, 255, 0.12);
+}
+.csrp-mf-row-creator::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+.csrp-mf-row-creator .csrp-mf-av {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.32);
+}
+.csrp-mf-creator-chip { margin-left: 7px; font-size: 9px; padding: 1px 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .csrp-creator-card::after, .csrp-creator-chip::after { animation: none; }
+}
+
+/* ── leaderboard search ──────────────────────────────────────────────────── */
+.csrp-lb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px auto 8px;
+  padding: 0 11px;
+  height: 32px;
+  width: 100%;
+  max-width: 340px;
+  border: 1px solid var(--csrp-line-strong);
+  border-radius: 8px;
+  background:
+    radial-gradient(120% 180% at 0% 0%, rgba(210, 34, 43, 0.10), transparent 60%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.csrp-lb-search:focus-within {
+  border-color: rgba(210, 34, 43, 0.6);
+  box-shadow: 0 0 0 1px rgba(210, 34, 43, 0.35), 0 0 22px rgba(210, 34, 43, 0.18);
+}
+.csrp-lb-ic {
+  font-size: 14px;
+  color: var(--csrp-fg-dim, rgba(255,255,255,0.5));
+  flex: none;
+}
+.csrp-lb-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--csrp-fg, #f3f0ea);
+  font-size: 12.5px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: 0.01em;
+}
+.csrp-lb-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+.csrp-lb-clear {
+  all: unset;
+  flex: none;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  transition: color 0.15s, background 0.15s;
+}
+.csrp-lb-clear:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.csrp-lb-count {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--csrp-fg-dim, rgba(255,255,255,0.5));
+  padding-left: 6px;
+  border-left: 1px solid var(--csrp-line, rgba(255,255,255,0.1));
+  white-space: nowrap;
+}
+
+/* injected remote-lookup result row */
+.csrp-lb-remote {
+  background: linear-gradient(90deg, rgba(210, 34, 43, 0.10), transparent 70%);
+  box-shadow: inset 2px 0 0 var(--csrp-accent, #d2222b);
+}
+.csrp-lb-remote-tag {
+  display: inline-block;
+  color: var(--csrp-accent, #d2222b);
+  font-size: 13px;
+}
+.csrp-lb-empty {
+  padding: 22px 14px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ── CSR+ Trades prompt overlay (shown when clicking the site's Trades tab) ── */
+.csrp-tr-overlay {
+  position: fixed; inset: 0; z-index: 2147483600;
+  display: grid; place-items: center; padding: 24px;
+  background: rgba(3, 3, 6, 0.74); backdrop-filter: blur(7px);
+  font-family: "Segoe UI", -apple-system, Roboto, sans-serif;
+  animation: csrpTrFade 0.22s ease both;
+}
+@keyframes csrpTrFade { from { opacity: 0; } to { opacity: 1; } }
+.csrp-tr-card {
+  position: relative; overflow: hidden; width: 100%; max-width: 480px;
+  background: linear-gradient(180deg, #14141b, #0c0c11);
+  border: 1px solid rgba(255,255,255,0.22); color: #f4f6fb;
+  padding: 26px 28px 22px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.6), 0 0 30px rgba(210,34,43,0.18);
+  animation: csrpTrPop 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes csrpTrPop { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+.csrp-tr-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: #d2222b; box-shadow: 0 0 16px rgba(210,34,43,0.7); }
+.csrp-tr-scan { position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0 1px, transparent 1px 3px); }
+.csrp-tr-tag { position: relative; font-size: 11px; font-weight: 800; letter-spacing: 0.22em; color: rgba(255,255,255,0.45); }
+.csrp-tr-beta { display: inline-block; margin-left: 6px; padding: 2px 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.14em;
+  color: #ffd24a; border: 1px solid rgba(255,210,74,0.45); background: rgba(255,210,74,0.1);
+  clip-path: polygon(0 0, 100% 0, 100% 66%, 85% 100%, 0 100%); }
+.csrp-tr-title { position: relative; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-top: 8px; }
+.csrp-tr-sub { position: relative; font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 6px; line-height: 1.5; }
+.csrp-tr-points { position: relative; list-style: none; margin: 18px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.csrp-tr-points li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #d7dae3; }
+.csrp-tr-points b { color: #fff; font-weight: 700; }
+.csrp-tr-ic { color: #e23a45; font-size: 12px; margin-top: 2px; flex: none; }
+/* "Don't ask again" — a prominent bordered pill so it's hard to miss. */
+.csrp-tr-remember { position: relative; display: flex; align-items: center; gap: 11px; margin: 20px 0 2px;
+  padding: 11px 13px; font-size: 13px; font-weight: 600; color: #c7cad3; cursor: pointer; user-select: none;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.16);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+  transition: border-color 0.15s, background 0.15s; }
+.csrp-tr-remember:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.3); }
+.csrp-tr-remember input { position: absolute; opacity: 0; width: 0; height: 0; }
+.csrp-tr-box { width: 20px; height: 20px; flex: none; border: 1.5px solid rgba(255,255,255,0.4); background: #0a0a0e;
+  display: grid; place-items: center; transition: background 0.15s, border-color 0.15s;
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 72% 100%, 0 100%); }
+.csrp-tr-box::after { content: "✓"; font-size: 13px; font-weight: 800; color: #fff; opacity: 0; }
+.csrp-tr-remember input:checked + .csrp-tr-box { background: #d2222b; border-color: #d2222b; }
+.csrp-tr-remember input:checked + .csrp-tr-box::after { opacity: 1; }
+.csrp-tr-remember:has(input:checked) { border-color: rgba(210,34,43,0.6); color: #fff; }
+
+.csrp-tr-actions { position: relative; display: flex; gap: 12px; margin-top: 16px; }
+.csrp-tr-btn { padding: 13px 14px; font-size: 14px; font-weight: 800; cursor: pointer;
+  transition: background 0.16s, border-color 0.16s, box-shadow 0.2s, transform 0.12s ease;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
+.csrp-tr-btn:active { transform: scale(0.99); }
+/* Secondary: "Use legacy" — quiet, narrower so the primary draws the eye. */
+.csrp-tr-legacy { flex: 0 0 auto; background: transparent; color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.2); }
+.csrp-tr-legacy:hover { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.4); }
+/* Primary: "Use CSR+" — always brand red with white text (never theme-white). */
+.csrp-tr-use { flex: 1; background: linear-gradient(180deg, #e23a45, #c41d27); color: #fff;
+  border: 1px solid #e23a45; box-shadow: 0 6px 22px rgba(210,34,43,0.4); letter-spacing: 0.02em; }
+.csrp-tr-use:hover { background: linear-gradient(180deg, #ef4b56, #d2222b); box-shadow: 0 8px 28px rgba(210,34,43,0.6); }
+/* ════════ CSR+ Cases — full-page overlay over /app/inventory/cases ════════ */
+#csrp-cases-frame {
+  position: fixed; inset: 0; width: 100vw; height: 100vh;
+  border: 0; z-index: 2147483500; background: #08080d;
+  animation: csrpTrFade 0.15s ease both;
+}
+/* While the overlay is up, stop the site underneath from doing any layout /
+   paint work (its own case grid is what causes the lag).
+   Exempt csrx-* nodes: the CS:R Inventory Helper extension mounts its bulk-
+   buy / auto-open FAB + windows on body with z-index 214748364x (above our
+   frame), so it keeps working on top of the CSR+ overlay too. */
+html[data-csrp-cases-overlay] body > *:not(#csrp-cases-frame):not(script):not(style):not([id^="csrx"]):not([class*="csrx"]):not(.csrp-mf-host):not(.csrp-cd-float) {
+  display: none !important;
+}

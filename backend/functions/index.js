@@ -683,7 +683,7 @@ async function handleReport(req, res, claims) {
   const reporterTier = resolveTier(reporterSnap.exists ? reporterSnap.data() : {});
   const priority = reporterTier === 'premium';
 
-  const link = (id) => `https://csrestored.fun/user/${id}`;
+  const link = (id) => `https://csrestored.fun/app/user/${id}`;
   const caption =
     (priority ? `⭐ <b>PRIORITY</b> @queryer\n` : '') +
     `🚩 <b>CSR+ report</b>\n` +

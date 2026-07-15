@@ -584,7 +584,7 @@
     }
 
     const PANE_HINTS = {
-      account: 'Connect Discord to share your look — or stay local in test mode.',
+      account: 'Sign in with Discord to share your look — colours, name and flair are free for everyone.',
       banner: 'Upload art, then drag it on a holo-screen to position · scroll to zoom.',
       colors: 'Two accents drive every style — gradients, rings, chips, effects.',
       effects: 'Name styles, card flair, avatar frames — ✦ effects need Premium to publish.',

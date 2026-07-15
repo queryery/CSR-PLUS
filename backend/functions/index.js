@@ -768,7 +768,7 @@ async function handleMyReports(req, res, claims) {
 }
 
 async function handleTelegramWebhook(req, res) {
-  const secret = TELEGRAM_WEBHOOK_SECRET.value();
+  const secret = (TELEGRAM_WEBHOOK_SECRET.value() || '').trim();
   const got = req.get('x-telegram-bot-api-secret-token') || '';
   if (!secret || !safeEqual(got, secret)) return res.status(403).send('');
   const cq = req.body && req.body.callback_query;

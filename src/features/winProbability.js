@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -54,15 +53,41 @@
       if (!host || grid.parentNode !== host) { mounted = null; return; }
       host.insertBefore(mounted, grid);
     }
+    fitToColumns(c1.el, c2.el);
 
     const [aggA, aggB] = await Promise.all([aggsFor(c1.cards), aggsFor(c2.cards)]);
     if (aggA.length < 2 || aggB.length < 2) return;
     const p = CSRP.stats.winProbability(aggA, aggB);
-    render(
-      p,
-      shortTitle(c1.title) || 'Team A',
-      shortTitle(c2.title) || 'Team B'
-    );
+
+    let titleA = shortTitle(c1.title) || 'Team A';
+    let titleB = shortTitle(c2.title) || 'Team B';
+    const my = CSRP._myId;
+    if (my) {
+      if (c1.cards.some((c) => c.id === my)) { titleA = 'Your Team'; titleB = 'Enemy Team'; }
+      else if (c2.cards.some((c) => c.id === my)) { titleA = 'Enemy Team'; titleB = 'Your Team'; }
+    }
+    render(p, titleA, titleB);
+  }
+
+  function fitToColumns(colA, colB) {
+    if (!mounted || !colA || !colB || !mounted.parentElement) return;
+    try {
+      const host = mounted.parentElement;
+      const ra = colA.getBoundingClientRect();
+      const rb = colB.getBoundingClientRect();
+      if (!ra.width || !rb.width) return;
+      const left = Math.min(ra.left, rb.left);
+      const right = Math.max(ra.right, rb.right);
+      const cs = getComputedStyle(host);
+      const contentLeft = host.getBoundingClientRect().left +
+        (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.paddingLeft) || 0);
+      const ml = Math.max(0, Math.round(left - contentLeft));
+      const w = Math.round(right - left);
+      if (mounted.style.marginLeft !== ml + 'px') mounted.style.marginLeft = ml + 'px';
+      if (mounted.style.width !== w + 'px') mounted.style.width = w + 'px';
+      mounted.style.marginRight = '0';
+      mounted.style.boxSizing = 'border-box';
+    } catch {  }
   }
 
   function shortTitle(t) {

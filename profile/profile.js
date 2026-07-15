@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const $ = (s) => document.querySelector(s);
@@ -6,8 +5,9 @@
   const id = params.get('id');
   const period = params.get('period') || 'last10';
   const startTab = params.get('tab') || 'overview';
-  const CREATOR_ID = '1371203777817739505';
-  const isCreator = String(id) === CREATOR_ID;
+
+  let CSRP_MYID = null;
+  try { chrome.storage.local.get(['csrpMyId'], (d) => { if (d && d.csrpMyId) CSRP_MYID = String(d.csrpMyId); }); } catch {}
 
   let sndCfg = { soundEnabled: true, soundVolume: 0.6 };
   try {
@@ -54,6 +54,27 @@
     const p = await api(`/history/user/${uid}/${page}`);
     return Array.isArray(p) ? p : [];
   };
+
+  function proApi(path) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'csrp:pro', path }, (resp) => {
+          if (chrome.runtime.lastError || !resp || !resp.ok) return resolve(null);
+          resolve(resp.data);
+        });
+      } catch { resolve(null); }
+    });
+  }
+  async function tierOf(uid) {
+    const d = await proApi('/pub/profiles?ids=' + encodeURIComponent(uid));
+    const p = d && d.profiles && d.profiles[uid];
+    return (p && p.tier) || 'free';
+  }
+  function tierBadgeHtml(tier) {
+    if (tier !== 'pro' && tier !== 'premium') return '';
+    const label = tier === 'premium' ? 'PREMIUM' : 'PRO';
+    return `<span class="ps-tier ps-tier-${tier}">◆ ${label}</span>`;
+  }
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -145,10 +166,9 @@
     const wr = matches ? (wins / matches) * 100 : 0;
     const kdr = profile.deaths ? profile.kills / profile.deaths : (profile.kills || 0);
     const card = $('#ps-card');
-    card.style.setProperty('--tc', isCreator ? '#ffffff' : tier.c);
-    if (isCreator) card.classList.add('ps-card-creator');
-    const rankLabel = isCreator ? 'CSR+ Creator' : tier.name;
-    const rankTitle = isCreator ? 'CSR+ Creator' : `${tier.name} tier`;
+    card.style.setProperty('--tc', tier.c);
+    const rankLabel = tier.name;
+    const rankTitle = `${tier.name} tier`;
     card.innerHTML =
       '<div class="ps-holo" aria-hidden="true"></div>' +
       '<div class="ps-corner ps-corner-tl" aria-hidden="true"></div>' +
@@ -162,6 +182,7 @@
       `<div class="ps-id" title="User ID">#${esc(id)}</div>` +
       '<div class="ps-elo"><span class="ps-elo-coin" aria-hidden="true"></span>' +
         `<b>${profile.points ?? '—'}</b><span class="ps-elo-lbl">ELO</span></div>` +
+      '<div class="ps-tier-row" id="ps-tier-row"></div>' +
       '<div class="ps-mini">' +
         `<div class="ps-mini-cell"><b class="${wr >= 50 ? 'good' : 'bad'}">${matches ? wr.toFixed(0) + '%' : '—'}</b><span>Winrate</span></div>` +
         `<div class="ps-mini-cell"><b>${kdr.toFixed(2)}</b><span>KDR</span></div>` +
@@ -178,10 +199,23 @@
       <a class="ext steam" target="_blank" rel="noopener" title="Steam profile" href="https://steamcommunity.com/profiles/${profile.steam}">${ICONS.steam}</a>
       <a class="ext steamdb" target="_blank" rel="noopener" title="SteamDB" href="https://steamdb.info/calculator/${profile.steam}/">${ICONS.steamdb}</a>
       <a class="ext faceit" target="_blank" rel="noopener" title="FaceitFinder" href="https://faceitfinder.com/profile/${profile.steam}">${ICONS.faceit}</a>` : '';
+    const isSelf = CSRP_MYID && String(CSRP_MYID) === String(id);
+    const reportBtn = isSelf ? '' :
+      `<button class="ph-report" id="ph-report" title="Report this player to CSR+ moderators">⚑ Report</button>`;
     $('#head').innerHTML =
       (avatar ? `<img class="ph-av" src="${avatar}" alt="" />` : '<div class="ph-av"></div>') +
       `<div class="ph-info"><div class="ph-name">${esc(profile.name)} ${flag}</div>` +
-      `<div class="ph-links">${links}</div></div>`;
+      `<div class="ph-links">${links}${reportBtn}</div></div>`;
+    const rb = $('#ph-report');
+    if (rb) rb.addEventListener('click', () => {
+      snd('click');
+      window.open(chrome.runtime.getURL(`report/report.html?id=${encodeURIComponent(id)}`), '_blank', 'noopener');
+    });
+
+    tierOf(id).then((tier) => {
+      const html = tierBadgeHtml(tier);
+      const row = $('#ps-tier-row'); if (row) row.innerHTML = html;
+    });
   }
 
   function periodRows() {

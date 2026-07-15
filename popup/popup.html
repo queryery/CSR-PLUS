@@ -7,13 +7,13 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <!-- animated backdrop layers -->
+
   <div class="fx-grid" aria-hidden="true"></div>
   <div class="fx-scan" aria-hidden="true"></div>
   <div class="fx-noise" aria-hidden="true"></div>
 
   <div class="app" id="app">
-    <!-- Sidebar -->
+
     <aside class="side">
       <div class="brand">
         <div class="brand-icon">
@@ -33,7 +33,9 @@
         <button class="nav-i" data-tab="friends"><span class="ni-ic">◈</span><span class="ni-tx">Friends</span><span class="ni-no">05</span></button>
         <button class="nav-i" data-tab="sound"><span class="ni-ic">♪</span><span class="ni-tx">Sound</span><span class="ni-no">06</span></button>
         <button class="nav-i" data-tab="feedback"><span class="ni-ic">✦</span><span class="ni-tx">Feedback</span><span class="ni-no">07</span></button>
-        <button class="nav-i" data-tab="about"><span class="ni-ic">⌬</span><span class="ni-tx">About</span><span class="ni-no">08</span></button>
+        <button class="nav-i" data-tab="studio"><span class="ni-ic">✎</span><span class="ni-tx">Studio</span><span class="ni-no">08</span></button>
+        <button class="nav-i" data-tab="reports"><span class="ni-ic">🚩</span><span class="ni-tx">Reports</span><span class="ni-no">09</span></button>
+        <button class="nav-i" data-tab="about"><span class="ni-ic">⌬</span><span class="ni-tx">About</span><span class="ni-no">10</span></button>
       </nav>
 
       <div class="live-users" id="live-users" title="People using CSR+">
@@ -44,13 +46,13 @@
       <div class="side-foot">
         <span class="status-dot"></span>
         <span class="status-tx">ONLINE</span>
-        <span class="status-ver" id="side-ver">v0.0.8</span>
+        <button class="side-docs" id="side-docs" title="Open the CSR+ manual">DOCS</button>
+        <span class="status-ver" id="side-ver">v0.0.9</span>
       </div>
     </aside>
 
-    <!-- Content -->
     <main class="content" id="content">
-      <!-- General -->
+
       <section class="tab active" data-tab="general">
         <div class="tab-head"><h2 class="tab-h">General</h2><span class="tab-idx">// 01</span></div>
         <p class="tab-lead">Master switch and the extra intel CSR+ draws over the lobby.</p>
@@ -76,7 +78,6 @@
         </div>
       </section>
 
-      <!-- Automation -->
       <section class="tab" data-tab="automation">
         <div class="tab-head"><h2 class="tab-h">Automation</h2><span class="tab-idx">// 02</span></div>
         <p class="tab-lead">Let CSR+ click through the repetitive parts of matchmaking.</p>
@@ -116,7 +117,6 @@
         </div>
       </section>
 
-      <!-- Appearance -->
       <section class="tab" data-tab="appearance">
         <div class="tab-head"><h2 class="tab-h">Appearance</h2><span class="tab-idx">// 03</span></div>
         <p class="tab-lead">Theme and the time range CSR+ bases its stats on.</p>
@@ -153,7 +153,6 @@
         </div>
       </section>
 
-      <!-- Veto -->
       <section class="tab" data-tab="veto">
         <div class="tab-head"><h2 class="tab-h">Map veto</h2><span class="tab-idx">// 04</span></div>
         <p class="tab-lead">Drag to set your ban order. Top is banned first; the bottom map is the one you keep.</p>
@@ -167,7 +166,6 @@
         </div>
       </section>
 
-      <!-- Friends -->
       <section class="tab" data-tab="friends">
         <div class="tab-head"><h2 class="tab-h">Friends</h2><span class="tab-idx">// 05</span></div>
         <p class="tab-lead">Pick whose party invites get accepted. With no one selected, every invite is accepted.</p>
@@ -176,7 +174,6 @@
         <div class="friends" id="friends"></div>
       </section>
 
-      <!-- Sound -->
       <section class="tab" data-tab="sound">
         <div class="tab-head"><h2 class="tab-h">Sound</h2><span class="tab-idx">// 06</span></div>
         <p class="tab-lead">Audio cues for the UI, match found, the accept countdown and accept/cancel. Turn each group on or off and preview it.</p>
@@ -187,7 +184,6 @@
           <span class="sw"><span class="sw-dot"></span></span>
         </div>
 
-        <!-- everything below dims + locks while the master switch is off -->
         <div class="snd-body" id="snd-body">
           <div class="set vol-set">
             <div class="set-txt">
@@ -228,7 +224,6 @@
         </div>
       </section>
 
-      <!-- Feedback -->
       <section class="tab" data-tab="feedback">
         <div class="tab-head"><h2 class="tab-h">Feedback</h2><span class="tab-idx">// 07</span></div>
         <p class="tab-lead">CSR+ Trades is in <b>beta</b> — found a bug or have an idea? I'd love to hear it.</p>
@@ -256,17 +251,63 @@
         </button>
       </section>
 
-      <!-- About -->
+      <section class="tab" data-tab="studio">
+        <div class="tab-head"><h2 class="tab-h">Studio</h2><span class="tab-idx">// 08</span></div>
+        <p class="tab-lead">Profile customization: banner, colors, name styles, card flair, avatar frames and a title chip.
+          Free is local; <b>Pro</b> shares your look with other CSR+ players, <b>Premium</b> adds animated effects.</p>
+        <button class="btn btn-wide" id="open-studio"><span class="btn-fill"></span><span class="btn-tx">✎ Open CSR+ Studio</span></button>
+        <button class="btn btn-wide btn-ghost" id="open-subs"><span class="btn-tx">✦ View Pro &amp; Premium plans</span></button>
+
+        <div class="grp-h"><span>Account</span></div>
+        <div class="set">
+          <div class="set-txt"><div class="set-t">CSR+ membership</div><div class="set-d" id="pro-status">Not signed in</div></div>
+          <button class="btn btn-sm" id="pro-signin"><span class="btn-tx">Sign in</span></button>
+          <button class="btn btn-sm" id="pro-signout" hidden><span class="btn-tx">Sign out</span></button>
+        </div>
+        <div class="set" id="hide-banners-set" hidden>
+          <div class="set-txt"><div class="set-t">Hide everyone's banners <span class="pro-tag">PRO</span></div><div class="set-d">Hides other players' banners for you — your own banner still shows</div></div>
+          <span class="sw" id="pop-hide-banners"><span class="sw-dot"></span></span>
+        </div>
+      </section>
+
+      <section class="tab" data-tab="reports">
+        <div class="tab-head"><h2 class="tab-h">Reports</h2><span class="tab-idx">// 09</span></div>
+        <p class="tab-lead">Track the reports you've filed. A CSR+ moderator reviews each one and updates its status.</p>
+
+        <div class="rep-auth" id="rep-auth">
+          <div class="grp-h"><span>Account</span></div>
+          <div class="set">
+            <div class="set-txt"><div class="set-t">Sign in to view your reports</div><div class="set-d">Reports are tied to your Discord account. Sign in on the Studio tab to see their status here.</div></div>
+            <button class="btn btn-sm" id="rep-signin"><span class="btn-tx">Sign in</span></button>
+          </div>
+        </div>
+
+        <div class="rep-body" id="rep-body" hidden>
+          <div class="grp-h"><span>Your reports</span>
+            <button class="snd-all" id="rep-refresh" title="Refresh">↻ Refresh</button>
+          </div>
+          <div class="rep-legend">
+            <span class="rep-chip s-sent">Sent</span>
+            <span class="rep-chip s-checking">Checking</span>
+            <span class="rep-chip s-punished">Punished</span>
+            <span class="rep-chip s-insufficient">Not enough info</span>
+            <span class="rep-chip s-rejected">Rejected</span>
+          </div>
+          <div class="rep-list" id="rep-list"><div class="cl-skel"></div></div>
+        </div>
+      </section>
+
       <section class="tab" data-tab="about">
-        <div class="tab-head"><h2 class="tab-h">About</h2><span class="tab-idx">// 08</span></div>
+        <div class="tab-head"><h2 class="tab-h">About</h2><span class="tab-idx">// 10</span></div>
 
         <div class="about">
           <div class="about-icon"><img src="../assets/icon256.png" alt="" width="56" height="56" /></div>
           <div class="about-name" data-glitch="CSR+">CSR<span>+</span></div>
-          <div class="about-ver" id="about-ver">v0.0.8</div>
+          <div class="about-ver" id="about-ver">v0.0.9</div>
           <p class="about-p">A match assistant for csrestored.fun: auto-accept, smart
             map banning, and player stats at a glance.</p>
           <div class="about-links">
+            <a class="btn btn-sm" id="docs-link" href="#"><span class="btn-fill"></span><span class="btn-tx">Docs</span></a>
             <a class="btn btn-sm" id="gh-link" href="https://github.com/queryery/CSR-PLUS" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">GitHub</span></a>
             <a class="btn btn-sm" href="https://github.com/queryery/CSR-PLUS/blob/main/PRIVACY.md" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">Privacy</span></a>
             <a class="btn btn-sm" href="https://github.com/queryery/CSR-PLUS/blob/main/LICENSE" target="_blank" rel="noopener"><span class="btn-fill"></span><span class="btn-tx">License</span></a>
@@ -299,7 +340,6 @@
     </main>
   </div>
 
-  <!-- update popup (modal) -->
   <div class="modal" id="update-modal" hidden>
     <div class="modal-card">
       <div class="modal-scan"></div>
@@ -316,7 +356,6 @@
     </div>
   </div>
 
-  <!-- toast stack -->
   <div class="toasts" id="toasts"></div>
 
   <script src="popup.js"></script>

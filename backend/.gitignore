@@ -1,0 +1,7 @@
+functions/node_modules/
+functions/.env
+functions/.env.*
+functions/grant-tier.js
+functions/*serviceaccount*.json
+.firebase/
+*.log

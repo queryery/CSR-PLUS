@@ -25,14 +25,13 @@
   </header>
 
   <main id="app">
-    <!-- top-level page tabs -->
+
     <nav class="page-tabs" id="page-tabs">
       <button class="page-tab active" data-page="trades"><span class="pt-ic">≡</span> Trades</button>
       <button class="page-tab" data-page="create"><span class="pt-ic">＋</span> Create Offer</button>
       <button class="page-report" id="report-bug" type="button" title="Report a bug or request a feature">🐛 Report a bug</button>
     </nav>
 
-    <!-- ════════════ TRADES list page ════════════ -->
     <section class="page active" id="page-trades">
       <section class="trade-head">
         <h1 class="th-title">Your Trades</h1>
@@ -62,14 +61,12 @@
       </div>
     </section>
 
-    <!-- ════════════ CREATE OFFER page ════════════ -->
     <section class="page" id="page-create">
     <section class="trade-head">
       <h1 class="th-title">Send Trade Offer</h1>
       <p class="th-sub">Select items and coins to trade with a friend.</p>
     </section>
 
-    <!-- STEP 1 — pick a friend ------------------------------------------------>
     <section class="step" id="step-friend">
       <h2 class="block-h">Select Friend</h2>
       <div class="friend-tools">
@@ -80,7 +77,6 @@
       </div>
     </section>
 
-    <!-- STEP 2 — compose the offer -------------------------------------------->
     <section class="step" id="step-compose" hidden>
       <div class="partner-bar" id="partner-bar">
         <div class="pb-info">
@@ -93,7 +89,6 @@
         <button class="pb-close" id="pb-close" title="Change friend">✕</button>
       </div>
 
-      <!-- side tabs: only one inventory grid is mounted at a time (perf) -->
       <div class="trade-tabs" id="trade-tabs">
         <button class="ttab tag-give-tab active" data-side="me">
           <span class="ttab-sheen"></span>
@@ -109,7 +104,6 @@
         </button>
       </div>
 
-      <!-- ME panel -->
       <section class="side-panel active" data-panel="me">
         <label class="coin-row">
           <span class="coin-ic">◎</span>
@@ -130,7 +124,6 @@
         <div class="grid" id="me-grid"><div class="empty">Loading your inventory…</div></div>
       </section>
 
-      <!-- THEM panel -->
       <section class="side-panel" data-panel="them">
         <label class="coin-row">
           <span class="coin-ic">◎</span>
@@ -151,7 +144,6 @@
         <div class="grid" id="them-grid"><div class="empty">Pick a friend first.</div></div>
       </section>
 
-      <!-- summary + actions -->
       <div class="summary" id="summary">
         <div class="sum-side">
           <span class="sum-label">You give</span>
@@ -170,10 +162,9 @@
       </div>
       <div class="form-msg" id="form-msg" hidden></div>
     </section>
-    </section><!-- /page-create -->
+    </section>
   </main>
 
-  <!-- report-a-bug overlay -->
   <div class="trade-overlay" id="report-overlay" hidden>
     <div class="to-card report-card">
       <button class="report-x" id="report-x" title="Close">✕</button>
@@ -199,7 +190,6 @@
     </div>
   </div>
 
-  <!-- trade status overlay: loading → success / error -->
   <div class="trade-overlay" id="trade-overlay" hidden>
     <div class="to-card" id="to-card">
       <div class="to-icon" id="to-icon"><span class="to-spinner"></span></div>

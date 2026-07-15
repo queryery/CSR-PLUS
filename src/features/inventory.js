@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -51,8 +50,16 @@
     const anchor = findAnchor();
     if (!anchor) return;
     const btn = makeButton(id);
-    if (anchor.mode === 'after') anchor.node.insertAdjacentElement('afterend', btn);
-    else anchor.node.appendChild(btn);
+    if (anchor.mode === 'after') {
+      let wrap = anchor.node.parentElement;
+      if (!wrap || !wrap.classList.contains('csrp-pc-actions')) {
+        wrap = document.createElement('div');
+        wrap.className = 'csrp-pc-actions';
+        anchor.node.replaceWith(wrap);
+        wrap.appendChild(anchor.node);
+      }
+      wrap.appendChild(btn);
+    } else anchor.node.appendChild(btn);
   }
 
   CSRP.inventory = { tick };

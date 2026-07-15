@@ -1,17 +1,11 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
 
   CSRP.API_BASE = 'https://api.csrestored.fun';
 
-
-  CSRP.CREATOR_ID = '1371203777817739505';
-
-  CSRP.CREATOR_RANK_IMG = (() => {
-    try { return chrome.runtime.getURL('assets/creator-rank.png'); }
-    catch { return 'https://www.boletaenmano.com/wp-content/uploads/2025/06/disabled.png'; }
-  })();
+  CSRP.PRO_API = 'https://europe-west1-csr-plus-331c8.cloudfunctions.net/api';
+  CSRP.CHECKOUT_HOST = 'https://csr-plus-331c8.web.app';
 
 
   CSRP.MAPS = [
@@ -54,6 +48,7 @@
     soundCountdown: true,
     soundAccept: true,
     theme: 'black',
+    hideBanners: false,
     useCsrpTrades: false,
     tradesPromptDismissed: false,
     useCsrpCases: false,

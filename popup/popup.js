@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
 
@@ -74,6 +73,7 @@
         $$('.nav-i').forEach((b) => b.classList.toggle('active', b === btn));
         $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === tab));
         if (tab === 'friends') loadFriends();
+        if (tab === 'reports') loadReports();
       });
     });
   }
@@ -272,7 +272,13 @@
           <img src="${avatar}" alt="" onerror="this.style.visibility='hidden'"/>
           <span class="fn">${esc(f.name)}</span>
           <span class="fp">${f.points ?? ''}</span>
+          <button class="ftrade" title="Send trade offer">⇄</button>
           <span class="fchk">✓</span>`;
+        row.querySelector('.ftrade').addEventListener('click', (e) => {
+          e.stopPropagation();
+          snd('click');
+          chrome.tabs.create({ url: chrome.runtime.getURL(`trades/trades.html?partner=${f.id}`) });
+        });
         row.addEventListener('mouseenter', () => snd('hover'));
         row.addEventListener('click', () => {
           const now = !row.classList.contains('sel');
@@ -478,6 +484,193 @@
     });
   }
 
+  function bindStudio() {
+    $('#open-studio')?.addEventListener('click', () => {
+      snd('click');
+      chrome.tabs.create({ url: chrome.runtime.getURL('customize/customize.html') });
+    });
+    $('#open-subs')?.addEventListener('click', () => {
+      snd('click');
+      chrome.tabs.create({ url: chrome.runtime.getURL('subscribe/subscribe.html') });
+    });
+    bindProAccount();
+    bindReports();
+  }
+
+  const REP_STATUS = {
+    sent: { label: 'Sent', cls: 's-sent', desc: 'Delivered to moderators' },
+    checking: { label: 'Checking', cls: 's-checking', desc: 'A moderator is reviewing it' },
+    punished: { label: 'Punishment applied', cls: 's-punished', desc: 'Action was taken against the player' },
+    insufficient: { label: 'Not enough info', cls: 's-insufficient', desc: 'Add more detail and report again' },
+    rejected: { label: 'Rejected', cls: 's-rejected', desc: 'Dismissed as invalid or fake' },
+  };
+  let repLoaded = false;
+
+  function repTimeAgo(ms) {
+    if (!ms) return '';
+    const s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  function renderReports(items) {
+    const list = $('#rep-list');
+    if (!list) return;
+    if (!items.length) {
+      list.innerHTML = '<div class="rep-empty">No reports yet. Report a player from their CSR+ profile.</div>';
+      return;
+    }
+    list.textContent = '';
+    for (const r of items) {
+      const st = REP_STATUS[r.status] || REP_STATUS.sent;
+      const row = document.createElement('div');
+      row.className = 'rep-item';
+      const head = document.createElement('div');
+      head.className = 'rep-item-head';
+      const reason = document.createElement('span');
+      reason.className = 'rep-reason';
+      reason.textContent = r.reason || 'Report';
+      const chip = document.createElement('span');
+      chip.className = 'rep-chip ' + st.cls;
+      chip.textContent = st.label;
+      head.append(reason, chip);
+      const meta = document.createElement('div');
+      meta.className = 'rep-meta';
+      const tgt = document.createElement('span');
+      tgt.className = 'rep-target';
+      tgt.textContent = 'Player ' + (r.targetId || '');
+      const when = document.createElement('span');
+      when.className = 'rep-when';
+      when.textContent = repTimeAgo(r.at);
+      meta.append(tgt, when);
+      const desc = document.createElement('div');
+      desc.className = 'rep-status-desc';
+      desc.textContent = st.desc;
+      row.append(head, meta, desc);
+      list.appendChild(row);
+    }
+  }
+
+  async function loadReports() {
+    const auth = $('#rep-auth'), body = $('#rep-body');
+    await loadPro();
+    const signedIn = proValid(proSession);
+    if (auth) auth.hidden = signedIn;
+    if (body) body.hidden = !signedIn;
+    if (!signedIn) return;
+    const list = $('#rep-list');
+    if (!repLoaded && list) list.innerHTML = '<div class="cl-skel"></div>';
+    const resp = await proProxy('/me/reports', { token: proSession.token });
+    repLoaded = true;
+    if (resp.ok && resp.data && Array.isArray(resp.data.reports)) renderReports(resp.data.reports);
+    else if (resp.status === 401) { renderReports([]); }
+    else if (list) list.innerHTML = '<div class="rep-empty">Could not load your reports. Try again.</div>';
+  }
+
+  function bindReports() {
+    $('#rep-signin')?.addEventListener('click', async () => {
+      snd('click'); $('#rep-signin').disabled = true;
+      const s = await proSignIn(); $('#rep-signin').disabled = false;
+      if (!s) return toast('Sign-in failed or cancelled');
+      await refreshPro(); await loadReports();
+    });
+    $('#rep-refresh')?.addEventListener('click', () => { snd('click'); repLoaded = false; loadReports(); });
+  }
+
+  const JWT_KEY = 'csrpProToken';
+  const DISCORD_CLIENT_ID = '1526694025757851819';
+  let proSession = null, proTier = 'free';
+
+  function proProxy(path, opts = {}) {
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ type: 'csrp:pro', path, ...opts }, (resp) => {
+          if (chrome.runtime.lastError || !resp) return resolve({ ok: false });
+          resolve(resp);
+        });
+      } catch { resolve({ ok: false }); }
+    });
+  }
+  const jwtExp = (t) => { try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp || 0; } catch { return 0; } };
+  const proValid = (s) => !!(s && s.token && s.exp && s.exp * 1000 > Date.now() + 30000);
+
+  function loadPro() {
+    return new Promise((r) => chrome.storage.local.get([JWT_KEY], (d) => { proSession = (d && d[JWT_KEY]) || null; r(proSession); }));
+  }
+  async function proSignIn() {
+    if (proValid(proSession)) return proSession;
+    const redirectUri = chrome.identity.getRedirectURL();
+    const authUrl = 'https://discord.com/api/oauth2/authorize?' + new URLSearchParams({
+      client_id: DISCORD_CLIENT_ID, response_type: 'code', redirect_uri: redirectUri, scope: 'identify', prompt: 'consent',
+    }).toString();
+    const redirect = await new Promise((res) => {
+      try { chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true }, (r) => res(chrome.runtime.lastError ? null : r)); }
+      catch { res(null); }
+    });
+    if (!redirect) return null;
+    const code = new URL(redirect).searchParams.get('code');
+    if (!code) return null;
+    const resp = await proProxy('/auth/exchange', { method: 'POST', body: { code, redirectUri } });
+    if (!resp.ok || !resp.data || !resp.data.token) return null;
+    proSession = { token: resp.data.token, exp: jwtExp(resp.data.token), user: resp.data.user || null };
+    chrome.storage.local.set({ [JWT_KEY]: proSession });
+    return proSession;
+  }
+  function reflectPro() {
+    const signedIn = proValid(proSession);
+    const st = $('#pro-status');
+    if (st) st.textContent = signedIn
+      ? `${proSession.user?.name || 'Signed in'} · ${proTier === 'premium' ? 'Premium' : proTier === 'pro' ? 'Pro' : 'Free'}`
+      : 'Not signed in';
+    $('#pro-signin').hidden = signedIn;
+    $('#pro-signout').hidden = !signedIn;
+    $('#hide-banners-set').hidden = !(signedIn && (proTier === 'pro' || proTier === 'premium'));
+    const area = (chrome.storage && chrome.storage.sync) ? chrome.storage.sync : chrome.storage.local;
+    area.get(['hideBanners'], (d) => { $('#pop-hide-banners')?.classList.toggle('on', d.hideBanners === true); });
+  }
+  async function refreshPro() {
+    if (!proValid(proSession)) { proTier = 'free'; reflectPro(); return; }
+    const resp = await proProxy('/me', { token: proSession.token });
+    if (resp.ok && resp.data) { proTier = resp.data.tier || 'free'; proSession.user = proSession.user || resp.data.user; }
+    reflectPro();
+  }
+  function bindProAccount() {
+    loadPro().then(() => {
+      reflectPro();
+      if (proValid(proSession)) refreshPro();
+    });
+    $('#pro-signin')?.addEventListener('click', async () => {
+      snd('click'); $('#pro-signin').disabled = true;
+      const s = await proSignIn(); $('#pro-signin').disabled = false;
+      if (!s) return toast('Sign-in failed or cancelled');
+      await refreshPro(); toast('Signed in');
+    });
+    $('#pro-signout')?.addEventListener('click', () => {
+      proSession = null; proTier = 'free'; chrome.storage.local.remove(JWT_KEY); reflectPro(); snd('off');
+    });
+    $('#pop-hide-banners')?.addEventListener('click', () => {
+      const el = $('#pop-hide-banners');
+      const on = !el.classList.contains('on');
+      el.classList.toggle('on', on);
+      snd(on ? 'on' : 'off');
+      const area = (chrome.storage && chrome.storage.sync) ? chrome.storage.sync : chrome.storage.local;
+      area.set({ hideBanners: on });
+      if (area !== chrome.storage.local) chrome.storage.local.set({ hideBanners: on });
+    });
+  }
+
+  function bindDocs() {
+    const open = (e) => {
+      e.preventDefault();
+      snd('click');
+      chrome.tabs.create({ url: chrome.runtime.getURL('docs/docs.html') });
+    };
+    $('#docs-link')?.addEventListener('click', open);
+    $('#side-docs')?.addEventListener('click', open);
+  }
+
 
   function cmpVer(a, b) {
     const pa = a.split('.').map(Number), pb = b.split('.').map(Number);
@@ -505,6 +698,8 @@
     bindAccept();
     bindSound();
     bindFeedback();
+    bindDocs();
+    bindStudio();
     renderMaps();
     reflectMaster();
     showVersion();

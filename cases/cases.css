@@ -1,13 +1,9 @@
-/* CSR+ Cases — case browser + cinematic unboxing. Builds on trades.css tokens. */
-
 :root {
   --gold: #ffd24a;
   --gold-dim: rgba(255, 210, 74, 0.14);
   --gold-line: rgba(255, 210, 74, 0.45);
 }
 
-/* Author display rules (flex/grid) would otherwise override the UA's
- * [hidden] { display: none } — make hidden always win on this page. */
 [hidden] { display: none !important; }
 
 #app { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 26px 28px 80px; }
@@ -20,12 +16,10 @@
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
 
-/* ── toolbar ─────────────────────────────────────────────────────────── */
 .cs-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0 20px; }
 .cs-tools .tb-search { flex: 1 1 220px; min-width: 180px; }
 .cs-count { color: var(--muted); font-size: 12px; font-weight: 700; margin-left: auto; }
 
-/* ── case grid (angular cards, trades style) ─────────────────────────── */
 .case-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 14px;
   content-visibility: auto;
@@ -63,7 +57,6 @@
 .cc-name { font-size: 12.5px; font-weight: 700; line-height: 1.25; min-height: 31px; display: flex; align-items: center; }
 .cc-price { font-size: 12px; }
 
-/* ── single case view ────────────────────────────────────────────────── */
 .cs-back {
   background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 700;
   cursor: pointer; padding: 4px 0; margin-bottom: 10px; transition: color 0.15s;
@@ -118,7 +111,6 @@
   border: 1px solid rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); color: #ffb3b8; }
 .case-msg.ok { border-color: rgba(120,235,160,0.4); background: rgba(120,235,160,0.07); color: #c7ffd9; }
 
-/* ── contents grid (specials render as gold cards inside it) ─────────── */
 .contents .block-h { margin-bottom: 12px; }
 .cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .cs-grid .card { cursor: default; animation: ccIn 0.35s var(--ease) backwards; }
@@ -131,7 +123,6 @@
   clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%);
 }
 
-/* ════════════ OPENING OVERLAY (CS:GO-style: case + reel) ════════════ */
 .open-stage {
   position: fixed; inset: 0; z-index: 55;
   display: flex; align-items: center; justify-content: center;
@@ -186,7 +177,6 @@
 .reel-item.ri-special .ri-name { color: var(--gold); }
 .reel-item.ri-special .ri-img { filter: drop-shadow(0 0 10px rgba(255,210,74,0.6)); }
 
-/* landing: winner pops, the rest dims */
 .reel.done .reel-item { opacity: 0.28; }
 .reel.done .reel-item.ri-win { opacity: 1; transform: scale(1.1); z-index: 2;
   box-shadow: 0 0 0 1px var(--rc, #9aa0ad), 0 0 30px color-mix(in srgb, var(--rc, #9aa0ad) 65%, transparent); }
@@ -207,11 +197,8 @@
 .reel-fade-l { left: 0; background: linear-gradient(90deg, rgba(3,3,6,0.95), transparent); }
 .reel-fade-r { right: 0; background: linear-gradient(-90deg, rgba(3,3,6,0.95), transparent); }
 
-/* ── dropped-item overlay ────────────────────────────────────────────── */
 .reveal-overlay {
   position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
-  /* If the card is ever taller than the viewport, the OVERLAY scrolls — the
-     card itself never grows an inner scrollbar. */
   overflow-y: auto; padding: 20px 0;
   background:
     radial-gradient(60% 60% at 50% 46%, color-mix(in srgb, var(--rc, #9aa0ad) 13%, transparent), transparent 70%),
@@ -221,7 +208,7 @@
 }
 @keyframes rvFade { from { opacity: 0; } }
 .reveal-card {
-  position: relative; width: min(760px, 94vw); margin: auto; /* centers + plays nice with overlay scroll */
+  position: relative; width: min(760px, 94vw); margin: auto;
   padding: 24px 28px 26px;
   border: 2px solid color-mix(in srgb, var(--rc, #9aa0ad) 45%, var(--line-2));
   background: linear-gradient(180deg, var(--panel-2), var(--panel));
@@ -232,7 +219,6 @@
 @keyframes rvPop { 0% { transform: scale(0.82) translateY(16px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 .reveal-card.special { border-color: var(--gold-line); box-shadow: 0 0 80px rgba(255,210,74,0.3); }
 
-/* staggered entrance for the details column */
 .reveal-card.rv-anim .rv-info > * { animation: rvUp 0.45s var(--ease) backwards; }
 .reveal-card.rv-anim .rv-info > *:nth-child(1) { animation-delay: 0.10s; }
 .reveal-card.rv-anim .rv-info > *:nth-child(2) { animation-delay: 0.18s; }
@@ -263,7 +249,6 @@
 .rv-grid { position: relative; display: grid; grid-template-columns: 1.4fr 2fr; gap: 26px; margin-top: 22px; }
 @media (max-width: 640px) { .rv-grid { grid-template-columns: 1fr; } }
 
-/* left: item art panel tinted by rarity */
 .rv-artbox {
   position: relative; display: flex; flex-direction: column; justify-content: flex-end;
   min-height: 230px; overflow: hidden; border-radius: 10px;
@@ -276,7 +261,6 @@
 .rv-topline { position: absolute; left: 50%; top: 0; z-index: 1; height: 2px; width: 36%;
   transform: translateX(-50%); background: var(--rc, #9aa0ad);
   box-shadow: 0 0 12px var(--rc, #9aa0ad); }
-/* breathing rarity glow behind the item */
 .rv-artbox::before {
   content: ""; position: absolute; left: 50%; top: 46%; width: 75%; aspect-ratio: 1;
   transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
@@ -285,7 +269,6 @@
 }
 @keyframes rvBreathe { 0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.94); }
   50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } }
-/* shine sweep across the art panel on entrance */
 .rv-artbox::after {
   content: ""; position: absolute; top: -30%; bottom: -30%; left: -40%; width: 34%;
   transform: rotate(18deg) translateX(-120%); pointer-events: none;
@@ -293,7 +276,6 @@
 }
 .reveal-card.rv-anim .rv-artbox::after { animation: rvShine 1.1s ease-out 0.35s; }
 @keyframes rvShine { to { transform: rotate(18deg) translateX(620%); } }
-/* rotating rays behind a special drop */
 .reveal-card.special .rv-art::before {
   content: ""; position: absolute; left: 50%; top: 50%; width: 190%; aspect-ratio: 1;
   transform: translate(-50%, -50%); pointer-events: none;
@@ -312,7 +294,6 @@
 .rv-art .rv-star { font-size: 74px; color: var(--gold); text-shadow: 0 0 30px rgba(255,210,74,0.8); position: relative; }
 .rv-artname { position: relative; z-index: 1; padding: 0 0 12px 14px; font-size: 11.5px; color: var(--muted); }
 
-/* right: details */
 .rv-info { display: flex; flex-direction: column; gap: 15px; min-width: 0; }
 .rv-name { font-size: 22px; font-weight: 800; letter-spacing: -0.01em;
   text-shadow: 0 0 22px color-mix(in srgb, var(--rc, #9aa0ad) 45%, transparent); }
@@ -327,7 +308,6 @@
 .rv-stat-k { font-size: 11.5px; color: var(--fg-dim); }
 .rv-stat-v { font-size: 14px; font-weight: 700; color: var(--fg); }
 
-/* float bar (wear ranges: FN 7% / MW 8% / FT 23% / WW 7% / BS 55%) */
 .rv-floatblock { display: flex; flex-direction: column; gap: 9px; }
 .rv-lbl { font-size: 11.5px; color: var(--fg-dim); }
 .rv-floatbar { position: relative; display: flex; width: 100%; }
@@ -351,7 +331,6 @@
 .rv-sell.sold { opacity: 0.6; cursor: default; }
 .rv-sell:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── loading state (spinner + "the servers are slow" messaging) ─────────── */
 .cs-loading {
   grid-column: 1 / -1; display: flex; align-items: center; gap: 14px;
   padding: 16px 18px; border: 1px solid var(--line);
@@ -370,7 +349,6 @@
 .cs-load-sub { font-size: 11.5px; color: var(--muted); animation: csPulse 1.6s ease-in-out infinite; }
 @keyframes csPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
-/* ── error / retry block (server didn't respond) ───────────────────────── */
 .cs-error {
   grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   padding: 18px 20px; border: 1px solid rgba(255,107,107,0.32);
@@ -389,10 +367,8 @@
 .cs-retry:hover { background: var(--gold-dim); border-color: var(--gold-line); color: var(--gold); }
 .cs-retry:active { transform: scale(0.97); }
 
-/* ── render perf: off-screen cards skip layout/paint entirely ───────────── */
 .case-card, .cs-grid .card { content-visibility: auto; contain-intrinsic-size: 180px 230px; }
 
-/* skeletons for the case grid */
 .case-skel { height: 182px; border: 1px solid var(--line);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
   background: linear-gradient(110deg, var(--panel) 30%, var(--panel-2) 50%, var(--panel) 70%);

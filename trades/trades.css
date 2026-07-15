@@ -1,5 +1,3 @@
-/* CSR+ trade composer — cyberpunk console, mirrors profile/inventory styling.
- * Two-column give/receive layout, skin cards reuse the inventory card markup. */
 :root {
   --bg: #050507; --bg-2: #0b0b0f; --panel: #0e0e13; --panel-2: #14141b;
   --line: rgba(255,255,255,0.09); --line-2: rgba(255,255,255,0.22);
@@ -50,7 +48,6 @@ body { min-height: 100vh; position: relative; overflow-x: hidden; }
 .site-link { color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700; transition: color 0.18s; }
 .site-link:hover { color: var(--fg); }
 
-/* BETA badge */
 .beta-badge {
   display: inline-block; margin-left: 7px; padding: 2px 7px; font-size: 9px; font-weight: 900; letter-spacing: 0.14em;
   color: #ffd24a; border: 1px solid color-mix(in srgb, #ffd24a 45%, transparent);
@@ -66,7 +63,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .th-title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
 .th-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-/* top-level page tabs (Trades / Create Offer) */
 .page-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
 .page-tab { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; color: var(--fg-dim);
   padding: 12px 20px; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; cursor: pointer; position: relative;
@@ -79,7 +75,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .page { display: none; }
 .page.active { display: block; animation: rise 0.3s var(--ease) both; }
 
-/* Report-a-bug button (pinned right in the tab bar) */
 .page-report { margin-left: auto; align-self: center; display: inline-flex; align-items: center; gap: 6px;
   cursor: pointer; color: #ffd24a; font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
   border: 1px solid rgba(255,210,74,0.4); background: rgba(255,210,74,0.08); padding: 8px 14px; border-radius: 999px;
@@ -87,7 +82,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .page-report:hover { color: #ffe69a; border-color: rgba(255,210,74,0.75); background: rgba(255,210,74,0.16); transform: translateY(-1px); }
 .page-report:active { transform: scale(0.98); }
 
-/* ── report overlay ─────────────────────────────────────────────────────── */
 .report-card { --c: #ffd24a; max-width: 460px; padding: 30px 28px 26px; }
 .report-card::before { background: #ffd24a; box-shadow: 0 0 16px rgba(255,210,74,0.6); }
 .report-x { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; background: none;
@@ -125,7 +119,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 }
 .block-h::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-2), transparent); }
 
-/* shared search */
 .tb-search {
   flex: 1; min-width: 160px; background: var(--panel); border: 1px solid var(--line); color: var(--fg);
   padding: 9px 12px; font-size: 13px; outline: none;
@@ -134,7 +127,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .tb-search:focus { border-color: var(--accent); }
 .tb-search::placeholder { color: var(--muted); }
 
-/* ── friend picker ──────────────────────────────────────────────────────── */
 .friend-tools { margin-bottom: 14px; display: flex; }
 .friend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
 .friend {
@@ -152,7 +144,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .fr-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fr-sub { font-size: 11px; color: var(--muted); font-family: "Consolas", monospace; }
 
-/* ── partner bar ────────────────────────────────────────────────────────── */
 .partner-bar {
   display: flex; align-items: center; justify-content: space-between;
   background: var(--panel); border: 1px solid var(--line-2); padding: 9px 14px; margin-bottom: 14px;
@@ -167,7 +158,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
   transition: color 0.18s, border-color 0.18s; }
 .pb-close:hover { color: var(--give); border-color: var(--give); }
 
-/* ── side tabs (give / receive) — segmented, glowing, animated ───────────── */
 .trade-tabs {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; padding: 0;
 }
@@ -182,11 +172,11 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 }
 .tag-give-tab { --c: var(--give); }
 .tag-get-tab { --c: var(--get); }
-.ttab::before { /* left accent bar */
+.ttab::before {
   content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c);
   opacity: 0.4; transition: opacity 0.2s, box-shadow 0.25s;
 }
-.ttab::after { /* corner glow on the active tab */
+.ttab::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
   background: radial-gradient(130% 100% at 0% 0%, color-mix(in srgb, var(--c) 26%, transparent), transparent 62%);
   transition: opacity 0.3s;
@@ -209,7 +199,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
   clip-path: polygon(0 0, 100% 0, 100% 72%, 72% 100%, 0 100%);
   transition: box-shadow 0.2s, transform 0.2s var(--ease);
 }
-/* directional glyph: give pushes out (↑/→), receive pulls in (↓/←) */
 .tag-give-tab .ttab-dot::after { content: "↑"; }
 .tag-get-tab .ttab-dot::after { content: "↓"; }
 .ttab.active .ttab-dot { box-shadow: 0 0 16px color-mix(in srgb, var(--c) 55%, transparent); transform: scale(1.06); }
@@ -218,7 +207,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 @keyframes nudgeUp { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes nudgeDown { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
 .ttab-dot, .ttab-text, .ttab-badge { position: relative; z-index: 1; }
-/* text absorbs the free space so a wider badge never resizes the tab content */
 .ttab-text { display: flex; flex-direction: column; gap: 2px; line-height: 1.1; flex: 1 1 auto; min-width: 0; }
 .ttab-text > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ttab-sub { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -243,7 +231,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
 .coin-row:focus-within { border-color: color-mix(in srgb, #ffd24a 55%, var(--line-2)); box-shadow: 0 0 18px rgba(255,210,74,0.15); }
 
-/* glowing golden coin disc */
 .coin-ic {
   --gold: #ffd24a; --gold-d: #c8941a;
   width: 26px; height: 26px; flex: none; display: grid; place-items: center; position: relative;
@@ -253,10 +240,10 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
   box-shadow: 0 0 0 1px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.5), 0 0 14px rgba(255,210,74,0.55),
               inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.35);
 }
-.coin-ic::before { /* engraved ring */
+.coin-ic::before {
   content: ""; position: absolute; inset: 4px; border-radius: 50%;
   border: 1px solid rgba(120,80,0,0.45); box-shadow: inset 0 0 3px rgba(120,80,0,0.4); }
-.coin-ic::after { /* the ◎ glyph, embossed */
+.coin-ic::after {
   content: "◎"; font-size: 15px; font-weight: 900; color: #6e4a00; line-height: 1;
   text-shadow: 0 1px 0 rgba(255,255,255,0.55); }
 .coin-ic { animation: coinShine 3.4s ease-in-out infinite; }
@@ -273,7 +260,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .coin-input { -moz-appearance: textfield; appearance: textfield; }
 .coin-bal { font-size: 11px; color: var(--muted); font-family: "Consolas", monospace; white-space: nowrap; min-width: 90px; }
 
-/* inventory toolbar: search + sort + selected count */
 .inv-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .seg { display: flex; background: var(--panel-2); border: 1px solid var(--line); padding: 2px; flex: none; }
 .seg button { background: none; border: none; color: var(--muted); padding: 7px 13px; font-size: 11px; font-weight: 700;
@@ -282,7 +268,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .seg button.on { background: var(--accent); color: var(--accent-ink); }
 .sel-count { font-size: 11px; color: var(--muted); font-family: "Consolas", monospace; white-space: nowrap; margin-left: auto; }
 
-/* category chips */
 .cat-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
 .chip {
   display: inline-flex; align-items: center; gap: 7px;
@@ -296,7 +281,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .chip-n { font-family: "Consolas", monospace; font-size: 10px; opacity: 0.8; }
 .chip.on .chip-n { opacity: 1; }
 
-/* grid + cards (cards reuse the inventory markup/classes) */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
   grid-auto-rows: 176px; gap: 10px;
   height: clamp(220px, 42vh, 460px); overflow-y: auto; overflow-x: hidden; padding: 2px 6px 2px 2px;
@@ -332,7 +316,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .c-star { margin-right: 2px; }
 .c-skin { font-size: 10px; color: var(--fg-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .c-badges { display: flex; align-items: center; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-/* special-pattern badge: Doppler phase / CH blue gem tier / Fire & Ice */
 .c-gem { font-family: "Consolas", monospace; font-size: 8.5px; font-weight: 700; border: 1px solid; white-space: nowrap;
   padding: 1px 4px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
   text-shadow: 0 0 8px currentColor; }
@@ -348,7 +331,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
   background: linear-gradient(90deg, transparent, var(--grid), transparent); animation: shimmer 1.3s linear infinite; }
 @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
-/* ── summary + actions ──────────────────────────────────────────────────── */
 .summary { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 14px;
   background: var(--panel); border: 1px solid var(--line); padding: 11px 18px;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
@@ -360,7 +342,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .sum-side-r .sum-val { justify-content: flex-end; }
 .sum-arrow { font-size: 22px; color: var(--accent); text-shadow: 0 0 10px var(--glow); }
 
-/* reusable gold coin chip: a mini disc + amount (used in summaries/cards) */
 .coin-chip { display: inline-flex; align-items: center; gap: 5px; color: #ffd24a;
   font-family: "Consolas", monospace; font-weight: 800; }
 .coin-mini {
@@ -392,14 +373,11 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 
 .foot { position: relative; z-index: 2; text-align: center; color: var(--muted); font-size: 11px; padding: 24px; }
 
-/* ── trade status overlay ───────────────────────────────────────────────── */
 .trade-overlay {
   position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 24px;
   background: rgba(4, 4, 7, 0.72); backdrop-filter: blur(7px);
   animation: ovIn 0.25s var(--ease) both;
 }
-/* [hidden] must beat the display rules above/below, or the overlay and its
-   sub-sections show on load. */
 .trade-overlay[hidden], .to-detail[hidden], .to-actions[hidden] { display: none !important; }
 @keyframes ovIn { from { opacity: 0; } to { opacity: 1; } }
 .to-card {
@@ -442,7 +420,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .to-actions { display: flex; gap: 12px; margin-top: 22px; }
 .to-actions .btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 
-/* ── trades list (Trades page) ──────────────────────────────────────────── */
 .tl-search-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 .tl-date { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; color: var(--fg-dim);
   text-transform: uppercase; letter-spacing: 0.06em; }
@@ -512,7 +489,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .tr-open-ic { transition: transform 0.16s var(--ease), color 0.16s; }
 .tr:hover .tr-open-ic { color: var(--accent); transform: translate(2px,-2px); }
 
-/* hover preview (read-only floating card) */
 .tr-preview { position: fixed; z-index: 60; width: 440px; max-width: 92vw; pointer-events: none;
   background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line-2);
   box-shadow: 0 18px 50px rgba(0,0,0,0.6); padding: 12px 13px;
@@ -547,7 +523,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
 .trp-foot { margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 10px; color: var(--muted);
   font-family: "Consolas", monospace; }
 
-/* ── single-trade view (trade-view.html) ────────────────────────────────── */
 .tv-arrow { color: var(--muted); margin: 0 4px; }
 .tv-status { font-weight: 800; }
 .tv-status.st-pending { color: #fbbf24; }
@@ -567,7 +542,6 @@ main { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; paddin
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%); }
 .tv-grid { height: auto; max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 
-/* accept / reject bar (recipient, pending) */
 .tv-actions { margin-top: 22px; }
 .tv-act-btns { display: flex; gap: 12px; }
 .tv-act-btns .btn { flex: 1; padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer; border: 1px solid var(--line-2);

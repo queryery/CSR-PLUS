@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CSR+ Manual</title>
+<style>
+  :root {
+    --bg: #060608; --panel: #0c0c10; --panel-2: #121218; --line: #232330;
+    --fg: #e8e8f0; --muted: #8a8a9a; --accent: #ffffff; --red: #e23a45;
+    --blue: #8fb4ff; --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.65 "Segoe UI", system-ui, sans-serif;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+  .wrap { position: relative; z-index: 1; display: flex; max-width: 1200px; margin: 0 auto; }
+
+  aside {
+    position: sticky; top: 0; align-self: flex-start; height: 100vh; overflow-y: auto;
+    width: 250px; flex: none; padding: 28px 18px; border-right: 1px solid var(--line);
+  }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: 0.06em; margin-bottom: 2px; }
+  .logo span { color: var(--red); }
+  .logo-sub { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 22px; }
+  aside a {
+    display: block; padding: 6px 10px; margin: 1px 0; color: var(--muted);
+    text-decoration: none; font-size: 13px; border-left: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+  }
+  aside a:hover { color: var(--fg); background: var(--panel-2); border-left-color: var(--accent); }
+  aside .toc-h { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); margin: 18px 0 6px; opacity: 0.7; }
+
+  main { flex: 1; min-width: 0; padding: 40px 44px 100px; }
+  h1 { font-size: 30px; font-weight: 900; letter-spacing: 0.02em; }
+  .lead { color: var(--muted); margin: 8px 0 34px; max-width: 68ch; }
+  section { margin-bottom: 46px; scroll-margin-top: 24px; }
+  h2 {
+    font-size: 19px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--line);
+  }
+  h2 .idx { color: var(--muted); font-size: 12px; letter-spacing: 0.2em; margin-right: 10px; }
+  h3 { font-size: 15px; font-weight: 800; margin: 18px 0 6px; }
+  p, li { color: #c9c9d6; max-width: 76ch; }
+  ul { padding-left: 22px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  code, kbd {
+    font-family: Consolas, monospace; font-size: 13px; color: var(--fg);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); padding: 14px 18px; margin: 12px 0;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  }
+  .card b { color: var(--fg); }
+  .tip { border-left: 3px solid var(--blue); }
+  .warn { border-left: 3px solid var(--red); }
+  .chip {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+    text-transform: uppercase; padding: 2px 8px; margin-left: 8px; vertical-align: 2px;
+    border: 1px solid var(--line); color: var(--muted); border-radius: 3px;
+  }
+  .chip.new { color: var(--red); border-color: var(--red); }
+  .chip.beta { color: var(--blue); border-color: var(--blue); }
+  table { border-collapse: collapse; margin: 10px 0; width: 100%; max-width: 760px; }
+  th, td { text-align: left; padding: 8px 12px; border: 1px solid var(--line); font-size: 13.5px; }
+  th { background: var(--panel-2); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  td { color: #c9c9d6; }
+  footer { color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 18px; }
+  @media (max-width: 860px) { aside { display: none; } main { padding: 28px 20px 80px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside>
+    <div class="logo">CSR<span>+</span></div>
+    <div class="logo-sub">User manual</div>
+    <div class="toc-h">Basics</div>
+    <a href="#start">Getting started</a>
+    <a href="#master">Master switch</a>
+    <a href="#popup">The popup</a>
+    <div class="toc-h">Match intel</div>
+    <a href="#badges">Player badges &amp; rating</a>
+    <a href="#winprob">Win probability</a>
+    <a href="#overlay">Match Found overlay</a>
+    <a href="#notes">Notes &amp; tags</a>
+    <div class="toc-h">Automation</div>
+    <a href="#autoaccept">Auto-accept</a>
+    <a href="#mapban">Smart map veto</a>
+    <a href="#servercopy">Server copy</a>
+    <a href="#invites">Friend invite filter</a>
+    <div class="toc-h">Pages &amp; tools</div>
+    <a href="#profile">Profile pages</a>
+    <a href="#inventory">Inventory viewer</a>
+    <a href="#trades">CSR+ Trades</a>
+    <a href="#sendtrade">Send trade button</a>
+    <a href="#cases">CSR+ Cases</a>
+    <a href="#leaderboard">Leaderboard search</a>
+    <a href="#elo">ELO tracker</a>
+    <div class="toc-h">Personalisation</div>
+    <a href="#custom">Profile customization</a>
+    <a href="#themes">Themes</a>
+    <a href="#sounds">Sounds</a>
+    <div class="toc-h">Meta</div>
+    <a href="#updates">Updates</a>
+    <a href="#privacy">Privacy &amp; safety</a>
+    <a href="#faq">FAQ</a>
+  </aside>
+
+  <main>
+    <h1>CSR+ — Enhanced Match Suite</h1>
+    <p class="lead">Everything the extension does, how it works, and how to control it.
+      CSR+ runs on <code>csrestored.fun</code> and adds match intel, automation and quality-of-life
+      tools on top of the site — nothing is modified server-side, and none of it gives gameplay advantages.</p>
+
+    <section id="start">
+      <h2><span class="idx">01</span>Getting started</h2>
+      <p>Install the extension, then open <code>csrestored.fun</code> and sign in as usual.
+        CSR+ activates automatically on the site. Click the CSR+ icon in your browser toolbar to open
+        the control popup — every feature described below can be toggled there.</p>
+      <div class="card tip"><b>Tip:</b> most data features need you to be signed in on the site,
+        because CSR+ reads the same API your own browser session uses (match history, friends, inventory).</div>
+    </section>
+
+    <section id="master">
+      <h2><span class="idx">02</span>Master switch</h2>
+      <p>The big switch at the top of the popup's <b>General</b> tab turns the whole extension on or off.
+        When off, every injected element (badges, bars, buttons, overlays) is removed from the page instantly
+        and all automation loops stop. Nothing else needs to be un-configured.</p>
+    </section>
+
+    <section id="popup">
+      <h2><span class="idx">03</span>The popup</h2>
+      <p>The popup is CSR+'s control console. Its tabs:</p>
+      <table>
+        <tr><th>Tab</th><th>What it controls</th></tr>
+        <tr><td>General</td><td>Master switch, player badges, win probability and other overlays.</td></tr>
+        <tr><td>Automation</td><td>Auto-accept (with countdown delay) and smart map veto.</td></tr>
+        <tr><td>Appearance</td><td>Theme (Black / White) and the stats period used for badges (today / yesterday / last 10).</td></tr>
+        <tr><td>Map veto</td><td>Drag your ban order. Top of the list is banned first; the bottom map is the one you want to keep.</td></tr>
+        <tr><td>Friends</td><td>Whose party invites are auto-accepted, plus the ⇄ shortcut to send a trade offer.</td></tr>
+        <tr><td>Sound</td><td>UI and match sound cues, per-group toggles, volume, previews.</td></tr>
+        <tr><td>Feedback</td><td>Bug reports / ideas for the beta features.</td></tr>
+        <tr><td>About</td><td>Version, update check, changelog, credits, and this manual.</td></tr>
+      </table>
+      <p>The sidebar also shows the community <b>live users</b> counter and a <b>DOCS</b> shortcut to this page.</p>
+    </section>
+
+    <section id="badges">
+      <h2><span class="idx">04</span>Player badges &amp; rating</h2>
+      <p>In the match room every player card gets a strength badge (e.g. <i>Strong</i>, <i>Average</i>)
+        computed from their ELO and recent performance:</p>
+      <ul>
+        <li><b>Elo-led hybrid model:</b> ELO dominates the score; K/D, kills-per-round, estimated ADR, winrate and
+          current form add up to a smaller performance nudge.</li>
+        <li><b>Recency-weighted:</b> newer matches count more than old ones.</li>
+        <li><b>Confidence-weighted:</b> players with very few games are pulled toward "Average" on purpose —
+          3 games is not enough evidence to call someone a demon or a bot.</li>
+      </ul>
+      <p>Hover a badge for the full tooltip: sample size, rating, K/D, K/R, winrate, form trend, win/loss streak
+        and K/D stability. The time range (today / yesterday / last 10 games) is set in <b>Appearance</b>.</p>
+      <div class="card"><b>Note:</b> the site's API has no per-round damage, so ADR is an estimate:
+        <code>K/R × 100 + assists/round × 22</code>, clamped to a sane range.</div>
+    </section>
+
+    <section id="winprob">
+      <h2><span class="idx">05</span>Win probability</h2>
+      <p>A blue/red bar above the two teams in the match room showing each side's chance to win.
+        It uses the FACEIT-style logistic curve on the teams' average ELO
+        (<code>1 / (1 + 10^((eloB − eloA)/400))</code>) with a small per-player performance adjustment.
+        The bar fills in as player stats stream in, and always aligns itself to the team grid —
+        it stays clear of the match room chat sidebar.</p>
+    </section>
+
+    <section id="overlay">
+      <h2><span class="idx">06</span>Match Found overlay</h2>
+      <p>When a match is found, CSR+ rebuilds the confirm window with a full intel panel:
+        every player's avatar, name, tag, strength badge, K/D, K/R, ADR and winrate, sorted by strength,
+        plus the win-probability bar. Rows fill in progressively as stats arrive, so the panel appears instantly.</p>
+      <p>The auto-accept countdown lives in this panel's header (or floats top-right if the window
+        hasn't rendered yet). You can always click <b>Accept</b> manually — CSR+ forwards the click to the site's
+        real button.</p>
+    </section>
+
+    <section id="notes">
+      <h2><span class="idx">07</span>Notes &amp; tags</h2>
+      <p>Click any player card in a match room to open a compact popover with their stats and two private fields:</p>
+      <ul>
+        <li><b>Tag</b> — a short label (e.g. <code>smurf</code>, <code>mate</code>, <code>toxic</code>) shown as a chip
+          on their card every time you meet them again.</li>
+        <li><b>Note</b> — free text only you can see.</li>
+      </ul>
+      <p>Everything is stored locally in your browser. Nothing is uploaded anywhere.</p>
+      <div class="card tip"><b>Group / lobby cards:</b> clicking a lobby member opens their CSR+ profile.
+        Site controls on the card — like the kick <b>✕</b> — still work normally; CSR+ ignores clicks on them.</div>
+    </section>
+
+    <section id="autoaccept">
+      <h2><span class="idx">08</span>Auto-accept</h2>
+      <p>Automatically accepts the match when one is found. Configure in <b>Automation</b>:</p>
+      <ul>
+        <li><b>Delay</b> — a countdown (with ticking sound, if enabled) before the accept is clicked,
+          so you have a moment to cancel.</li>
+        <li>Works together with the Match Found overlay; the countdown is shown in its header.</li>
+      </ul>
+    </section>
+
+    <section id="mapban">
+      <h2><span class="idx">09</span>Smart map veto</h2>
+      <p>Bans maps for you according to your priority list (drag to reorder in the <b>Map veto</b> tab).
+        The veto on the site is turn-based; CSR+ reads whose turn it is and how many bans the turn allows,
+        then bans your least-wanted maps first. In the final vote round (two maps left, each player votes for one)
+        it casts exactly one vote for your preferred remaining map.</p>
+      <div class="card warn"><b>Heads-up:</b> the bottom map of your list is the one CSR+ tries to keep alive.</div>
+    </section>
+
+    <section id="servercopy">
+      <h2><span class="idx">10</span>Server copy</h2>
+      <p>When your match server is assigned, CSR+ arms the connect line so a single click copies a ready
+        <code>connect ip:port</code> command to your clipboard — even when the site displays the address as
+        "Hidden", the real address from the join link is used. A toast confirms the copy.</p>
+    </section>
+
+    <section id="invites">
+      <h2><span class="idx">11</span>Friend invite filter</h2>
+      <p>In the popup's <b>Friends</b> tab, select which friends' party invites should be auto-accepted.
+        With nobody selected, every invite is accepted. Selected friends are marked with a ✓.</p>
+    </section>
+
+    <section id="profile">
+      <h2><span class="idx">12</span>Profile pages</h2>
+      <p>CSR+ has its own profile page (opened from player cards, popovers, or lobby clicks). It mirrors the
+        site profile — header with avatar, flag and Steam / SteamDB / FaceitFinder links, a statistics grid
+        (winrate, ELO, KDR, AVG, rating, kills, deaths, matches, wins) and a full match history — and adds
+        Overview / History / Inventory tabs.</p>
+    </section>
+
+    <section id="inventory">
+      <h2><span class="idx">13</span>Inventory viewer</h2>
+      <p>On any user page a <b>▦ Watch inventory</b> button opens that player's inventory in the CSR+ viewer:
+        item icons, rarity colours, float &amp; wear (FN/MW/FT/WW/BS), pattern seed, StatTrak™ counts, name tags,
+        and Doppler-phase / Case-Hardened gem badges (data by <b>smel</b>). Sort and filter by type, rarity or name.</p>
+    </section>
+
+    <section id="trades">
+      <h2><span class="idx">14</span>CSR+ Trades <span class="chip beta">beta</span></h2>
+      <p>A full replacement for the site's trade screen. Open it from the site's Trades link
+        (CSR+ offers to take over — your choice is remembered) or from the popup.</p>
+      <ul>
+        <li><b>Trades list</b> — all incoming/outgoing offers with search, direction and date filters,
+          item previews and coin amounts.</li>
+        <li><b>Create offer</b> — pick a friend, select items from both inventories side by side,
+          attach coins on either side, review the summary and send.</li>
+        <li>Item cards show rarity, float, wear, seed, StatTrak™ and name tags — details the default page hides.</li>
+      </ul>
+    </section>
+
+    <section id="sendtrade">
+      <h2><span class="idx">15</span>Send trade button <span class="chip new">new</span></h2>
+      <p>On the site's friends page, every <b>confirmed friend</b> row gets a <b>⇄ Send trade</b> button that
+        opens CSR+ Trades with that friend already selected and their inventory loading.
+        Pending and incoming friend requests deliberately get no button — only mutual friends can be traded with.
+        The same shortcut (⇄) appears next to each friend in the popup's Friends tab.</p>
+    </section>
+
+    <section id="cases">
+      <h2><span class="idx">16</span>CSR+ Cases</h2>
+      <p>A faster, lag-free case-opening screen that replaces the site's cases page while active.
+        The site's own page underneath is paused so your machine isn't rendering two case grids at once.</p>
+    </section>
+
+    <section id="leaderboard">
+      <h2><span class="idx">17</span>Leaderboard search</h2>
+      <p>Adds a search box to the leaderboard so you can find any player by name without paging.
+        Players outside the current page are looked up through the API and shown with their rank and stats.</p>
+    </section>
+
+    <section id="elo">
+      <h2><span class="idx">18</span>ELO tracker</h2>
+      <p>Tracks your ELO across sessions and shows your gains/losses, so you can see your progression
+        at a glance without doing mental math after every match.</p>
+    </section>
+
+    <section id="custom">
+      <h2><span class="idx">19</span>Profile customization <span class="chip new">CSR+ Pro</span></h2>
+      <p>Make your profile and player card yours: a custom banner image behind your profile header,
+        accent colours, name styles and card flair — visible to every other CSR+ user who views your profile
+        or meets you in a match.</p>
+      <ul>
+        <li><b>Banner</b> — upload your own image; it is moderated automatically (and rejected if it contains
+          restricted content) before anyone else can see it.</li>
+        <li><b>Colours &amp; styles</b> — accent colour, name gradient and card border flair.</li>
+        <li><b>Sync</b> — stored in the cloud and applied wherever CSR+ renders you.</li>
+      </ul>
+      <p>Customization is part of <b>CSR+ Pro</b>, a small subscription that covers the storage, moderation and
+        server costs. Sign in with Discord in the customization editor (popup → Profile+), subscribe, and the
+        editor unlocks. Payments are handled by the payment provider — CSR+ never sees your card or PayPal details.</p>
+      <div class="card warn"><b>Moderation:</b> banners pass an automated safety scan before publishing.
+        Repeated attempts to publish restricted content can permanently disable customization for the account.</div>
+    </section>
+
+    <section id="themes">
+      <h2><span class="idx">20</span>Themes</h2>
+      <p>Two popup themes, both monochrome: <b>Black</b> (neon-white on deep black, default) and
+        <b>White</b> (ink on bright concrete). Switch in <b>Appearance</b>. Team colours and rarity colours
+        stay constant across themes so data always reads the same.</p>
+    </section>
+
+    <section id="sounds">
+      <h2><span class="idx">21</span>Sounds</h2>
+      <p>Small audio cues for hover/click, toggles, match found, the accept countdown ticks and accept/cancel.
+        The <b>Sound</b> tab has a master toggle, volume slider, per-group switches and preview buttons.
+        Browsers only allow audio after your first interaction with the page — that's normal.</p>
+    </section>
+
+    <section id="updates">
+      <h2><span class="idx">22</span>Updates</h2>
+      <p>With <b>Auto-update check</b> on, CSR+ checks GitHub for a new release when you open the popup
+        (at most once an hour) and shows a modal when one is available. <b>Check for updates</b> forces a check.
+        Updating opens the GitHub release page — install the new build from there.</p>
+    </section>
+
+    <section id="privacy">
+      <h2><span class="idx">23</span>Privacy &amp; safety</h2>
+      <ul>
+        <li>Notes, tags and all settings are stored <b>locally</b> in your browser.</li>
+        <li>CSR+ talks to the same site API your session already uses; it does not collect analytics.</li>
+        <li>The live users counter only increments an anonymous public counter — no identifying data.</li>
+        <li>Profile customization (opt-in) stores only what you publish: banner, colours and your Discord ID.</li>
+        <li>No gameplay advantages: everything CSR+ does is visible information and UI automation.</li>
+      </ul>
+      <p>Full policy: <a style="color:var(--blue)" href="https://github.com/queryery/CSR-PLUS/blob/main/PRIVACY.md">PRIVACY.md</a>.</p>
+    </section>
+
+    <section id="faq">
+      <h2><span class="idx">24</span>FAQ</h2>
+      <h3>Badges say "Average" for a player who is obviously smurfing.</h3>
+      <p>If they have very few games, the confidence weighting pulls them toward Average on purpose.
+        Check the tooltip's <i>Sample</i> row.</p>
+      <h3>Nothing shows up on the site.</h3>
+      <p>Check the master switch, make sure you're signed in on csrestored.fun, and reload the tab.</p>
+      <h3>Auto-copy of the connect command didn't fire.</h3>
+      <p>Browsers require a click before allowing clipboard writes. Click the connect line once — it's always armed.</p>
+      <h3>The kick ✕ in my group opens a profile instead of kicking.</h3>
+      <p>Fixed in 0.0.9 — CSR+ now passes clicks on site controls straight through.</p>
+    </section>
+
+    <footer>
+      CSR+ · GPL-3.0 · <a style="color:var(--muted)" href="https://github.com/queryery/CSR-PLUS">github.com/queryery/CSR-PLUS</a>
+      · Not affiliated with Valve or Counter-Strike: Restored.
+    </footer>
+  </main>
+</div>
+</body>
+</html>

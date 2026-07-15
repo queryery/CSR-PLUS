@@ -26,7 +26,7 @@
   </header>
 
   <main class="pwrap" id="app">
-    <!-- ═══ left rail: identity + vertical tabs ═══ -->
+
     <aside class="pside">
       <div class="ps-card" id="ps-card">
         <div class="ps-skel">Loading player…</div>
@@ -40,9 +40,8 @@
       <div class="ps-note" id="ps-note"></div>
     </aside>
 
-    <!-- ═══ main panels ═══ -->
     <section class="pmain">
-      <!-- Overview -->
+
       <section class="panel on" data-panel="overview">
         <section class="profile-head" id="head"></section>
         <section class="block" id="stats-block" hidden>
@@ -55,7 +54,6 @@
         </section>
       </section>
 
-      <!-- Performance: graphs -->
       <section class="panel" data-panel="performance">
         <section class="block">
           <h2 class="block-h">ELO trend <span class="block-sub" id="elo-sub"></span></h2>
@@ -75,7 +73,6 @@
         </section>
       </section>
 
-      <!-- History -->
       <section class="panel" data-panel="history">
         <section class="block">
           <h2 class="block-h">Match history</h2>
@@ -85,7 +82,6 @@
         </section>
       </section>
 
-      <!-- Inventory (native, merged — no extra tab) -->
       <section class="panel" data-panel="inventory">
         <section class="block">
           <h2 class="block-h">Inventory <span class="block-sub" id="inv-sub"></span></h2>
@@ -108,7 +104,6 @@
     </section>
   </main>
 
-  <!-- ═══ weapon details (opens on item click) ═══ -->
   <div class="wd-overlay" id="wd" hidden>
     <div class="wd-card">
       <div class="wd-head">

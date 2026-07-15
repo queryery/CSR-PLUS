@@ -1,4 +1,3 @@
-
 (function (root) {
   'use strict';
 

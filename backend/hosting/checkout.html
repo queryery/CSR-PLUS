@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSR+ — Checkout</title>
+<style>
+  :root { --bg:#07080a; --fg:#f4f6f8; --dim:#8b9099; --line:#20242b; --accent:#fff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body {
+    background:var(--bg); color:var(--fg);
+    font:15px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .card {
+    width:100%; max-width:420px; background:#0b0d10; border:1px solid var(--line);
+    border-radius:14px; padding:28px 26px; box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  h1 { font-size:20px; margin:0 0 4px; letter-spacing:.06em; }
+  .plan { color:var(--dim); margin:0 0 2px; text-transform:uppercase; letter-spacing:.18em; font-size:12px; }
+  .price { font-size:34px; font-weight:700; margin:10px 0 2px; }
+  .price small { font-size:14px; color:var(--dim); font-weight:400; }
+  ul { list-style:none; padding:0; margin:16px 0 22px; }
+  li { padding:5px 0 5px 22px; position:relative; color:#cdd2d8; }
+  li::before { content:"›"; position:absolute; left:4px; color:var(--fg); }
+  #paypal-button-container { min-height:48px; }
+  .msg { margin-top:16px; padding:10px 12px; border-radius:8px; font-size:13px; display:none; }
+  .msg.err { display:block; background:#2a1416; border:1px solid #5c2a2f; color:#ffb3ba; }
+  .msg.ok  { display:block; background:#0f2417; border:1px solid #245c3a; color:#9de8bd; }
+  .foot { margin-top:18px; font-size:11px; color:var(--dim); line-height:1.6; }
+  .spin { color:var(--dim); font-size:13px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <p class="plan" id="plan-label">CSR+</p>
+    <h1>Checkout</h1>
+    <div class="price" id="price">—</div>
+    <ul id="features"></ul>
+    <div id="paypal-button-container"><span class="spin">Loading…</span></div>
+    <div class="msg" id="msg"></div>
+    <p class="foot">
+      Payments are processed by PayPal. Your CSR+ tier unlocks after PayPal confirms the
+      subscription. You can cancel anytime in your PayPal account — your tier stays active until
+      the end of the paid period. Refunds/chargebacks revoke the tier.
+    </p>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+  var API = 'https://europe-west1-csr-plus-331c8.cloudfunctions.net/api';
+
+  var params = new URLSearchParams(location.search);
+  var plan = (params.get('plan') || '').toLowerCase();
+  var token = params.get('token') || '';
+
+  var PLANS = {
+    pro:     { label: 'CSR+ Pro',     price: '$2', feats: ['Shared static banner', 'Premium cosmetics', 'Hide everyone’s banners', 'Pro badge'] },
+    premium: { label: 'CSR+ Premium', price: '$4', feats: ['Everything in Pro', 'Animated banner', 'Animated name & avatar frame', 'Priority moderation', 'Premium badge'] }
+  };
+
+  var msg = document.getElementById('msg');
+  function showErr(t) { msg.className = 'msg err'; msg.textContent = t; }
+  function showOk(t)  { msg.className = 'msg ok';  msg.textContent = t; }
+
+  if (plan !== 'pro' && plan !== 'premium') { showErr('Invalid plan.'); return; }
+  if (!token) { showErr('Missing sign-in token. Open checkout from the CSR+ Studio.'); return; }
+
+  var p = PLANS[plan];
+  document.getElementById('plan-label').textContent = p.label;
+  document.getElementById('price').innerHTML = p.price + ' <small>/ month</small>';
+  document.getElementById('features').innerHTML = p.feats.map(function (f) { return '<li>' + f + '</li>'; }).join('');
+
+  fetch(API + '/config').then(function (r) { return r.json(); }).then(function (cfg) {
+    if (!cfg || !cfg.ok) throw new Error('config');
+    var planId = plan === 'premium' ? cfg.premiumPlanId : cfg.proPlanId;
+    var s = document.createElement('script');
+    s.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(cfg.paypalClientId) +
+            '&vault=true&intent=subscription';
+    s.onload = function () { renderButton(planId); };
+    s.onerror = function () { showErr('Could not load PayPal.'); };
+    document.head.appendChild(s);
+  }).catch(function () { showErr('Could not load checkout config.'); });
+
+  function renderButton(planId) {
+    document.getElementById('paypal-button-container').innerHTML = '';
+    paypal.Buttons({
+      style: { shape: 'pill', color: 'white', layout: 'vertical', label: 'subscribe' },
+      createSubscription: function (data, actions) {
+        return actions.subscription.create({ plan_id: planId });
+      },
+      onApprove: function (data) {
+        showOk('Confirming with CSR+…');
+        fetch(API + '/me/paypal/link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ subscriptionID: data.subscriptionID })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j && j.ok) {
+            showOk('✓ ' + (j.tier === 'premium' ? 'Premium' : 'Pro') + ' unlocked! You can close this tab and return to CSR+.');
+          } else {
+            showErr((j && j.error) || 'Could not link subscription.');
+          }
+        }).catch(function () { showErr('Network error linking subscription.'); });
+      },
+      onError: function () { showErr('PayPal error. Please try again.'); }
+    }).render('#paypal-button-container');
+  }
+})();
+</script>
+</body>
+</html>

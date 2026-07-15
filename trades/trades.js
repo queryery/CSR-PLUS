@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const $ = (s) => document.querySelector(s);
@@ -147,11 +146,26 @@
     if (empty) empty.remove();
   }
 
+  let pendingPartner = null;
   async function loadFriends() {
     const resp = await api('/users/friends');
     const data = resp.ok ? resp.data : null;
     state.friends = Array.isArray(data) ? data : [];
     renderFriends();
+
+    if (pendingPartner) {
+      const want = pendingPartner;
+      pendingPartner = null;
+      const f = state.friends.find((x) => String(x.id ?? x.discord_id ?? '') === want);
+      if (f) {
+        const id = String(f.id ?? f.discord_id);
+        selectFriend({
+          id,
+          name: f.name || f.username || 'Player',
+          avatar: f.avatar ? `https://cdn.discordapp.com/avatars/${id}/${f.avatar}.png?size=64` : '',
+        });
+      }
+    }
   }
 
   const gridSel = (side) => (side === 'me' ? '#me-grid' : '#them-grid');
@@ -922,6 +936,12 @@
     bindBack();
     bindControls();
     updateSummary();
+
+    const wanted = new URLSearchParams(location.search).get('partner');
+    if (/^\d{15,21}$/.test(wanted || '')) {
+      pendingPartner = wanted;
+      switchPage('create');
+    }
 
     loadTrades(false);
 

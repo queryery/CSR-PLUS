@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -31,13 +30,8 @@
     const id = member.id;
     const tag = id ? CSRP.notes.getTag?.(id) : null;
 
-    const creator = id && String(id) === CSRP.CREATOR_ID;
     const nameEl = h('div', { class: 'csrp-mf-name' }, [
       id ? 'Loading…' : 'Anonymous',
-      creator ? h('span', { class: 'csrp-tag-chip csrp-creator-chip csrp-mf-creator-chip' }, [
-        h('span', { class: 'csrp-creator-spark', title: 'CSR+ Creator' }, '作'),
-        'CSR+',
-      ]) : null,
       tag ? h('span', { class: 'csrp-tag-chip csrp-mf-tag' }, tag) : null,
     ]);
     const badgeEl = h('span', { class: 'csrp-badge csrp-badge-loading csrp-mf-badge' }, '···');
@@ -52,7 +46,7 @@
       : h('div', { class: 'csrp-mf-av' });
     const checkEl = h('span', { class: 'csrp-mf-check', title: 'Accepted' }, '✓');
 
-    const row = h('div', { class: 'csrp-mf-row' + (creator ? ' csrp-mf-row-creator' : '') }, [
+    const row = h('div', { class: 'csrp-mf-row' }, [
       h('div', { class: 'csrp-mf-avwrap' }, [avEl, rankEl, checkEl]),
       h('div', { class: 'csrp-mf-id' }, [
         nameEl,

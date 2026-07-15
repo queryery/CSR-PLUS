@@ -1,14 +1,23 @@
 {
   "manifest_version": 3,
   "name": "CSR+ — Enhanced Match Suite",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
-  "permissions": ["storage", "clipboardWrite", "notifications"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzyX3157+l4dqak7AzegHDTrLxJ7JXkxrHNBcqR0xsF3s3n1GB7dbBZGcrrifInWCRHJT/bZuA9LrlvBlxaolqz7S/Ba/t5waxd/rt4IjsRsSpPkCH9sI7wUReE4xUHw2xXcO4Zmg+4fk6Ht2vgxFJPbKHLgOXt1lVMdYtX5ViPzHGBwcPlkQQEosyDrJhYlD0rDuLleahJIE7ghZw+A90PbABOIUeqz3/obZtqp/1ERoYpH3J9x7noYBlb4oz+/QWc0+N/2XJboiZuDP/KMWR7vaWyGbcDDa7xugK1R31UG7YABcc+FIdJ0aqc7FGy0Y5KZvVbg2WIHEtt/JYtdGuwIDAQAB",
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "notifications",
+    "identity"
+  ],
   "host_permissions": [
     "https://csrestored.fun/*",
     "https://api.csrestored.fun/*",
     "https://api.github.com/*",
-    "https://api.counterapi.dev/*"
+    "https://api.counterapi.dev/*",
+    "https://europe-west1-csr-plus-331c8.cloudfunctions.net/*",
+    "https://storage.googleapis.com/*",
+    "https://csr-plus-331c8.web.app/*"
   ],
   "background": {
     "service_worker": "src/background.js",
@@ -47,6 +56,7 @@
         "src/lib/gems.js",
         "src/lib/store.js",
         "src/lib/api.js",
+        "src/lib/pro.js",
         "src/lib/stats.js",
         "src/lib/dom.js",
         "src/lib/sound.js",
@@ -62,6 +72,8 @@
         "src/features/cases.js",
         "src/features/leaderboardSearch.js",
         "src/features/eloTracker.js",
+        "src/features/profileCustom.js",
+        "src/features/reportButton.js",
         "src/main.js"
       ],
       "css": ["src/styles/inject.css"],
@@ -70,7 +82,20 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["src/inject/socketHook.js", "assets/sounds/*.wav", "assets/*.png", "profile/profile.html", "inventory/inventory.html", "trades/trades.html", "trades/trade-view.html", "cases/cases.html"],
+      "resources": [
+        "src/inject/socketHook.js",
+        "assets/sounds/*.wav",
+        "assets/*.png",
+        "profile/profile.html",
+        "inventory/inventory.html",
+        "trades/trades.html",
+        "trades/trade-view.html",
+        "cases/cases.html",
+        "docs/docs.html",
+        "customize/customize.html",
+        "report/report.html",
+        "subscribe/subscribe.html"
+      ],
       "matches": ["https://csrestored.fun/*"]
     }
   ]

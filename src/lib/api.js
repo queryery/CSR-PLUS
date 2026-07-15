@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -54,7 +53,6 @@
           settled = true;
           if (chrome.runtime.lastError || !resp) return directFetch(path).then(resolve);
           if (resp.ok) return resolve(resp.data);
-          CSRP.log('api error', path, resp.error);
           resolve(null);
         });
       } catch {
@@ -65,11 +63,13 @@
 
   function directFetch(path) {
     return fetch(BASE + path, { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
-      .catch((err) => {
-        CSRP.log('api direct error', path, err.message);
-        return null;
-      });
+      .then(async (r) => {
+        if (!r.ok) return null;
+        const text = await r.text();
+        try { return JSON.parse(text.replace(/([:\[,]\s*)(-?\d{16,})(?=\s*[,}\]])/g, '$1"$2"')); }
+        catch { return null; }
+      })
+      .catch(() => null);
   }
 
   async function get(path) {
@@ -122,6 +122,7 @@
   }
 
   CSRP.api = {
+    me: () => getFresh('/users/@me'),
     user: (id) => get(`/users/${id}`),
     userFresh: (id) => getFresh(`/users/${id}`),
     friends: () => get('/users/friends'),

@@ -1,6 +1,3 @@
-/* CSR+ injected UI — dark surfaces, hairline borders, one restrained accent. */
-
-/* Default theme: dark surfaces with a red accent. */
 :root,
 [data-csrp-theme="mask"] {
   --csrp-bg: #0c0c0e;
@@ -10,11 +7,10 @@
   --csrp-fg: #f3f0ea;
   --csrp-fg-dim: rgba(243, 240, 234, 0.55);
   --csrp-accent: #d2222b;
-  --csrp-on-accent: #ffffff; /* readable text on an accent-filled surface */
+  --csrp-on-accent: #ffffff;
   --csrp-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Monochrome theme: near-white accent, no colour. */
 [data-csrp-theme="black"] {
   --csrp-bg: #08080a;
   --csrp-bg-soft: #131316;
@@ -23,10 +19,9 @@
   --csrp-fg: #f4f4f6;
   --csrp-fg-dim: rgba(244, 244, 246, 0.52);
   --csrp-accent: #e9e9ec;
-  --csrp-on-accent: #0a0a0c; /* dark text on the near-white accent */
+  --csrp-on-accent: #0a0a0c;
 }
 
-/* ── Strength badge ─────────────────────────────────────────────── */
 .csrp-badge-wrap {
   position: relative;
   display: inline-flex;
@@ -78,7 +73,6 @@
   letter-spacing: 0.2em;
 }
 
-/* ── Toast (server copied, etc.) ────────────────────────────────── */
 .csrp-toast {
   position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 16px);
   padding: 11px 20px; border-radius: 999px;
@@ -91,7 +85,6 @@
 }
 .csrp-toast-show { opacity: 1; transform: translate(-50%, 0); }
 
-/* ELO change toast — tinted by direction, sits a bit higher (longer-lived). */
 .csrp-elo-toast { bottom: 70px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 .csrp-elo-up {
   border-color: rgba(86, 214, 138, 0.7); color: #aaffcb;
@@ -102,7 +95,6 @@
   box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 24px rgba(255, 93, 106, 0.3);
 }
 
-/* ── "Watch inventory" button (injected on the player page) ──────── */
 .csrp-watch-btn {
   display: inline-flex; align-items: center; gap: 8px;
   margin-left: 12px; padding: 10px 20px;
@@ -116,7 +108,39 @@
 .csrp-watch-btn:active { transform: translateY(0) scale(0.98); }
 .csrp-wb-ic { font-size: 13px; }
 
-/* Tier colors: bright-green → ember → green → yellow → ice → orange → red → grey */
+.csrp-report-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-left: 10px; padding: 9px 16px;
+  background: transparent; color: var(--csrp-accent);
+  border: 1px solid var(--csrp-accent); border-radius: 999px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; opacity: 0.82;
+  transition: filter 0.18s, transform 0.15s var(--csrp-ease), box-shadow 0.2s, opacity 0.18s;
+}
+.csrp-report-btn:hover { opacity: 1; box-shadow: 0 0 14px rgba(210,34,43,0.32); transform: translateY(-1px); }
+.csrp-report-btn:active { transform: translateY(0) scale(0.98); }
+.csrp-rb-ic { font-size: 12px; }
+.csrp-report-btn.csrp-report-float {
+  position: fixed; right: 18px; bottom: 18px; z-index: 2147483000;
+  margin: 0; padding: 11px 18px; opacity: 0.95;
+  background: var(--csrp-accent); color: var(--csrp-on-accent);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.csrp-report-btn.csrp-report-float:hover { opacity: 1; }
+
+.csrp-pc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+  padding: 6px 0;
+}
+.csrp-pc-actions .csrp-watch-btn,
+.csrp-pc-actions .csrp-report-btn { margin-left: 0; }
+.csrp-pc-actions .csrp-watch-btn { padding: 9px 18px; }
+.csrp-pc-actions .csrp-report-btn { padding: 9px 16px; }
 .csrp-t-vstrong      { color: #2bff88; border-color: rgba(43, 255, 136, 0.55); }
 .csrp-t-hot          { color: #ff5e3a; border-color: rgba(255, 94, 58, 0.55); }
 .csrp-t-cold         { color: #6ec3ff; border-color: rgba(110, 195, 255, 0.5); }
@@ -124,8 +148,10 @@
 .csrp-t-peak         { color: #ffd23f; border-color: rgba(255, 210, 63, 0.5); }
 .csrp-t-inconsistent { color: #ff9838; border-color: rgba(255, 152, 56, 0.5); }
 .csrp-t-weak         { color: #ff4d57; border-color: rgba(255, 77, 87, 0.5); }
-.csrp-t-none         { color: #9a9aa2; border-color: rgba(154, 154, 162, 0.4); }
-
+.csrp-t-none {
+  color: #9a9aa2;
+  border-color: rgba(154, 154, 162, 0.4);
+}
 @keyframes csrp-pop {
   0% {
     opacity: 0;
@@ -143,7 +169,6 @@
   }
 }
 
-/* ── Tooltip ────────────────────────────────────────────────────── */
 .csrp-tip {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -209,7 +234,6 @@
   font-weight: 600;
 }
 
-/* ── Win probability bar ────────────────────────────────────────── */
 .csrp-wp {
   margin: 0 64px 18px;
   animation: csrp-fade 0.4s var(--csrp-ease) both;
@@ -273,7 +297,6 @@
   }
 }
 
-/* ── Tag chip ───────────────────────────────────────────────────── */
 .csrp-tag-chip {
   display: inline-block;
   margin-left: 6px;
@@ -288,7 +311,6 @@
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
 }
 
-/* ── Profile slide-in panel ─────────────────────────────────────── */
 .csrp-panel-bk {
   position: fixed;
   inset: 0;
@@ -545,7 +567,6 @@
   }
 }
 
-/* ── Match Found rebuild (injected into the native confirm window) ── */
 .csrp-mf {
   width: min(900px, 92vw);
   margin: 18px auto 24px;
@@ -560,23 +581,15 @@
   animation: csrp-fade 0.4s var(--csrp-ease) both;
 }
 
-/* Full-screen host that centers the panel (so the panel's own transform stays
-   free for the open animation + drag offset). */
 .csrp-mf-host {
   position: fixed; inset: 0;
-  /* Max int32 z-index — sits above EVERYTHING the site (or another extension)
-     can stack. `isolation` forces a fresh stacking context so a page element
-     with its own high z-index can't punch through. */
   z-index: 2147483647;
   isolation: isolate;
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
   perspective: 1600px;
-  /* Capture pointer + wheel so the page behind the overlay can't be clicked,
-     scrolled or interacted with while a match is being confirmed. */
   pointer-events: auto;
 }
-/* Dim + blur + vignette the page behind the panel. Fades in under the panel. */
 .csrp-mf-host::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background:
@@ -591,8 +604,6 @@
 @keyframes csrp-mf-bg-in { to { opacity: 1; } }
 .csrp-mf-host > .csrp-mf { pointer-events: auto; }
 
-/* Centered overlay variant — replaces the hidden native dialog. Cyberpunk
-   console look: angular panel, grid texture, neon edge. */
 .csrp-mf-center {
   position: relative;
   width: min(1140px, 96vw);
@@ -600,8 +611,6 @@
   display: flex; flex-direction: column;
   margin: 0; overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.10);
-  /* cyberpunk glass: translucent dark pane, fine grid, red core glow + a cool
-     cyan counter-glow in the far corner, all behind a heavy backdrop blur. */
   background:
     linear-gradient(var(--csrp-grid, rgba(255,255,255,0.035)) 1px, transparent 1px) 0 0 / 32px 32px,
     linear-gradient(90deg, var(--csrp-grid, rgba(255,255,255,0.035)) 1px, transparent 1px) 0 0 / 32px 32px,
@@ -625,7 +634,6 @@
     filter 0.6s var(--csrp-ease),
     transform 0.7s cubic-bezier(0.13, 1.1, 0.25, 1);
 }
-/* neon top edge */
 .csrp-mf-center::before {
   content: ""; position: absolute; left: 0; top: 0; height: 2px; width: 120px;
   background: var(--csrp-accent); box-shadow: 0 0 14px var(--csrp-accent); z-index: 4;
@@ -635,7 +643,6 @@
   0%, 100% { width: 120px; opacity: 1; }
   50% { width: 240px; opacity: 0.7; }
 }
-/* one-shot light sweep + scanline flash across the panel as it opens */
 .csrp-mf-center::after {
   content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background:
@@ -653,10 +660,8 @@
   opacity: 1; filter: blur(0) brightness(1);
   transform: translate(var(--csrp-dx, 0px), var(--csrp-dy, 0px)) scale(1) rotateX(0deg);
 }
-/* While dragging: kill the transition so it tracks the cursor 1:1. */
 .csrp-mf-center.csrp-mf-dragging { transition: none; cursor: grabbing; }
 .csrp-mf-center .csrp-mf-content { overflow-y: auto; }
-/* Drag handle affordance on the bar. */
 .csrp-mf-bar { cursor: grab; user-select: none; }
 .csrp-mf-bar .csrp-mf-actions,
 .csrp-mf-bar button { cursor: default; }
@@ -699,7 +704,6 @@
   transition: filter 0.2s, transform 0.15s var(--csrp-ease), box-shadow 0.2s;
   animation: csrp-mf-accept-pulse 1.8s ease-in-out infinite;
 }
-/* travelling shine on the accept button */
 .csrp-mf-accept::before {
   content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
   background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent);
@@ -734,7 +738,6 @@
 
 .csrp-mf-brand { display: flex; flex-direction: column; line-height: 1.15; }
 
-/* pulsing "live" dot next to the brand */
 .csrp-mf-pulse {
   width: 8px; height: 8px; border-radius: 50%; flex: none;
   background: var(--csrp-accent); box-shadow: 0 0 0 0 rgba(210,34,43,0.6);
@@ -769,7 +772,6 @@
   align-items: center;
 }
 
-/* ── accept-progress HUD (N / M players ready) ──────────────────────── */
 .csrp-mf-accbar { margin-bottom: 14px; }
 .csrp-mf-accbar-h {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -800,7 +802,6 @@
   padding: 18px 22px 20px;
 }
 
-/* win probability */
 .csrp-mf-wp {
   margin-bottom: 14px;
 }
@@ -837,7 +838,6 @@
   border: 1px solid var(--csrp-line);
   overflow: hidden;
 }
-/* faint moving sheen along the whole track */
 .csrp-mf-wp-track::after {
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
@@ -855,11 +855,9 @@
   box-shadow: 0 0 14px rgba(143, 180, 255, 0.55);
   transition: width 1s cubic-bezier(0.16, 1.1, 0.3, 1), box-shadow 0.6s;
 }
-/* tint the favourite's side label brighter */
 .csrp-mf-wp[data-fav="a"] .csrp-mf-wp-a,
 .csrp-mf-wp[data-fav="b"] .csrp-mf-wp-b { text-shadow: 0 0 10px currentColor; }
 
-/* teams side by side */
 .csrp-mf-body {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -914,7 +912,6 @@
   color: var(--csrp-accent);
 }
 
-/* player rows */
 .csrp-mf-row {
   display: flex;
   align-items: center;
@@ -925,8 +922,6 @@
   animation: csrp-rowin 0.55s cubic-bezier(0.16, 1.1, 0.3, 1) both;
 }
 
-/* Cascade rows in after the panel has landed. Each team slides from its own
-   side (left team from the left, right team from the right). */
 .csrp-mf-team .csrp-mf-row:nth-child(2) { animation-delay: .26s }
 .csrp-mf-team .csrp-mf-row:nth-child(3) { animation-delay: .33s }
 .csrp-mf-team .csrp-mf-row:nth-child(4) { animation-delay: .40s }
@@ -956,7 +951,6 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   transform: translateX(-2px);
 }
-/* keep the BEST row's gold wash on hover instead of a flat grey */
 .csrp-mf-row-best:hover {
   background: linear-gradient(90deg, rgba(245, 183, 60, 0.22), rgba(245, 183, 60, 0.05) 60%, transparent);
 }
@@ -1002,7 +996,6 @@
   transform-origin: left;
 }
 
-/* ── avatar + rank pill ─────────────────────────────────────────────── */
 .csrp-mf-avwrap { position: relative; flex: none; width: 38px; height: 38px; }
 .csrp-mf-rank {
   position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
@@ -1020,7 +1013,6 @@
   border-color: rgba(255, 220, 130, 0.9); box-shadow: 0 0 12px rgba(245, 183, 60, 0.6);
 }
 
-/* ── top player + BEST row treatments ───────────────────────────────── */
 .csrp-mf-row-top {
   background: linear-gradient(90deg, rgba(210, 34, 43, 0.12), transparent 70%);
   box-shadow: inset 2px 0 0 var(--csrp-accent);
@@ -1032,9 +1024,6 @@
 .csrp-mf-row-best .csrp-mf-av { border-color: rgba(245, 183, 60, 0.8); box-shadow: 0 0 12px rgba(245, 183, 60, 0.45); }
 .csrp-mf-row-best .csrp-mf-name { color: #ffd96b; }
 
-/* ── per-player accept state ─────────────────────────────────────────── */
-/* Pending players sit slightly dim; the green check is hidden until they
-   accept, then the avatar brightens and the check pops in. */
 .csrp-mf-check {
   position: absolute; right: -4px; top: -4px;
   width: 15px; height: 15px; border-radius: 50%;
@@ -1055,8 +1044,6 @@
   border-color: rgba(86, 214, 138, 0.55);
   box-shadow: 0 0 10px rgba(86, 214, 138, 0.35);
 }
-/* pop the row when a player accepts. The extra :not(#_) bumps specificity so
-   this beats the side-entrance .csrp-mf-team .csrp-mf-row animation-name rule. */
 .csrp-mf-body .csrp-mf-team .csrp-mf-row.csrp-mf-justaccepted {
   animation: csrp-mf-accpop 0.5s var(--csrp-ease) 1;
 }
@@ -1066,7 +1053,6 @@
   100% { transform: scale(1); }
 }
 
-/* settle-into-rank slide when the leaderboard re-sorts */
 .csrp-mf-body .csrp-mf-team .csrp-mf-row.csrp-mf-reorder {
   animation: csrp-mf-settle 0.5s var(--csrp-ease) both;
 }
@@ -1127,7 +1113,6 @@
   transform: scale(0.92);
 }
 
-/* ── Card popover (match room: click any card) ──────────────────── */
 .csrp-pop {
   position: fixed;
   width: 252px;
@@ -1144,7 +1129,6 @@
   transition: opacity 0.2s var(--csrp-ease), transform 0.24s var(--csrp-ease);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
 }
-/* top accent strip */
 .csrp-pop::before {
   content: "";
   position: absolute; left: 0; top: 0; height: 2px; width: 46px;
@@ -1259,8 +1243,6 @@
 }
 
 
-/* ── Countdown widget ───────────────────────────────────────────── */
-/* Floating fallback if the match-found window hasn't rendered our bar yet. */
 .csrp-cd-float {
   position: fixed;
   top: 78px;
@@ -1339,7 +1321,6 @@
   transform: scale(0.95);
 }
 
-/* ── lobby player slot: clickable → profile, with a cyber hover lift ───────── */
 .csrp-lobby-card {
   transition: transform 0.18s var(--csrp-ease, cubic-bezier(.22,1,.36,1)),
               box-shadow 0.18s ease, border-color 0.18s ease;
@@ -1351,216 +1332,7 @@
     0 5px 14px rgba(0, 0, 0, 0.35),
     0 0 9px rgba(210, 34, 43, 0.18);
 }
-/* The creator slot already glows white — keep its hover subtle too. */
-.csrp-lobby-card.csrp-creator-card:hover {
-  box-shadow:
-    0 5px 14px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.55),
-    0 0 11px rgba(255, 255, 255, 0.16);
-}
 
-/* ── CSR+ creator card — popup-style monochrome cyberpunk (white) ─────────── */
-/* Matches the popup / profile / inventory / trades look: deep black panel, a
-   white neon frame, a slow holographic white conic sweep, faint scanlines and
-   angular white corner ticks. Strictly monochrome — white on black, no colour. */
-.csrp-creator-card {
-  position: relative;
-  border-radius: 0 !important;
-  overflow: hidden;
-  isolation: isolate;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  background:
-    radial-gradient(120% 90% at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
-    linear-gradient(180deg, rgba(20, 20, 26, 0.6), rgba(10, 10, 13, 0.4)) !important;
-  box-shadow:
-    0 0 16px rgba(255, 255, 255, 0.2),
-    inset 0 0 18px rgba(255, 255, 255, 0.05);
-  /* single notched bottom-right corner — the inventory/profile card shape */
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
-}
-/* slow holographic white conic sweep behind the card content */
-.csrp-creator-card::after {
-  content: ""; position: absolute; inset: -45% -20%; z-index: 0; pointer-events: none;
-  opacity: 0.4;
-  background: conic-gradient(from 0deg at 50% 50%,
-    transparent 0deg, rgba(255, 255, 255, 0.26) 60deg,
-    transparent 130deg, rgba(255, 255, 255, 0.16) 230deg, transparent 320deg);
-  -webkit-mask-image: radial-gradient(70% 70% at 50% 40%, #000 30%, transparent 78%);
-          mask-image: radial-gradient(70% 70% at 50% 40%, #000 30%, transparent 78%);
-  animation: csrp-creator-holo 14s linear infinite;
-}
-@keyframes csrp-creator-holo { to { transform: rotate(360deg); } }
-/* short centered white accent strip at the top (the inventory-card .c-strip) */
-.csrp-creator-card::before {
-  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 38%; height: 2px; z-index: 2; pointer-events: none;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-}
-/* keep all real content above the holo sweep */
-.csrp-creator-card > * { position: relative; z-index: 1; }
-/* Lobby slot adopts the same notched popup-card shape. */
-.csrp-creator-lobby:hover {
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.75),
-    0 0 22px rgba(255, 255, 255, 0.28) !important;
-}
-/* Center the chip under the name in the lobby slot. */
-.csrp-creator-chip-lobby {
-  margin-left: 0;
-  margin-top: 8px;
-  align-self: center;
-}
-/* ── corner frame: faint scanlines + a single top-left white corner tick ──── */
-.csrp-cf {
-  position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
-  overflow: hidden;
-  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px);
-}
-/* one angular white corner tick, top-left (matches the popup-card corners) */
-.csrp-cf::before {
-  content: ""; position: absolute; top: 6px; left: 6px; width: 13px; height: 13px;
-  border: 2px solid rgba(255, 255, 255, 0.85); border-right: none; border-bottom: none;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
-}
-/* vertical kanji mark, top-right */
-.csrp-cf-kanji {
-  position: absolute; top: 6px; right: 9px;
-  writing-mode: vertical-rl;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.7);
-  text-shadow: 0 0 7px rgba(255, 255, 255, 0.5);
-  user-select: none;
-}
-.csrp-creator-lobby .csrp-cf-kanji { font-size: 13px; }
-
-/* ── cyberpunk avatar frame (matches the custom profile page .ph-av shape) ──── */
-/* Single notched bottom-right corner, clean thin edge, with a rotating conic
-   tracer glowing in the frame gap (white → crimson). */
-.csrp-avframe {
-  --csrp-av-clip: polygon(0 0, 100% 0, 100% 80%, 80% 100%, 0 100%);
-  position: relative;
-  display: inline-block;
-  flex: none;
-  isolation: isolate;
-  clip-path: var(--csrp-av-clip);
-  padding: 2px;
-  background: linear-gradient(160deg, rgba(255,255,255,0.95), rgba(255,255,255,0.3));
-}
-/* the avatar image gets the same notched shape, sitting inside the ring */
-.csrp-avframe > img {
-  display: block;
-  position: relative; z-index: 1;
-  border-radius: 0 !important;
-  clip-path: var(--csrp-av-clip);
-}
-/* rotating conic tracer behind the image — the "frame" energy */
-.csrp-avframe-ring {
-  content: ""; position: absolute; inset: -40%;
-  z-index: 0; pointer-events: none;
-  background: conic-gradient(from 0deg,
-    transparent 0deg 200deg,
-    rgba(255,255,255,0.95) 300deg,
-    #d62638 340deg,
-    transparent 360deg);
-  animation: csrp-avframe-spin 4s linear infinite;
-}
-@keyframes csrp-avframe-spin { to { transform: rotate(360deg); } }
-/* Additive avatar frame (no reparenting — React-safe): the img is clipped in
-   place; the ring is an absolutely-positioned sibling behind it. */
-img.csrp-av-clip {
-  position: relative; z-index: 1;
-  border-radius: 0 !important;
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 80% 100%, 0 100%);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.55);
-}
-.csrp-av-ring {
-  position: absolute; z-index: 0; pointer-events: none;
-  background: conic-gradient(from 0deg,
-    transparent 0deg 200deg,
-    rgba(255,255,255,0.95) 300deg,
-    #d62638 340deg,
-    transparent 360deg);
-  animation: csrp-avframe-spin 4s linear infinite;
-}
-/* soft white halo + crisp inner edge around the whole frame */
-.csrp-avframe::after {
-  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  clip-path: inherit;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6), inset 0 0 6px rgba(255,255,255,0.45);
-}
-
-/* Creator chip: popup-style white neon on near-black, angular clip, white
-   underline + a vertical kanji mark, with a slow white sheen sweep. */
-.csrp-creator-chip {
-  position: relative;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  margin-left: 6px;
-  color: #f4f4f6 !important;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 70%),
-    rgba(10, 10, 12, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.55) !important;
-  box-shadow:
-    0 0 9px rgba(255, 255, 255, 0.3),
-    inset 0 0 8px rgba(255, 255, 255, 0.06);
-  text-shadow: 0 0 7px rgba(255, 255, 255, 0.45);
-  letter-spacing: 0.12em;
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 6px) 100%, 0 100%, 0 5px);
-}
-/* white underline */
-.csrp-creator-chip::before {
-  content: ""; position: absolute; left: 6px; right: 6px; bottom: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
-}
-/* slow smooth white sheen across the chip */
-.csrp-creator-chip::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.24) 50%, transparent 58%);
-  transform: translateX(-130%);
-  animation: csrp-creator-chip-shine 5s linear infinite;
-}
-@keyframes csrp-creator-chip-shine {
-  0% { transform: translateX(-130%); }
-  100% { transform: translateX(130%); }
-}
-/* a small white kanji mark */
-.csrp-creator-spark {
-  display: inline-block;
-  margin-right: 5px;
-  color: #ffffff;
-  font-weight: 900;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
-}
-
-/* ── creator row inside the Match Found panel (monochrome white) ──────────── */
-.csrp-mf-row-creator {
-  position: relative;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.09), transparent 60%) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
-    0 0 14px rgba(255, 255, 255, 0.12);
-}
-.csrp-mf-row-creator::before {
-  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-}
-.csrp-mf-row-creator .csrp-mf-av {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 12px rgba(255, 255, 255, 0.32);
-}
-.csrp-mf-creator-chip { margin-left: 7px; font-size: 9px; padding: 1px 6px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .csrp-creator-card::after, .csrp-creator-chip::after { animation: none; }
-}
-
-/* ── leaderboard search ──────────────────────────────────────────────────── */
 .csrp-lb-search {
   display: flex;
   align-items: center;
@@ -1626,7 +1398,6 @@ img.csrp-av-clip {
   white-space: nowrap;
 }
 
-/* injected remote-lookup result row */
 .csrp-lb-remote {
   background: linear-gradient(90deg, rgba(210, 34, 43, 0.10), transparent 70%);
   box-shadow: inset 2px 0 0 var(--csrp-accent, #d2222b);
@@ -1644,7 +1415,6 @@ img.csrp-av-clip {
   font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ── CSR+ Trades prompt overlay (shown when clicking the site's Trades tab) ── */
 .csrp-tr-overlay {
   position: fixed; inset: 0; z-index: 2147483600;
   display: grid; place-items: center; padding: 24px;
@@ -1677,7 +1447,6 @@ img.csrp-av-clip {
 .csrp-tr-points li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #d7dae3; }
 .csrp-tr-points b { color: #fff; font-weight: 700; }
 .csrp-tr-ic { color: #e23a45; font-size: 12px; margin-top: 2px; flex: none; }
-/* "Don't ask again" — a prominent bordered pill so it's hard to miss. */
 .csrp-tr-remember { position: relative; display: flex; align-items: center; gap: 11px; margin: 20px 0 2px;
   padding: 11px 13px; font-size: 13px; font-weight: 600; color: #c7cad3; cursor: pointer; user-select: none;
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.16);
@@ -1698,25 +1467,514 @@ img.csrp-av-clip {
   transition: background 0.16s, border-color 0.16s, box-shadow 0.2s, transform 0.12s ease;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
 .csrp-tr-btn:active { transform: scale(0.99); }
-/* Secondary: "Use legacy" — quiet, narrower so the primary draws the eye. */
 .csrp-tr-legacy { flex: 0 0 auto; background: transparent; color: rgba(255,255,255,0.6);
   border: 1px solid rgba(255,255,255,0.2); }
 .csrp-tr-legacy:hover { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.4); }
-/* Primary: "Use CSR+" — always brand red with white text (never theme-white). */
 .csrp-tr-use { flex: 1; background: linear-gradient(180deg, #e23a45, #c41d27); color: #fff;
   border: 1px solid #e23a45; box-shadow: 0 6px 22px rgba(210,34,43,0.4); letter-spacing: 0.02em; }
 .csrp-tr-use:hover { background: linear-gradient(180deg, #ef4b56, #d2222b); box-shadow: 0 8px 28px rgba(210,34,43,0.6); }
-/* ════════ CSR+ Cases — full-page overlay over /app/inventory/cases ════════ */
 #csrp-cases-frame {
   position: fixed; inset: 0; width: 100vw; height: 100vh;
   border: 0; z-index: 2147483500; background: #08080d;
   animation: csrpTrFade 0.15s ease both;
 }
-/* While the overlay is up, stop the site underneath from doing any layout /
-   paint work (its own case grid is what causes the lag).
-   Exempt csrx-* nodes: the CS:R Inventory Helper extension mounts its bulk-
-   buy / auto-open FAB + windows on body with z-index 214748364x (above our
-   frame), so it keeps working on top of the CSR+ overlay too. */
 html[data-csrp-cases-overlay] body > *:not(#csrp-cases-frame):not(script):not(style):not([id^="csrx"]):not([class*="csrx"]):not(.csrp-mf-host):not(.csrp-cd-float) {
   display: none !important;
+}
+
+.csrp-st-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  flex: none;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(180deg, #e23a45, #c41d27);
+  border: 1px solid #e23a45;
+  border-radius: 8px;
+  transition: box-shadow 0.2s, transform 0.12s ease, filter 0.16s;
+}
+
+.csrp-st-btn:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 4px 16px rgba(210, 34, 43, 0.45);
+}
+
+.csrp-st-btn:active {
+  transform: scale(0.97);
+}
+
+.csrp-st-ic {
+  font-size: 13px;
+  line-height: 1;
+}
+
+div:has(> .csrp-st-btn) {
+  display: flex;
+  align-items: center;
+}
+
+div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
+  width: auto;
+}
+
+
+.csrp-pc-hdr {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+
+.csrp-pc-hdr:has(> .csrp-pc-banner) {
+  min-height: 280px;
+  padding: 36px 24px;
+  display: flex;
+  align-items: center;
+}
+
+.csrp-pc-hdr>* {
+  position: relative;
+  z-index: 1;
+}
+
+.csrp-pc-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 0 !important;
+  overflow: hidden;
+}
+
+.csrp-pc-banner .csrp-pc-bimg {
+  position: absolute;
+  max-width: none;
+  max-height: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+.csrp-pc-banner video.csrp-pc-bimg { object-fit: cover; }
+
+.csrp-tier-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
+  padding: 2px 7px; border-radius: 999px; margin-top: 4px; line-height: 1.4;
+  vertical-align: middle; white-space: nowrap; position: relative; z-index: 3;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.csrp-tier-badge:not(.csrp-tb-inline) { display: flex; width: fit-content; align-self: flex-start; flex: 0 0 auto; }
+.csrp-tb-inline {
+  display: inline-flex; width: fit-content; max-width: max-content;
+  flex: 0 0 auto; align-self: center;
+  margin-top: 0; margin-left: 6px;
+  vertical-align: middle; font-size: 8.5px; padding: 1px 6px;
+}
+.csrp-has-badge {
+  width: auto !important; max-width: none !important;
+  overflow: visible !important; text-overflow: clip !important;
+}
+.csrp-tb-center {
+  align-self: center !important;
+  margin: 4px auto 0;
+}
+.csrp-tb-pro {
+  color: #cfe4ff; border: 1px solid rgba(74,108,255,0.6);
+  background: rgba(74,108,255,0.14);
+}
+.csrp-tb-premium {
+  color: #1a1206; border: none;
+  background: linear-gradient(90deg, #ffd76a, #ff8f3a);
+  box-shadow: 0 1px 8px rgba(255,143,58,0.4);
+  animation: csrpTbShine 3s linear infinite;
+  background-size: 200% 100%;
+}
+@keyframes csrpTbShine { to { background-position: 200% 0; } }
+
+
+.csrp-anim-name-shimmer {
+  background:
+    linear-gradient(105deg,
+      transparent 0%, transparent 38%,
+      rgba(255,255,255,0.95) 47%, #fff 50%, rgba(255,255,255,0.95) 53%,
+      transparent 62%, transparent 100%),
+    linear-gradient(92deg, var(--pc1, #fff), var(--pc2, #8fb4ff), var(--pc1, #fff));
+  background-size: 260% 100%, 100% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent !important;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--pc2,#8fb4ff) 45%, transparent));
+  animation: csrpNameShimmer 3.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+@keyframes csrpNameShimmer { 0% { background-position: 220% 0, 0 0; } 60%,100% { background-position: -60% 0, 0 0; } }
+
+.csrp-anim-name-pulse {
+  color: #fff !important;
+  animation: csrpNamePulse 2.6s ease-in-out infinite;
+}
+@keyframes csrpNamePulse {
+  0%, 100% {
+    text-shadow:
+      0 0 3px color-mix(in srgb, var(--pc1,#fff) 55%, transparent),
+      0 0 8px color-mix(in srgb, var(--pc2,#8fb4ff) 30%, transparent);
+    filter: brightness(0.96);
+  }
+  50% {
+    text-shadow:
+      0 0 6px #fff,
+      0 0 16px var(--pc1,#fff),
+      0 0 30px color-mix(in srgb, var(--pc2,#8fb4ff) 75%, transparent),
+      0 0 46px color-mix(in srgb, var(--pc1,#fff) 45%, transparent);
+    filter: brightness(1.12);
+  }
+}
+
+
+.csrp-anim-av-spin {
+  animation: csrpAvAurora 2.8s ease-in-out infinite !important;
+}
+@keyframes csrpAvAurora {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 85%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--pc2,#8fb4ff) 35%, transparent),
+      0 0 12px 2px color-mix(in srgb, var(--pc2,#8fb4ff) 45%, transparent);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 5px color-mix(in srgb, var(--pc2,#8fb4ff) 70%, transparent),
+      0 0 26px 5px color-mix(in srgb, var(--pc1,#fff) 65%, transparent);
+    filter: brightness(1.12);
+  }
+}
+
+.csrp-anim-av-orbit {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 80%, transparent);
+  animation: csrpAvPulse 2.2s cubic-bezier(0.22,1,0.36,1) infinite !important;
+}
+@keyframes csrpAvPulse {
+  0% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 85%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 60%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--pc2,#8fb4ff) 50%, transparent);
+  }
+  100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 85%, transparent),
+      0 0 0 9px transparent,
+      0 0 0 16px transparent;
+  }
+}
+
+.csrp-pc-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: inherit; overflow: hidden; }
+
+.csrp-ov-particles .csrp-pc-overlay { mix-blend-mode: screen; }
+.csrp-ov-particles .csrp-pc-overlay::before,
+.csrp-ov-particles .csrp-pc-overlay::after {
+  content: ""; position: absolute; inset: -20% 0; }
+.csrp-ov-particles .csrp-pc-overlay::before {
+  background-image:
+    radial-gradient(1.6px 1.6px at 18% 30%, #fff, transparent 60%),
+    radial-gradient(1.4px 1.4px at 68% 62%, color-mix(in srgb, var(--pc2,#8fb4ff) 90%, #fff), transparent 60%),
+    radial-gradient(1.2px 1.2px at 88% 22%, #fff, transparent 60%),
+    radial-gradient(1.8px 1.8px at 40% 82%, color-mix(in srgb, var(--pc1,#fff) 85%, #fff), transparent 60%);
+  background-size: 200px 200px;
+  animation: csrpParticles 7s linear infinite, csrpTwinkle 2.3s ease-in-out infinite;
+}
+.csrp-ov-particles .csrp-pc-overlay::after {
+  background-image:
+    radial-gradient(1px 1px at 55% 12%, #fff, transparent 60%),
+    radial-gradient(1px 1px at 12% 70%, color-mix(in srgb, var(--pc2,#8fb4ff) 80%, #fff), transparent 60%),
+    radial-gradient(1px 1px at 78% 88%, #fff, transparent 60%);
+  background-size: 150px 150px; opacity: 0.6;
+  animation: csrpParticles 11s linear infinite reverse, csrpTwinkle 3.1s ease-in-out infinite 0.6s;
+}
+@keyframes csrpParticles { to { background-position: 0 -200px; } }
+@keyframes csrpTwinkle { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+.csrp-ov-sweep .csrp-pc-overlay {
+  background:
+    linear-gradient(115deg,
+      transparent 34%,
+      color-mix(in srgb, var(--pc1,#fff) 22%, transparent) 46%,
+      rgba(255,255,255,0.5) 50%,
+      color-mix(in srgb, var(--pc2,#8fb4ff) 30%, transparent) 54%,
+      transparent 66%);
+  background-size: 280% 100%;
+  mix-blend-mode: screen;
+  animation: csrpSweep 4.8s cubic-bezier(0.55, 0, 0.45, 1) infinite;
+}
+.csrp-ov-sweep .csrp-pc-overlay::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 44%,
+    color-mix(in srgb, var(--pc2,#8fb4ff) 18%, transparent) 50%, transparent 56%);
+  background-size: 280% 100%; mix-blend-mode: overlay;
+  animation: csrpSweep 4.8s cubic-bezier(0.55, 0, 0.45, 1) infinite 0.18s;
+}
+@keyframes csrpSweep { 0% { background-position: 135% 0; } 70%,100% { background-position: -55% 0; } }
+
+.csrp-pc-banner .csrp-pc-bfill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(26px) brightness(0.55) saturate(1.25);
+  transform: scale(1.18);
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.csrp-pc-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(0, 0, 0, var(--pcdim, 0.3));
+}
+
+.csrp-pc-hasbn {
+  overflow: hidden;
+}
+
+.csrp-pc-hasbn>*:not(.csrp-pc-banner):not(.csrp-pc-fx) {
+  position: relative;
+  z-index: 1;
+}
+
+.csrp-pc-hdr p.truncate:not([class*="csrp-pcn-"]):not([class*="csrp-anim-name-"]),
+.csrp-pc-card h1:not([class*="csrp-pcn-"]):not([class*="csrp-anim-name-"]),
+.csrp-pc-stat-value {
+  color: var(--pc-banner-fg, #f8fafc) !important;
+  text-shadow: 0 1px 2px var(--pc-banner-shadow, rgba(0, 0, 0, 0.8));
+}
+
+.csrp-pc-stat-label {
+  color: var(--pc-banner-label, rgba(248, 250, 252, 0.72)) !important;
+  text-shadow: 0 1px 2px var(--pc-banner-shadow, rgba(0, 0, 0, 0.8));
+}
+
+.csrp-pcn-gradient {
+  background: linear-gradient(92deg, var(--pc1), var(--pc2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+.csrp-pcn-outline {
+  color: transparent !important;
+  -webkit-text-stroke: 1px var(--pc1);
+  letter-spacing: 0.03em;
+}
+
+.csrp-pcn-metal {
+  background: linear-gradient(180deg, #fdfdfd 0%, #c8ccd4 38%, #7d838f 52%, #e7eaef 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.65));
+}
+
+.csrp-pcn-rainbow {
+  background: linear-gradient(92deg, #ff5d6a, #ffb84d, #7ee081, #6db4ff, #b78cff, #ff5d6a);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  animation: csrpPcRainbow 5s linear infinite;
+}
+
+@keyframes csrpPcRainbow {
+  to {
+    background-position: 300% 0;
+  }
+}
+
+.csrp-pcn-glitch {
+  text-shadow: 1.6px 0 0 color-mix(in srgb, var(--pc1) 85%, transparent),
+    -1.6px 0 0 color-mix(in srgb, var(--pc2) 85%, transparent);
+  animation: csrpPcGlitch 2.4s steps(2) infinite;
+}
+
+@keyframes csrpPcGlitch {
+
+  0%,
+  92%,
+  100% {
+    transform: none;
+  }
+
+  94% {
+    transform: translateX(1px);
+  }
+
+  97% {
+    transform: translateX(-1px);
+  }
+}
+
+.csrp-pc-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.csrp-pcf-ring {
+  border-color: transparent !important;
+  background-image: linear-gradient(rgba(10, 10, 14, 0.92), rgba(10, 10, 14, 0.92)),
+    linear-gradient(120deg, var(--pc1), var(--pc2), var(--pc1)) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  box-shadow: 0 0 10px -3px color-mix(in srgb, var(--pc1) 45%, transparent);
+}
+
+.csrp-pcf-corners .csrp-pc-fx::before,
+.csrp-pcf-corners .csrp-pc-fx::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--pc1);
+}
+
+.csrp-pcf-corners .csrp-pc-fx::before {
+  top: 5px;
+  left: 5px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.csrp-pcf-corners .csrp-pc-fx::after {
+  bottom: 5px;
+  right: 5px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.csrp-pcf-scanline .csrp-pc-fx {
+  background: repeating-linear-gradient(0deg, transparent 0 4px, color-mix(in srgb, var(--pc1) 9%, transparent) 4px 5px);
+  animation: csrpPcScan 7s linear infinite;
+}
+
+@keyframes csrpPcScan {
+  to {
+    background-position: 0 48px;
+  }
+}
+
+.csrp-pcf-holo .csrp-pc-fx {
+  background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--pc2) 22%, transparent) 45%,
+      color-mix(in srgb, var(--pc1) 22%, transparent) 55%, transparent 70%);
+  background-size: 260% 100%;
+  animation: csrpPcHolo 4.2s ease-in-out infinite alternate;
+}
+
+@keyframes csrpPcHolo {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+.csrp-pcf-aurora .csrp-pc-fx::before {
+  content: '';
+  position: absolute;
+  inset: -24px;
+  background:
+    radial-gradient(60% 90% at 18% 110%, color-mix(in srgb, var(--pc1) 26%, transparent), transparent 70%),
+    radial-gradient(55% 85% at 85% -15%, color-mix(in srgb, var(--pc2) 24%, transparent), transparent 70%);
+  filter: blur(6px);
+  animation: csrpPcAurora 7s ease-in-out infinite alternate;
+}
+
+@keyframes csrpPcAurora {
+  from {
+    transform: translateX(-3%) scale(1);
+    opacity: 0.75;
+  }
+
+  to {
+    transform: translateX(3%) scale(1.08);
+    opacity: 1;
+  }
+}
+
+.csrp-pcf-kanji .csrp-pc-fx::before {
+  content: attr(data-kanji);
+  position: absolute;
+  right: 8px;
+  bottom: 2px;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: color-mix(in srgb, var(--pc1) 30%, transparent);
+}
+
+.csrp-pc-card.csrp-pcf-ring {
+  overflow: hidden;
+}
+
+.csrp-pca-ring {
+  box-shadow: 0 0 0 2px var(--pc1), 0 0 14px color-mix(in srgb, var(--pc1) 55%, transparent);
+}
+
+.csrp-pca-hex {
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  border-radius: 0 !important;
+}
+
+.csrp-pca-glow {
+  animation: csrpPcPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes csrpPcPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--pc1), 0 0 8px color-mix(in srgb, var(--pc1) 45%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 2px var(--pc2), 0 0 22px color-mix(in srgb, var(--pc2) 70%, transparent);
+  }
+}
+
+.csrp-pc-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.csrp-pcc-outline {
+  color: var(--pc1);
+  border: 1px solid var(--pc1);
+  background: transparent;
+}
+
+.csrp-pcc-solid {
+  color: #fff;
+  background: var(--pc1);
+  border: 1px solid var(--pc1);
+}
+
+.csrp-pcc-gradient {
+  color: #fff;
+  background: linear-gradient(92deg, var(--pc1), var(--pc2));
+  border: 0;
 }

@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   if (window.__csrpHooked) return;
@@ -64,9 +63,7 @@
     });
   }
 
-  function readMatchData() {
-    const fiber = findRootFiber();
-    if (!fiber) return null;
+  function readMatchData(fiber) {
     const d = searchValue(fiber, (v) => v.matchData);
     if (!d) return null;
     const mp = d.map_pick || {};
@@ -86,8 +83,16 @@
     };
   }
 
+  let myIdSent = false;
   function emit() {
-    const data = readMatchData();
+    const fiber = findRootFiber();
+    if (!fiber) return;
+    const myId = findMyId(fiber);
+    if (myId && !myIdSent) {
+      myIdSent = true;
+      window.dispatchEvent(new CustomEvent('csrp:myid', { detail: { myId } }));
+    }
+    const data = readMatchData(fiber);
     if (data) {
       window.dispatchEvent(new CustomEvent('csrp:matchdata', { detail: data }));
     }
@@ -117,7 +122,7 @@
   const boot = setInterval(() => {
     const ok = hookSocket();
     emit();
-    if (ok || ++tries > 40) clearInterval(boot);
+    if ((ok && myIdSent) || ++tries > 40) clearInterval(boot);
   }, 500);
 
 

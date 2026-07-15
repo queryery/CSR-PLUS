@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -145,8 +144,63 @@
     return btn;
   }
 
+  function friendIdSet() {
+    const list = CSRP._friendsCache;
+    if (!Array.isArray(list) || !list.length) return null;
+    return new Set(list.map((f) => String(f.id ?? f.discord_id ?? '')));
+  }
+
+  let friendsRefreshed = false;
+  function tickFriendsPage() {
+    if (!/friend/i.test(location.pathname)) return;
+    const ids = friendIdSet();
+    if (!ids) {
+      if (!friendsRefreshed) {
+        friendsRefreshed = true;
+        CSRP.api.friends().then((f) => { if (Array.isArray(f)) CSRP._friendsCache = f; });
+      }
+      return;
+    }
+    for (const img of document.querySelectorAll('img')) {
+      if (img.closest('.csrp-pop, .csrp-panel, nav, header')) continue;
+      const id = CSRP.dom.idFromAvatar(img);
+      if (!id || !ids.has(id)) continue;
+
+      let row = img.parentElement, hit = null;
+      for (let up = 0; row && up < 6; up++, row = row.parentElement) {
+        if (row.querySelector('button, svg, a')) { hit = row; break; }
+      }
+      if (!hit || hit.querySelector('.csrp-st-btn')) continue;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'csrp-st-btn';
+      btn.title = 'Send a trade offer via CSR+';
+      btn.innerHTML = '<span class="csrp-st-ic">⇄</span> Send trade';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        CSRP.sound?.play('click');
+        window.open(tradesUrl() + '?partner=' + id, '_blank', 'noopener');
+      });
+
+      const firstBtn = hit.querySelector('button');
+      if (firstBtn) {
+        firstBtn.insertAdjacentElement('beforebegin', btn);
+        const wrap = firstBtn.parentElement;
+        if (wrap) {
+          wrap.style.display = 'flex';
+          wrap.style.alignItems = 'center';
+        }
+        firstBtn.style.width = 'auto';
+        firstBtn.style.flex = 'none';
+      } else hit.appendChild(btn);
+    }
+  }
+
   function tick() {
     bindNavInterception();
+    tickFriendsPage();
     if (!onTradesRoute()) {
       const stale = document.getElementById(BTN_ID);
       if (stale) stale.remove();

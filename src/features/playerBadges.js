@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -17,8 +16,7 @@
         CSRP.api.history(id),
       ]);
       pending.delete(id);
-      if (!profile) { CSRP.log('no profile for', id); return null; }
-      if (!Array.isArray(history)) CSRP.log('no history for', id, '(using lifetime stats)');
+      if (!profile) return null;
       const agg = CSRP.stats.analyze(profile, history, period);
       analyzed.set(id, agg);
       return agg;
@@ -61,57 +59,16 @@
   }
 
 
-  function ensureCreatorFrame(el) {
-    if (!el || el.querySelector('.csrp-cf')) return;
-    const frame = h('div', { class: 'csrp-cf', 'aria-hidden': 'true' }, [
-      h('span', { class: 'csrp-cf-kanji' }, '東京'),
-    ]);
-    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
-    el.appendChild(frame);
-  }
-
-
-  function ensureAvatarFrame() {}
-
-
-  function makeCreatorChip() {
-    return h('span', { class: 'csrp-tag-chip csrp-creator-chip' }, [
-      h('span', { class: 'csrp-creator-spark', title: 'CSR+ Creator' }, '作'),
-      'CSR+ Creator',
-    ]);
-  }
-
-  function markCreator(card, info) {
-    if (info.id !== CSRP.CREATOR_ID) return;
-    card.classList.add('csrp-creator-card');
-    ensureCreatorFrame(card);
-    ensureAvatarFrame(card);
-    ensureCreatorChip(card, info);
-    swapRankImg(card);
-  }
-
-  function swapRankImg(scope) {
-    const url = CSRP.CREATOR_RANK_IMG;
-    if (!scope || !url) return;
-    for (const img of scope.querySelectorAll('img[alt="rank"]')) {
-      if (img.src === url) continue;
-      img.removeAttribute('srcset');
-      img.src = url;
-      img.dataset.csrpRank = '1';
-    }
-  }
-
-  function ensureCreatorChip(card, info) {
-    if (info.id !== CSRP.CREATOR_ID) return;
-    if (card.querySelector('.csrp-creator-chip')) return;
-    const anchor = info.header || card.querySelector('h1')?.parentElement;
-    if (!anchor) return;
-    anchor.appendChild(makeCreatorChip());
-  }
-
+  const INTERACTIVE = 'a, button, svg, [role="button"], input, textarea, select, label, [class*="cursor-pointer"]';
 
   function tickLobby() {
-    for (const img of document.querySelectorAll('div.rounded-2xl img[alt="Avatar"]')) {
+    for (const n of document.querySelectorAll('div.rounded-2xl.csrp-lobby-card')) {
+      if (!n.querySelector('img[alt="Avatar"][width="72"]')) {
+        n.classList.remove('csrp-lobby-card');
+        n.style.cursor = '';
+      }
+    }
+    for (const img of document.querySelectorAll('div.rounded-2xl img[alt="Avatar"][width="72"]')) {
       const id = CSRP.dom.idFromAvatar(img);
       if (!id) continue;
       const slot = img.closest('div.rounded-2xl');
@@ -123,29 +80,15 @@
         slot.classList.add('csrp-lobby-card');
         slot.style.cursor = 'pointer';
         slot.addEventListener('click', (e) => {
-          if (e.target.closest('a, button')) return;
-          e.stopPropagation();
+          if (!slot.classList.contains('csrp-lobby-card')) return;
+          const hit = e.target.closest(INTERACTIVE);
+          if (hit && hit !== slot) return;
           CSRP.sound?.play('click');
           CSRP.notes?.openProfile(id);
         });
+      } else {
+        slot.classList.add('csrp-lobby-card');
       }
-
-
-      if (id !== CSRP.CREATOR_ID) continue;
-      slot.classList.add('csrp-creator-card', 'csrp-creator-lobby');
-      ensureCreatorFrame(slot);
-      ensureAvatarFrame(slot);
-      swapRankImg(slot);
-      if (slot.querySelector('.csrp-creator-chip')) continue;
-
-      const nameRow = slot.querySelector('.flex.items-center.gap-1\\.5');
-      const chip = h('span', { class: 'csrp-tag-chip csrp-creator-chip csrp-creator-chip-lobby' }, [
-        h('span', { class: 'csrp-creator-spark', title: 'CSR+ Creator' }, '作'),
-        'CSR+ Creator',
-      ]);
-
-      const block = nameRow?.parentElement || slot.querySelector('.flex.flex-col');
-      (block || slot).appendChild(chip);
     }
   }
 
@@ -153,7 +96,6 @@
   async function decorate(card) {
     const info = CSRP.dom.parseCard(card);
     if (!info.id) return;
-    markCreator(card, info);
     if (card.querySelector('.csrp-badge-wrap')) return;
 
 
@@ -169,9 +111,8 @@
       card.dataset.csrpClick = '1';
       card.style.cursor = 'pointer';
       card.addEventListener('click', (e) => {
-
-        if (e.target.closest('a, button')) return;
-        e.stopPropagation();
+        const hit = e.target.closest(INTERACTIVE);
+        if (hit && hit !== card) return;
         CSRP.notes?.openCardPopover(info.id, info.name, card);
       });
     }

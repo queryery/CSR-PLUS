@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
@@ -56,7 +55,7 @@
       const p = node.play();
       if (p && p.catch) p.catch(() => {});
     } catch {
-      
+
     }
   }
 

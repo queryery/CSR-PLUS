@@ -1,4 +1,3 @@
-/* CSR+ inventory page — cyberpunk console, skin cards with rarity accents. */
 :root {
   --bg: #050507; --bg-2: #0b0b0f; --panel: #0e0e13; --panel-2: #14141b;
   --line: rgba(255,255,255,0.09); --line-2: rgba(255,255,255,0.22);
@@ -50,7 +49,6 @@ body { min-height: 100vh; position: relative; overflow-x: hidden; }
 
 main { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 26px 28px 60px; }
 
-/* header */
 .inv-head { display: flex; align-items: center; gap: 16px; animation: rise 0.4s var(--ease) both; }
 .ih-skel { color: var(--muted); padding: 12px 0; }
 .ih-av { width: 64px; height: 64px; flex: none; object-fit: cover; background: var(--panel); border: 1px solid var(--line-2);
@@ -59,7 +57,6 @@ main { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; paddin
 .ih-sub { font-size: 12px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px; }
 .flag { height: 16px; width: 24px; border: 1px solid var(--line-2); object-fit: cover; }
 
-/* toolbar */
 .toolbar { margin-top: 24px; animation: rise 0.45s var(--ease) both; }
 .tb-stats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
 .kv { font-size: 12px; color: var(--muted); font-family: "Consolas", monospace; }
@@ -91,11 +88,9 @@ main { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; paddin
 .chip-n { font-family: "Consolas", monospace; font-size: 10px; opacity: 0.8; }
 .chip.on .chip-n { opacity: 1; }
 
-/* grid */
 .grid { margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
 .empty { grid-column: 1/-1; text-align: center; color: var(--muted); padding: 50px 0; font-size: 13px; }
 
-/* card */
 .card {
   position: relative; display: flex; flex-direction: column;
   background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 12%, var(--panel)), var(--panel) 70%);
@@ -138,7 +133,6 @@ main { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; paddin
 .c-nametag { display: block; margin-top: 6px; font-size: 10px; color: var(--fg-dim); font-style: italic;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* skeleton */
 .card-skel { aspect-ratio: 1 / 1.18; background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); }
 .card-skel::after { content: ""; position: absolute; inset: 0;

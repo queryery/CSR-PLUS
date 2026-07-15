@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSR+ Studio — Profile Customization</title>
+  <link rel="stylesheet" href="customize.css" />
+</head>
+
+<body>
+
+  <div class="sky" aria-hidden="true">
+    <div class="stars s1"></div>
+    <div class="stars s2"></div>
+    <div class="stars s3"></div>
+    <div class="nebula"></div>
+    <div class="gridfloor"></div>
+    <div class="fx-scan"></div>
+  </div>
+
+  <header class="topbar">
+    <button class="btn ghost sm" id="btn-back" title="Go back">← Back</button>
+    <div class="brand">
+      <span class="brand-name">CSR<span>+</span> STUDIO</span>
+      <span class="brand-sub">Profile customization</span>
+    </div>
+    <div class="top-actions">
+      <span class="mode-chip" id="mode-chip" title="Sign in to share your look with other CSR+ users">TEST MODE · LOCAL</span>
+      <label class="master">
+        <input type="checkbox" id="c-enabled" />
+        <span class="sw"><span class="sw-dot"></span></span>
+        <span class="master-lbl">Enabled</span>
+      </label>
+      <button class="btn ghost sm" id="btn-export" title="Copy your setup as JSON">Export</button>
+      <button class="btn ghost sm" id="btn-import" title="Paste a setup JSON">Import</button>
+      <button class="btn danger sm" id="btn-reset">Reset</button>
+      <button class="btn save" id="btn-save" title="Save locally, and publish to other CSR+ users if you're Pro">
+        <span id="save-lbl">Save</span></button>
+    </div>
+  </header>
+
+  <main class="studio">
+
+    <section class="controls">
+
+      <div class="tabbar" id="tabbar">
+        <button class="tab-btn active" data-pane="account"><i>◈</i><span>Account</span></button>
+        <button class="tab-btn" data-pane="banner"><i>▦</i><span>Banner</span></button>
+        <button class="tab-btn" data-pane="colors"><i>◐</i><span>Colors</span></button>
+        <button class="tab-btn" data-pane="effects"><i>✦</i><span>Effects</span></button>
+      </div>
+      <p class="pane-hint" id="pane-hint">Connect Discord to share your look — or stay local in test mode.</p>
+
+      <div class="pane active" data-pane="account">
+        <div class="panel acct" id="account-panel">
+          <div class="acct-id" id="acct-id">
+            <div class="acct-av-wrap">
+              <img class="acct-av" id="acct-av" src="../assets/icon128.png" alt="" />
+              <span class="acct-tier-dot" id="acct-tier-dot"></span>
+            </div>
+            <div class="acct-meta">
+              <div class="acct-name" id="acct-name">Not signed in</div>
+              <div class="acct-tier" id="tier-badge">Free · local</div>
+            </div>
+          </div>
+
+          <div class="acct-signin" id="acct-signin">
+            <p class="acct-note" id="acct-note">Free unlocks colors, name styles &amp; flair — all local.
+              Sign in to share your look with every CSR+ user.</p>
+            <button class="btn discord" id="btn-signin">
+              <svg class="dc-ic" viewBox="0 0 24 18" aria-hidden="true"><path fill="currentColor" d="M20.3 1.5A19.8 19.8 0 0 0 15.4 0c-.2.4-.5 1-.7 1.4a18.3 18.3 0 0 0-5.5 0C9 1 8.8.4 8.6 0 6.9.3 5.2.8 3.7 1.5.6 6.1-.2 10.6.2 15a19.9 19.9 0 0 0 6 3c.5-.6.9-1.3 1.3-2-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1 .4.7.8 1.4 1.3 2a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.6-3.3-13.5ZM8 12.2c-1.2 0-2.2-1.1-2.2-2.4C5.8 8.5 6.8 7.4 8 7.4s2.2 1.1 2.2 2.4c0 1.3-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4 0-1.3 1-2.4 2.2-2.4s2.2 1.1 2.2 2.4c0 1.3-1 2.4-2.2 2.4Z"/></svg>
+              <span>Sign in with Discord</span>
+            </button>
+            <button class="btn logout" id="btn-signout" hidden>
+              <svg class="lo-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 17l5-5-5-5M21 12H9M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/></svg>
+              <span>Log out</span>
+            </button>
+          </div>
+
+          <div class="acct-upgrade" id="acct-upgrade">
+            <div class="au-copy">
+              <div class="au-title">Go Pro or Premium</div>
+              <div class="au-sub">Shared banners, premium cosmetics, animated effects &amp; badges.</div>
+            </div>
+            <button class="btn tc-cta premium" id="btn-open-subs">View plans →</button>
+          </div>
+
+          <label class="mini-toggle" id="hide-banners-row" hidden><input type="checkbox" id="c-hide-banners" />
+            <span>Hide everyone's banners</span></label>
+
+          <div class="badge-preview-row">
+            <span class="bpr-lbl">Preview badge as</span>
+            <div class="pick sm" id="c-preview-tier" data-key="previewTier">
+              <button data-v="free" class="on">Free</button>
+              <button data-v="pro">Pro</button>
+              <button data-v="premium">Premium</button>
+            </div>
+          </div>
+
+          <div class="mod-warn" id="mod-warn" hidden></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h"><span class="ph-no">◦</span> Presets</div>
+          <div class="presets" id="presets"></div>
+        </div>
+      </div>
+
+      <div class="pane" data-pane="banner">
+      <div class="panel">
+        <div class="panel-h"><span class="ph-no">◦</span> Banner image</div>
+        <div class="drop" id="drop">
+          <input type="file" id="c-banner-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+          <div class="drop-inner" id="drop-inner">
+            <div class="drop-ic">▦</div>
+            <div class="drop-tx">Drop an image or <b>click to browse</b></div>
+            <div class="drop-sub">PNG / JPG / WebP · animated GIF up to 1.7 MB</div>
+          </div>
+        </div>
+        <div class="row-2">
+          <button class="btn ghost sm" id="btn-banner-remove" disabled>Remove banner</button>
+          <label class="mini-toggle"><input type="checkbox" id="c-banner-on" /> <span>Show banner</span></label>
+        </div>
+        <label class="slider-row">Blur <input type="range" id="c-banner-blur" min="0" max="16" step="1" /><output
+            id="o-blur">0</output></label>
+        <label class="slider-row">Darken <input type="range" id="c-banner-dim" min="0" max="80" step="5" /><output
+            id="o-dim">30</output></label>
+        <div class="fill-row">
+          <span class="fill-lbl">Behind the image</span>
+          <div class="pick" id="c-fill">
+            <button data-v="blur">Blurred copy</button>
+            <button data-v="color" class="pro">Solid color</button>
+          </div>
+          <label class="fill-color" id="fill-color-row" hidden>
+            <input type="color" id="c-fill-color" value="#0b0b12" /><span>Fill color — shows through transparent
+              PNGs</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel" id="placement-panel">
+        <div class="panel-h"><span class="ph-no">03</span> Placement <span class="ph-hint">per surface</span></div>
+        <div class="pick surf-tabs" id="surf-tabs">
+          <button data-surf="profile">Profile</button>
+          <button data-surf="card" class="pro">Match card</button>
+          <button data-surf="lobby" class="pro">Lobby</button>
+        </div>
+        <label class="mini-toggle wide"><input type="checkbox" id="c-surf-on" /> <span id="surf-on-lbl">Show banner on
+            this surface</span></label>
+        <div id="surf-adjust">
+          <div class="adjust-hint">Drag the banner on its screen to reposition · scroll over it to zoom</div>
+          <label class="slider-row">Zoom <input type="range" id="c-sscale" min="0.1" max="3" step="0.01"
+              list="zoom-ticks" /><output id="o-sscale">1.00×</output></label>
+          <datalist id="zoom-ticks">
+            <option value="1"></option>
+          </datalist>
+          <label class="slider-row">↔ X <input type="range" id="c-sx" min="0" max="100" step="1" /></label>
+          <label class="slider-row">↕ Y <input type="range" id="c-sy" min="0" max="100" step="1" /></label>
+          <label class="slider-row">⟳ Rotate <input type="range" id="c-srot" min="-180" max="180" step="1"
+              list="rot-ticks" /><output id="o-srot">0°</output></label>
+          <datalist id="rot-ticks">
+            <option value="0"></option>
+            <option value="-90"></option>
+            <option value="90"></option>
+          </datalist>
+          <div class="row-2">
+            <button class="btn ghost sm" id="btn-fill"
+              title="Exactly fill this surface (zoom 1×, centered)">Fill</button>
+            <button class="btn ghost sm" id="btn-fit"
+              title="Zoom out until the whole image is visible on this surface">Fit whole image</button>
+          </div>
+          <div class="anchor-row" id="anchor-x" title="Anchor the image horizontally on this surface">
+            <span class="anchor-lbl">Anchor</span>
+            <button data-x="0">◀ Left</button>
+            <button data-x="50">Center</button>
+            <button data-x="100">Right ▶</button>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="pane" data-pane="colors">
+      <div class="panel">
+        <div class="panel-h"><span class="ph-no">◦</span> Colors</div>
+        <div class="colors">
+          <label class="color-cell"><input type="color" id="c-accent" value="#e23a45" /><span>Accent</span><code
+              id="o-accent">#e23a45</code></label>
+          <label class="color-cell"><input type="color" id="c-accent2" value="#8fb4ff" /><span>Accent 2</span><code
+              id="o-accent2">#8fb4ff</code></label>
+        </div>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      </div>
+
+      <div class="pane" data-pane="effects">
+      <div class="panel">
+        <div class="panel-h"><span class="ph-no">◦</span> Name style</div>
+        <div class="pick" id="c-name" data-key="nameStyle">
+          <button data-v="none">Plain</button>
+          <button data-v="gradient">Gradient</button>
+          <button data-v="outline" class="pro">Outline</button>
+          <button data-v="metal" class="pro">Metal</button>
+          <button data-v="rainbow" class="pro">Rainbow</button>
+          <button data-v="glitch" class="pro">Glitch</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><span class="ph-no">06</span> Card flair</div>
+        <div class="pick" id="c-flair" data-key="cardFlair">
+          <button data-v="none">None</button>
+          <button data-v="ring">Neon ring</button>
+          <button data-v="corners">Corners</button>
+          <button data-v="scanline" class="pro">Scanlines</button>
+          <button data-v="holo" class="pro">Holo</button>
+          <button data-v="aurora" class="pro">Aurora</button>
+          <button data-v="kanji" class="pro">Kanji</button>
+        </div>
+        <label class="text-row" id="kanji-row" hidden>Kanji / mark
+          <input type="text" id="c-kanji" maxlength="4" placeholder="東京" />
+        </label>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><span class="ph-no">07</span> Avatar frame</div>
+        <div class="pick" id="c-avatar" data-key="avatarFrame">
+          <button data-v="none">None</button>
+          <button data-v="ring">Ring</button>
+          <button data-v="hex" class="pro">Hex</button>
+          <button data-v="glow" class="pro">Pulse</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><span class="ph-no">08</span> Title chip</div>
+        <label class="text-row">Text
+          <input type="text" id="c-chip" maxlength="18" placeholder="e.g. AWP enjoyer" />
+        </label>
+        <div class="pick" id="c-chipstyle" data-key="chipStyle">
+          <button data-v="outline">Outline</button>
+          <button data-v="solid" class="pro">Solid</button>
+          <button data-v="gradient" class="pro">Gradient</button>
+        </div>
+      </div>
+
+      <div class="panel prem-panel">
+        <div class="panel-h"><span class="ph-no">✦</span> Premium effects <span class="ph-hint prem-hint">Premium</span></div>
+        <div class="pick" id="c-anim-name" data-key="animName">
+          <button data-v="none">No animation</button>
+          <button data-v="shimmer" class="prem">Chrome shimmer</button>
+          <button data-v="pulse" class="prem">Neon breathe</button>
+        </div>
+        <div class="pick" id="c-anim-avatar" data-key="animAvatar">
+          <button data-v="none">Static ring</button>
+          <button data-v="spin" class="prem">Aurora halo</button>
+          <button data-v="orbit" class="prem">Energy pulse</button>
+        </div>
+        <div class="pick" id="c-overlay" data-key="overlay">
+          <button data-v="none">No overlay</button>
+          <button data-v="particles" class="prem">Stardust</button>
+          <button data-v="sweep" class="prem">Holo sweep</button>
+        </div>
+        <p class="prem-note-txt" id="prem-lock" hidden>These require CSR+ Premium.
+          <a href="#" id="prem-upsell">Upgrade →</a></p>
+      </div>
+      </div>
+
+      <div class="save-note" id="save-note">Changes preview live below · click <b>Save</b> to keep them
+        <span id="save-scope"></span></div>
+    </section>
+
+    <section class="stage-wrap">
+      <div class="prev-h">HOLO PREVIEW <span class="prev-h-sub">· live with your real profile</span></div>
+
+      <div class="stage" id="stage">
+
+        <div class="stage-row">
+        <article class="screen" data-surf="profile" style="--float-d:0s">
+          <div class="tilt t-profile">
+            <div class="scr-bar"><span class="scr-dot"></span><span class="scr-lbl">YOUR PROFILE PAGE</span><span
+                class="scr-on" data-on="profile"></span></div>
+            <div class="scr-body">
+
+              <div class="real" data-rw="1600">
+              <div class="real-inner">
+              <div class="sp-hero" id="box-profile">
+                <div class="sb" id="bn-profile">
+                  <div class="sb-grid" aria-hidden="true"></div>
+                </div>
+                <div class="sp-row">
+                  <img class="sp-av j-av" alt="" />
+                  <div class="sp-meta">
+                    <div class="namerow">
+                      <span class="sp-name j-name">Player</span>
+                      <img class="flag j-flag" alt="" hidden />
+                      <span class="level-hex" title="BattlePass level"><svg viewBox="0 0 100 115">
+                          <polygon points="50,5 95,27.5 95,87.5 50,110 5,87.5 5,27.5" />
+                        </svg><b>15</b></span>
+                      <span class="chip j-chip" hidden></span>
+                    </div>
+                    <span class="j-tier-badge" hidden></span>
+                    <div class="sp-socials" aria-hidden="true"><i></i><i></i><i></i></div>
+                  </div>
+                  <span class="sp-mkt">View Marketplace</span>
+                </div>
+              </div>
+              <div class="sp-stats">
+                <div><b class="d-wr">50.00%</b><i>Winrate</i></div>
+                <div><b class="d-elo">1025</b><i>ELO</i></div>
+                <div><b class="d-kdr">0.95</b><i>KDR</i></div>
+                <div><b class="d-avg">13.40</b><i>AVG</i></div>
+              </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+          <article class="screen" data-surf="lobby" style="--float-d:1.7s">
+            <div class="tilt t-lobby">
+              <div class="scr-bar"><span class="scr-dot"></span><span class="scr-lbl">LOBBY SLOT</span><span
+                  class="scr-on" data-on="lobby"></span></div>
+              <div class="scr-body center">
+                <div class="lb" id="box-lobby">
+                  <div class="sb sub" id="bn-lobby"></div>
+                  <div class="fx" id="fx-lobby"></div>
+                  <img class="lb-av j-av" alt="" />
+                  <div class="namerow center">
+                    <span class="lb-name j-name">Player</span>
+                    <img class="flag sm j-flag" alt="" hidden />
+                  </div>
+                  <div class="lb-elo"><span class="rank-ic" aria-hidden="true"></span><b class="d-elo">1025</b> ELO</div>
+                  <span class="j-tier-badge center" hidden></span>
+                  <span class="chip sm j-chip" hidden></span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <article class="screen wide" data-surf="card" style="--float-d:0.9s">
+            <div class="tilt t-card">
+              <div class="scr-bar"><span class="scr-dot"></span><span class="scr-lbl">MATCH ROOM CARD</span><span
+                  class="scr-on" data-on="card"></span></div>
+              <div class="scr-body">
+
+                <div class="real" data-rw="420">
+                <div class="real-inner">
+                <div class="mc" id="box-card">
+                  <div class="sb sub" id="bn-card"></div>
+                  <div class="fx" id="fx-card"></div>
+                  <div class="mc-l">
+                    <img class="mc-av j-av" alt="" />
+                    <div class="mc-m"><b class="d-matches">146</b><i>Matches</i></div>
+                  </div>
+                  <div class="mc-r">
+                    <div class="mc-top">
+                      <div class="mc-id">
+                        <div class="namerow">
+                          <span class="mc-name j-name">Player</span>
+                          <img class="flag sm j-flag" alt="" hidden />
+                          <span class="chip sm j-chip" hidden></span>
+                        </div>
+                        <span class="mc-elo"><b class="d-elo">1025</b> ELO<span class="j-tier-badge inline" hidden></span></span>
+                      </div>
+                      <span class="level-hex lg"><svg viewBox="0 0 100 115">
+                          <polygon points="50,5 95,27.5 95,87.5 50,110 5,87.5 5,27.5" />
+                        </svg><b>15</b></span>
+                    </div>
+                    <div class="mc-stats">
+                      <div><b class="d-wins">73</b><i>Wins</i></div>
+                      <div><b class="d-wr">50.00%</b><i>Winrate</i></div>
+                      <div><b class="d-kills">1957</b><i>Kills</i></div>
+                      <div><b class="d-kdr">0.95</b><i>KDR</i></div>
+                      <div><b class="d-avg">13.40</b><i>AVG</i></div>
+                    </div>
+                  </div>
+                </div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </article>
+      </div>
+
+      <div class="prev-note">This is <b>test mode</b>: styling is stored in your browser and only you see it.
+        Cloud sync (everyone sees your style) arrives with <b>CSR+ Pro</b>.</div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="customize.js"></script>
+</body>
+
+</html>

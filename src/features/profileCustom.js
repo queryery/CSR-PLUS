@@ -89,26 +89,15 @@
     return undefined;
   }
 
-  function tierBadge(el, tier, variant) {
+  // Pro/Premium tier badges were removed — no paid tiers exist. This now only scrubs any
+  // stale badge from the DOM and never renders one. (Skill/form badges are a separate,
+  // free feature: csrp-badge in playerBadges.js — untouched.)
+  function tierBadge(el) {
     if (!el) return;
-    const inline = variant === 'inline';
-    const host = inline ? el : (el.parentElement || el);
-    let b = host.querySelector(':scope > .csrp-tier-badge') ||
-      (inline ? null : el.parentElement?.querySelector(':scope > .csrp-tier-badge'));
-    if (tier !== 'pro' && tier !== 'premium') {
-      if (b) b.remove();
-      el.classList.remove('csrp-has-badge');
-      return;
-    }
-    if (!b) {
-      b = h('span', { class: 'csrp-tier-badge' });
-      if (inline) el.appendChild(b);
-      else el.insertAdjacentElement('afterend', b);
-    }
-    if (inline) el.classList.add('csrp-has-badge');
-    b.className = 'csrp-tier-badge csrp-tb-' + tier +
-      (inline ? ' csrp-tb-inline' : variant === 'center' ? ' csrp-tb-center' : '');
-    b.textContent = (tier === 'premium' ? '◆ PREMIUM' : '◆ PRO');
+    const host = el.parentElement || el;
+    host.querySelectorAll(':scope > .csrp-tier-badge').forEach((b) => b.remove());
+    el.querySelectorAll?.(':scope > .csrp-tier-badge').forEach((b) => b.remove());
+    el.classList.remove('csrp-has-badge');
   }
 
   function profileEloAnchor(hdr) {
@@ -376,7 +365,13 @@
     chip.className = 'csrp-pc-chip csrp-pcc-' + (cfg.chipStyle || 'outline');
   }
 
+  // The friends page has a featured-friend header with the same avatar/layout as a real
+  // profile header (img[width="76"] inside .justify-between), so it would otherwise get the
+  // banner + name/overlay treatment. Don't apply customization on the friends page.
+  const onFriendsPage = () => /friend/i.test(location.pathname);
+
   function tickProfileHeader() {
+    if (onFriendsPage()) return;
     for (const img of document.querySelectorAll('img[width="76"], img.mr-2')) {
       const id = CSRP.dom.idFromAvatar(img);
       if (!id) continue;

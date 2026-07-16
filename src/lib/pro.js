@@ -2,7 +2,6 @@
   'use strict';
   const CSRP = (window.CSRP = window.CSRP || {});
   const PRO_API = CSRP.PRO_API;
-  const CHECKOUT = CSRP.CHECKOUT_HOST;
   const DISCORD_CLIENT_ID = '1526694025757851819';
 
   const JWT_KEY = 'csrpProToken';
@@ -112,14 +111,6 @@
   const uploadAnimatedBanner = (dataUrl) => authed('/me/banner/animated', { method: 'POST', body: { media: dataUrl }, timeoutMs: 120000 });
   const report = (payload) => authed('/report', { method: 'POST', body: payload, timeoutMs: 90000 });
 
-  async function startCheckout(plan) {
-    const token = await ensureToken();
-    if (!token) { await signIn(true); }
-    const t = (session && session.token) || '';
-    const url = `${CHECKOUT}/checkout?plan=${encodeURIComponent(plan)}&token=${encodeURIComponent(t)}`;
-    try { chrome.tabs.create({ url }); } catch { window.open(url, '_blank', 'noopener'); }
-  }
-
   const mem = new Map();
   const inflight = new Map();
   const PUB_TTL = 5 * 60 * 1000;
@@ -168,6 +159,6 @@
   CSRP.pro = {
     signIn, signOut, isSignedIn, currentUser, ensureToken,
     getMe, getMyReports, saveCustomization, uploadBanner, uploadAnimatedBanner, report,
-    startCheckout, getPublicProfiles, invalidateProfile,
+    getPublicProfiles, invalidateProfile,
   };
 })();

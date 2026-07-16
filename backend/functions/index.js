@@ -25,12 +25,6 @@ const visionClient = () => (_vision || (_vision = new vision.ImageAnnotatorClien
 const DISCORD_CLIENT_ID = defineString('DISCORD_CLIENT_ID');
 const DISCORD_CLIENT_SECRET = defineSecret('DISCORD_CLIENT_SECRET');
 const JWT_SECRET = defineSecret('JWT_SECRET');
-const PAYPAL_ENV = defineString('PAYPAL_ENV', { default: 'sandbox' });
-const PAYPAL_CLIENT_ID = defineString('PAYPAL_CLIENT_ID');
-const PAYPAL_CLIENT_SECRET = defineSecret('PAYPAL_CLIENT_SECRET');
-const PAYPAL_PRO_PLAN_ID = defineString('PAYPAL_PRO_PLAN_ID');
-const PAYPAL_PREMIUM_PLAN_ID = defineString('PAYPAL_PREMIUM_PLAN_ID');
-const PAYPAL_WEBHOOK_ID = defineString('PAYPAL_WEBHOOK_ID');
 const TELEGRAM_BOT_TOKEN = defineSecret('TELEGRAM_BOT_TOKEN');
 const TELEGRAM_CHAT_ID = defineString('TELEGRAM_CHAT_ID');
 const TELEGRAM_WEBHOOK_SECRET = defineSecret('TELEGRAM_WEBHOOK_SECRET');
@@ -46,15 +40,68 @@ const BANNER_W = 1920;
 const BANNER_H = 480;
 const ANIM_MAX_SECONDS = 10;
 
-const paypalBase = () =>
-  PAYPAL_ENV.value() === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
-
-const planToTier = (planId) => {
-  if (planId && planId === PAYPAL_PREMIUM_PLAN_ID.value()) return 'premium';
-  if (planId && planId === PAYPAL_PRO_PLAN_ID.value()) return 'pro';
-  return null;
-};
 const TIER_RANK = { free: 0, pro: 1, premium: 2 };
+
+const DEFAULT_CONFIG = {
+  prices: { pro: 2, premium: 4 },
+  bannerMaxBytes: { free: 0, pro: 20 * 1024 * 1024, premium: 40 * 1024 * 1024 },
+  animatedBanner: { pro: false, premium: true },
+  reportVideoMaxBytes: 50 * 1024 * 1024,
+  minVersion: '0.1.0',
+  updateRequired: true,
+  updateUrl: 'https://github.com/queryery/CSR-PLUS/releases/latest',
+  updateMessage: 'CSR+ 0.1.0 is a required update — it removes the old paid tiers and makes every feature free. Please update to keep using CSR+.',
+  premium: {
+    nameStyles: ['rainbow', 'glitch', 'metal'],
+    cardFlairs: ['holo', 'aurora'],
+    avatarFrames: ['hex', 'glow'],
+    chipStyles: ['solid', 'gradient'],
+    fillModeColor: true,
+    animName: true, animAvatar: true, overlay: true,
+  },
+};
+
+let _cfgCache = { at: 0, val: null };
+const CONFIG_TTL = 30 * 1000;
+async function getConfig() {
+  if (_cfgCache.val && Date.now() - _cfgCache.at < CONFIG_TTL) return _cfgCache.val;
+  let stored = {};
+  try {
+    const snap = await db.doc('config/tiers').get();
+    if (snap.exists) stored = snap.data() || {};
+  } catch {}
+  const val = mergeConfig(DEFAULT_CONFIG, stored);
+  _cfgCache = { at: Date.now(), val };
+  return val;
+}
+function mergeConfig(base, over) {
+  const out = JSON.parse(JSON.stringify(base));
+  if (over.prices && typeof over.prices === 'object') Object.assign(out.prices, pickNums(over.prices, ['pro', 'premium']));
+  if (over.bannerMaxBytes && typeof over.bannerMaxBytes === 'object') Object.assign(out.bannerMaxBytes, pickNums(over.bannerMaxBytes, ['free', 'pro', 'premium']));
+  if (over.animatedBanner && typeof over.animatedBanner === 'object') {
+    if (typeof over.animatedBanner.pro === 'boolean') out.animatedBanner.pro = over.animatedBanner.pro;
+    if (typeof over.animatedBanner.premium === 'boolean') out.animatedBanner.premium = over.animatedBanner.premium;
+  }
+  if (Number.isFinite(+over.reportVideoMaxBytes)) out.reportVideoMaxBytes = clampNum(over.reportVideoMaxBytes, 0, 200 * 1024 * 1024);
+  if (typeof over.minVersion === 'string' && /^\d+(\.\d+){0,3}$/.test(over.minVersion)) out.minVersion = over.minVersion;
+  if (typeof over.updateRequired === 'boolean') out.updateRequired = over.updateRequired;
+  if (typeof over.updateUrl === 'string' && /^https:\/\//.test(over.updateUrl)) out.updateUrl = over.updateUrl.slice(0, 300);
+  if (typeof over.updateMessage === 'string') out.updateMessage = over.updateMessage.slice(0, 300);
+  if (over.premium && typeof over.premium === 'object') {
+    const p = over.premium;
+    if (Array.isArray(p.nameStyles)) out.premium.nameStyles = p.nameStyles.filter((x) => typeof x === 'string').slice(0, 20);
+    if (Array.isArray(p.cardFlairs)) out.premium.cardFlairs = p.cardFlairs.filter((x) => typeof x === 'string').slice(0, 20);
+    if (Array.isArray(p.avatarFrames)) out.premium.avatarFrames = p.avatarFrames.filter((x) => typeof x === 'string').slice(0, 20);
+    if (Array.isArray(p.chipStyles)) out.premium.chipStyles = p.chipStyles.filter((x) => typeof x === 'string').slice(0, 20);
+    for (const k of ['fillModeColor', 'animName', 'animAvatar', 'overlay']) if (typeof p[k] === 'boolean') out.premium[k] = p[k];
+  }
+  return out;
+}
+function pickNums(obj, keys) {
+  const out = {};
+  for (const k of keys) if (Number.isFinite(+obj[k])) out[k] = Math.max(0, Math.round(+obj[k]));
+  return out;
+}
 
 function allowedOrigins() {
   const list = [];
@@ -104,11 +151,11 @@ async function rateLimit(key, perWindow, windowMs = 3600e3) {
   });
 }
 
+// Payments removed (July 2026) — every account gets the full feature set.
+// Banner uploads still require sign-in (for ownership + moderation), but no tier is gated.
+// moderationBanned still blocks uploads; that check lives in the upload handlers.
 function resolveTier(d) {
-  if (!d || d.chargeback) return 'free';
-  const until = d.premiumUntil || 0;
-  if (d.tier && (d.subActive || until > Date.now())) return d.tier;
-  return 'free';
+  return 'premium';
 }
 function tierAtLeast(d, min) {
   return TIER_RANK[resolveTier(d)] >= TIER_RANK[min];
@@ -194,48 +241,6 @@ function publicView(d) {
   };
 }
 
-async function paypalToken() {
-  const r = await fetch(paypalBase() + '/v1/oauth2/token', {
-    method: 'POST',
-    headers: {
-      Authorization: 'Basic ' + Buffer.from(
-        PAYPAL_CLIENT_ID.value() + ':' + PAYPAL_CLIENT_SECRET.value()).toString('base64'),
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'grant_type=client_credentials',
-  });
-  if (!r.ok) throw new Error('paypal oauth failed');
-  return (await r.json()).access_token;
-}
-
-async function paypalGetSubscription(subId) {
-  const t = await paypalToken();
-  const r = await fetch(`${paypalBase()}/v1/billing/subscriptions/${encodeURIComponent(subId)}`, {
-    headers: { Authorization: 'Bearer ' + t },
-  });
-  if (!r.ok) return null;
-  return r.json();
-}
-
-async function paypalVerifyWebhook(req) {
-  const t = await paypalToken();
-  const r = await fetch(paypalBase() + '/v1/notifications/verify-webhook-signature', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      auth_algo: req.get('paypal-auth-algo'),
-      cert_url: req.get('paypal-cert-url'),
-      transmission_id: req.get('paypal-transmission-id'),
-      transmission_sig: req.get('paypal-transmission-sig'),
-      transmission_time: req.get('paypal-transmission-time'),
-      webhook_id: PAYPAL_WEBHOOK_ID.value(),
-      webhook_event: req.body,
-    }),
-  });
-  if (!r.ok) return false;
-  return (await r.json()).verification_status === 'SUCCESS';
-}
-
 const hot = (v) => v === 'LIKELY' || v === 'VERY_LIKELY';
 function safeSearchBlocks(s) {
   return !!(s && (hot(s.adult) || hot(s.violence) || hot(s.racy)));
@@ -254,12 +259,18 @@ async function strike(uid, d) {
   return { banned: strikes >= 3 };
 }
 
+function allowedRedirect(redirectUri) {
+  if (/^https:\/\/[a-p]{32}\.chromiumapp\.org\/?$/.test(redirectUri)) return true;
+  if (/^https:\/\/[0-9a-f-]{36}\.extensions\.allizom\.org\/?$/.test(redirectUri)) return true;
+  const host = (CHECKOUT_HOST.value() || '').replace(/\/+$/, '');
+  if (host && (redirectUri === `${host}/admin` || redirectUri === `${host}/admin/`)) return true;
+  return false;
+}
+
 async function handleAuthExchange(req, res) {
   const { code, redirectUri } = req.body || {};
   if (!code || !redirectUri) return bad(res, 400, 'code and redirectUri required');
-  if (!/^https:\/\/[a-p]{32}\.chromiumapp\.org\/?/.test(redirectUri) &&
-    !/^https:\/\/[0-9a-f-]{36}\.extensions\.allizom\.org\/?/.test(redirectUri))
-    return bad(res, 400, 'bad redirectUri');
+  if (!allowedRedirect(redirectUri)) return bad(res, 400, 'bad redirectUri');
 
   const r = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
@@ -294,6 +305,7 @@ async function handleAuthExchange(req, res) {
 async function handleMe(req, res, claims) {
   const snap = await db.doc(`profiles/${claims.sub}`).get();
   const d = snap.exists ? snap.data() : {};
+  trackActive(claims.sub, (req.query && req.query.v) || null).catch(() => {});
   return ok(res, {
     user: { id: claims.sub, name: claims.name },
     tier: resolveTier(d),
@@ -347,20 +359,26 @@ async function handleSetCustomization(req, res, claims) {
   return ok(res, {});
 }
 
+const mb = (n) => Math.round(n / (1024 * 1024));
+
 async function handleBannerUpload(req, res, claims) {
   const snap = await db.doc(`profiles/${claims.sub}`).get();
   const d = snap.exists ? snap.data() : {};
+  const tier = resolveTier(d);
   if (!tierAtLeast(d, 'pro')) return bad(res, 402, 'CSR+ Pro subscription required');
   if (d.moderationBanned) return bad(res, 403, 'customization disabled for this account');
   if (!(await rateLimit(`${claims.sub}_banner`, 10))) return bad(res, 429, 'too many uploads, try later');
+
+  const cfg = await getConfig();
+  const cap = cfg.bannerMaxBytes[tier] || 0;
 
   const b64 = (req.body && req.body.image) || '';
   const m = /^data:image\/(png|jpeg|webp);base64,(.+)$/.exec(b64);
   if (!m) return bad(res, 400, 'image must be a png/jpeg/webp data URL');
   const approxBytes = Math.floor(m[2].length * 0.75);
-  if (approxBytes > BANNER_MAX_BYTES) return bad(res, 413, 'image too large (max 40 MB)');
+  if (approxBytes > cap) return bad(res, 413, `image too large (max ${mb(cap)} MB on your plan)`);
   const buf = Buffer.from(m[2], 'base64');
-  if (buf.length > BANNER_MAX_BYTES) return bad(res, 413, 'image too large (max 40 MB)');
+  if (buf.length > cap) return bad(res, 413, `image too large (max ${mb(cap)} MB on your plan)`);
 
   let webp;
   try {
@@ -396,18 +414,21 @@ async function handleBannerUpload(req, res, claims) {
 async function handleAnimatedBannerUpload(req, res, claims) {
   const snap = await db.doc(`profiles/${claims.sub}`).get();
   const d = snap.exists ? snap.data() : {};
-  if (resolveTier(d) !== 'premium') return bad(res, 402, 'CSR+ Premium subscription required');
+  const tier = resolveTier(d);
+  const cfg = await getConfig();
+  if (!cfg.animatedBanner[tier]) return bad(res, 402, 'CSR+ Premium subscription required');
   if (d.moderationBanned) return bad(res, 403, 'customization disabled for this account');
   if (!(await rateLimit(`${claims.sub}_animbanner`, 6))) return bad(res, 429, 'too many uploads, try later');
 
+  const cap = cfg.bannerMaxBytes[tier] || 0;
   const dataUrl = (req.body && req.body.media) || '';
   const m = /^data:(video\/(?:mp4|webm)|image\/(?:gif|webp));base64,(.+)$/.exec(dataUrl);
   if (!m) return bad(res, 400, 'media must be an mp4/webm video or animated gif/webp data URL');
   const mime = m[1];
   const approxBytes = Math.floor(m[2].length * 0.75);
-  if (approxBytes > BANNER_MAX_BYTES) return bad(res, 413, 'media too large (max 40 MB)');
+  if (approxBytes > cap) return bad(res, 413, `media too large (max ${mb(cap)} MB on your plan)`);
   const inBuf = Buffer.from(m[2], 'base64');
-  if (inBuf.length > BANNER_MAX_BYTES) return bad(res, 413, 'media too large (max 40 MB)');
+  if (inBuf.length > cap) return bad(res, 413, `media too large (max ${mb(cap)} MB on your plan)`);
 
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'csrp-anim-'));
   const cleanup = () => { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch { } };
@@ -519,88 +540,6 @@ async function saveBanner(key, buf, contentType) {
 }
 const publicUrl = (key) => `https://storage.googleapis.com/${bucket().name}/${key}?v=${Date.now()}`;
 
-async function handlePaypalLink(req, res, claims) {
-  if (!(await rateLimit(`${claims.sub}_link`, 20))) return bad(res, 429, 'slow down');
-  const subId = String((req.body && req.body.subscriptionID) || '');
-  if (!/^I-[A-Z0-9]{6,}$/i.test(subId)) return bad(res, 400, 'bad subscription id');
-  const sub = await paypalGetSubscription(subId);
-  if (!sub) return bad(res, 404, 'subscription not found');
-  const tier = planToTier(sub.plan_id);
-  if (!tier) return bad(res, 400, 'unknown plan');
-  if (!['ACTIVE', 'APPROVED'].includes(sub.status)) return bad(res, 402, `subscription is ${sub.status}`);
-
-  const dupe = await db.collection('profiles').where('paypalSubId', '==', subId).limit(1).get();
-  if (!dupe.empty && dupe.docs[0].id !== claims.sub) {
-    const od = dupe.docs[0].data();
-    if (od.chargeback || od.moderationBanned) return bad(res, 409, 'subscription cannot be linked');
-    return bad(res, 409, 'subscription already linked');
-  }
-
-  const until = sub.billing_info && sub.billing_info.next_billing_time
-    ? Date.parse(sub.billing_info.next_billing_time) : (Date.now() + 32 * 864e5);
-  await db.doc(`profiles/${claims.sub}`).set({
-    tier, paypalSubId: subId, subActive: true, chargeback: false,
-    premiumUntil: until,
-    premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
-  return ok(res, { tier });
-}
-
-async function handlePaypalWebhook(req, res) {
-  if (!(await paypalVerifyWebhook(req))) return bad(res, 401, 'bad signature');
-  const ev = req.body || {};
-  const evId = ev.id;
-  if (evId) {
-    const seen = db.doc(`webhookEvents/${evId}`);
-    const dup = await seen.get();
-    if (dup.exists) return ok(res, {});
-    await seen.set({ at: admin.firestore.FieldValue.serverTimestamp(), type: ev.event_type });
-  }
-  const subId = ev.resource && (ev.resource.id || ev.resource.billing_agreement_id);
-  if (!subId) return ok(res, {});
-  const q = await db.collection('profiles').where('paypalSubId', '==', subId).limit(1).get();
-  if (q.empty) return ok(res, {});
-  const ref = q.docs[0].ref;
-  const d = q.docs[0].data();
-
-  switch (ev.event_type) {
-    case 'BILLING.SUBSCRIPTION.ACTIVATED':
-    case 'BILLING.SUBSCRIPTION.RE-ACTIVATED':
-    case 'PAYMENT.SALE.COMPLETED': {
-      const sub = await paypalGetSubscription(subId);
-      const nbt = sub && sub.billing_info && sub.billing_info.next_billing_time;
-      const tier = (sub && planToTier(sub.plan_id)) || d.tier || 'pro';
-      await ref.set({
-        tier, subActive: true, chargeback: false,
-        premiumUntil: nbt ? Date.parse(nbt) : (Date.now() + 32 * 864e5),
-        premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
-      break;
-    }
-    case 'BILLING.SUBSCRIPTION.CANCELLED': {
-      const sub = await paypalGetSubscription(subId);
-      const nbt = sub && sub.billing_info && sub.billing_info.next_billing_time;
-      await ref.set({
-        subActive: false,
-        premiumUntil: nbt ? Date.parse(nbt) : (d.premiumUntil || Date.now()),
-        premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
-      break;
-    }
-    case 'BILLING.SUBSCRIPTION.SUSPENDED':
-    case 'BILLING.SUBSCRIPTION.EXPIRED':
-    case 'PAYMENT.SALE.REVERSED':
-    case 'PAYMENT.SALE.REFUNDED': {
-      await ref.set({
-        subActive: false, chargeback: true, premiumUntil: 0,
-        premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
-      break;
-    }
-  }
-  return ok(res, {});
-}
-
 async function handlePublicProfiles(req, res) {
   const ids = String(req.query.ids || '').split(',').map((s) => s.trim())
     .filter((s) => /^\d{15,21}$/.test(s)).slice(0, 25);
@@ -650,6 +589,37 @@ async function tgSendMedia(method, field, buf, mime, filename, caption, replyMar
   const r = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN.value()}/${method}`, { method: 'POST', body: fd });
   let j = null; try { j = await r.json(); } catch { }
   return { ok: !!(j && j.ok), messageId: j && j.result && j.result.message_id };
+}
+
+async function recordEvent(type, data) {
+  const now = new Date();
+  const day = now.toISOString().slice(0, 10);
+  try {
+    await db.collection('events').add({
+      type, ...data, day, at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    const inc = admin.firestore.FieldValue.increment(1);
+    const patch = { [`total.${type}`]: inc, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    await db.doc(`stats/daily_${day}`).set({ day, [type]: inc, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await db.doc('stats/totals').set(patch, { merge: true });
+  } catch (e) { console.error('recordEvent failed', e); }
+}
+
+async function trackActive(uid, version) {
+  const day = new Date().toISOString().slice(0, 10);
+  const ref = db.doc(`activity/${uid}`);
+  try {
+    const snap = await ref.get();
+    const prev = snap.exists ? snap.data() : null;
+    const firstSeen = !prev;
+    await ref.set({
+      lastSeen: admin.firestore.FieldValue.serverTimestamp(),
+      lastDay: day, version: version || null,
+      seenDays: admin.firestore.FieldValue.arrayUnion(day),
+    }, { merge: true });
+    if (firstSeen) await recordEvent('install', { uid });
+    if (!prev || prev.lastDay !== day) await recordEvent('active', { uid, day });
+  } catch (e) { console.error('trackActive failed', e); }
 }
 
 async function dcSendReport(content, media, priority) {
@@ -805,9 +775,151 @@ async function handleTelegramWebhook(req, res) {
   return res.status(200).send('');
 }
 
+function isOwner(claims) {
+  const owner = (DISCORD_OWNER_ID.value() || '').trim();
+  return !!(claims && owner && /^\d{15,21}$/.test(owner) && String(claims.sub) === owner);
+}
+
+async function handleAdminOverview(req, res) {
+  const totalsSnap = await db.doc('stats/totals').get();
+  const totals = totalsSnap.exists ? (totalsSnap.data().total || {}) : {};
+  const days = [];
+  const now = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const dt = new Date(now.getTime() - i * 864e5);
+    days.push(dt.toISOString().slice(0, 10));
+  }
+  const daySnaps = await db.getAll(...days.map((d) => db.doc(`stats/daily_${d}`)));
+  const series = daySnaps.map((s, i) => {
+    const v = s.exists ? s.data() : {};
+    return { day: days[i], active: v.active || 0, install: v.install || 0, report: v.report || 0, payment: v.payment || 0 };
+  });
+  const activeSnap = await db.collection('profiles').where('subActive', '==', true).select('tier').get().catch(() => null);
+  let proCount = 0, premCount = 0;
+  if (activeSnap) activeSnap.forEach((s) => {
+    const t = s.get('tier');
+    if (t === 'pro') proCount++; else if (t === 'premium') premCount++;
+  });
+  const cfg = await getConfig();
+  const mrr = proCount * (cfg.prices.pro || 0) + premCount * (cfg.prices.premium || 0);
+  return ok(res, {
+    totals: {
+      installs: totals.install || 0,
+      activeEvents: totals.active || 0,
+      reports: totals.report || 0,
+      payments: totals.payment || 0,
+    },
+    subscribers: { pro: proCount, premium: premCount, mrr },
+    series,
+  });
+}
+
+async function handleAdminReports(req, res) {
+  const status = String(req.query.status || '').trim();
+  let q = db.collection('reports');
+  if (REPORT_STATUSES.includes(status)) q = q.where('status', '==', status);
+  const snap = await q.limit(100).get();
+  const items = snap.docs.map((s) => {
+    const r = s.data();
+    return {
+      id: s.id, reporterId: r.reporterId, targetId: r.targetId,
+      reason: r.reason, description: r.description || '',
+      status: REPORT_STATUSES.includes(r.status) ? r.status : 'sent',
+      reporterTier: r.reporterTier || 'free', priority: !!r.priority, hadMedia: !!r.hadMedia,
+      at: r.at && r.at.toMillis ? r.at.toMillis() : null,
+      updatedAt: r.updatedAt && r.updatedAt.toMillis ? r.updatedAt.toMillis() : null,
+    };
+  }).sort((a, b) => (b.at || 0) - (a.at || 0));
+  return ok(res, { reports: items });
+}
+
+async function handleAdminReportStatus(req, res, claims) {
+  const id = String((req.body && req.body.id) || '');
+  const status = String((req.body && req.body.status) || '');
+  if (!/^[0-9a-f-]{36}$/.test(id)) return bad(res, 400, 'bad id');
+  if (!REPORT_STATUSES.includes(status)) return bad(res, 400, 'bad status');
+  const ref = db.doc(`reports/${id}`);
+  if (!(await ref.get()).exists) return bad(res, 404, 'not found');
+  await ref.set({ status, moderatedBy: `admin:${claims.sub}`, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  return ok(res, { status });
+}
+
+async function handleAdminUsers(req, res) {
+  const search = String(req.query.q || '').trim();
+  const out = [];
+  if (/^\d{15,21}$/.test(search)) {
+    const s = await db.doc(`profiles/${search}`).get();
+    if (s.exists) out.push(userRow(search, s.data()));
+  } else {
+    const snap = await db.collection('profiles').where('subActive', '==', true).limit(100).get();
+    snap.docs.forEach((s) => out.push(userRow(s.id, s.data())));
+  }
+  return ok(res, { users: out });
+}
+function userRow(id, d) {
+  return {
+    id, name: d.name || null, tier: resolveTier(d), storedTier: d.tier || 'free',
+    subActive: !!d.subActive, chargeback: !!d.chargeback,
+    premiumUntil: d.premiumUntil || 0, paddleSubId: d.paddleSubId || null,
+    moderationStrikes: d.moderationStrikes || 0, moderationBanned: !!d.moderationBanned,
+    bannerStatus: d.bannerStatus || null, bannerUrl: d.bannerUrl || null,
+    bannerEnabled: !!d.bannerEnabled, bannerKind: d.bannerKind || null,
+  };
+}
+
+async function handleAdminSetTier(req, res, claims) {
+  const uid = String((req.body && req.body.uid) || '');
+  const tier = String((req.body && req.body.tier) || '');
+  const days = Math.max(0, Math.min(3650000, Math.round(+(req.body && req.body.days) || 365)));
+  if (!/^\d{15,21}$/.test(uid)) return bad(res, 400, 'bad uid');
+  if (!['free', 'pro', 'premium'].includes(tier)) return bad(res, 400, 'bad tier');
+  const patch = tier === 'free'
+    ? { tier: 'free', subActive: false, premiumUntil: 0, chargeback: false }
+    : {
+        tier, subActive: true, chargeback: false,
+        premiumUntil: Date.now() + days * 864e5,
+        premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+  patch.grantedBy = `admin:${claims.sub}`;
+  await db.doc(`profiles/${uid}`).set(patch, { merge: true });
+  await recordEvent('admin_grant', { uid, tier });
+  return ok(res, { tier });
+}
+
+async function handleAdminBannerModerate(req, res, claims) {
+  const uid = String((req.body && req.body.uid) || '');
+  const action = String((req.body && req.body.action) || '');
+  if (!/^\d{15,21}$/.test(uid)) return bad(res, 400, 'bad uid');
+  const ref = db.doc(`profiles/${uid}`);
+  if (!(await ref.get()).exists) return bad(res, 404, 'not found');
+  const patch = { updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+  if (action === 'approve') patch.bannerStatus = 'approved';
+  else if (action === 'reject') { patch.bannerStatus = 'rejected'; patch.bannerEnabled = false; }
+  else if (action === 'disable') patch.bannerEnabled = false;
+  else if (action === 'unban') { patch.moderationBanned = false; patch.moderationStrikes = 0; }
+  else if (action === 'ban') patch.moderationBanned = true;
+  else return bad(res, 400, 'bad action');
+  patch.moderatedBy = `admin:${claims.sub}`;
+  await ref.set(patch, { merge: true });
+  return ok(res, {});
+}
+
+async function handleAdminGetConfig(req, res) {
+  return ok(res, { config: await getConfig() });
+}
+async function handleAdminSetConfig(req, res, claims) {
+  const body = (req.body && req.body.config) || {};
+  const merged = mergeConfig(DEFAULT_CONFIG, body);
+  merged.updatedBy = `admin:${claims.sub}`;
+  merged.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+  await db.doc('config/tiers').set(merged, { merge: false });
+  _cfgCache = { at: 0, val: null };
+  return ok(res, { config: await getConfig() });
+}
+
 exports.api = onRequest({
   region: 'europe-west1',
-  secrets: [DISCORD_CLIENT_SECRET, JWT_SECRET, PAYPAL_CLIENT_SECRET, TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, DISCORD_REPORT_WEBHOOK],
+  secrets: [DISCORD_CLIENT_SECRET, JWT_SECRET, TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, DISCORD_REPORT_WEBHOOK],
   memory: '1GiB',
   timeoutSeconds: 120,
   maxInstances: 10,
@@ -823,16 +935,22 @@ exports.api = onRequest({
       return await handlePublicProfiles(req, res);
     }
     if (req.method === 'POST' && p === '/auth/exchange') return await handleAuthExchange(req, res);
-    if (req.method === 'POST' && p === '/paypal/webhook') return await handlePaypalWebhook(req, res);
     if (req.method === 'POST' && p === '/tg/webhook') return await handleTelegramWebhook(req, res);
-    if (req.method === 'GET' && p === '/config')
+    if (req.method === 'GET' && p === '/config') {
+      const cfg = await getConfig();
+      res.set('Cache-Control', 'public, max-age=30');
       return ok(res, {
-        paypalClientId: PAYPAL_CLIENT_ID.value(),
-        proPlanId: PAYPAL_PRO_PLAN_ID.value(),
-        premiumPlanId: PAYPAL_PREMIUM_PLAN_ID.value(),
-        env: PAYPAL_ENV.value(),
+        // Payments removed — everything is free. Kept fields the client still reads.
+        paymentsEnabled: false,
         discordClientId: DISCORD_CLIENT_ID.value(),
+        bannerMaxBytes: cfg.bannerMaxBytes,
+        animatedBanner: cfg.animatedBanner,
+        minVersion: cfg.minVersion,
+        updateRequired: cfg.updateRequired,
+        updateUrl: cfg.updateUrl,
+        updateMessage: cfg.updateMessage,
       });
+    }
 
     const claims = auth(req);
     if (!claims) return bad(res, 401, 'sign in required');
@@ -840,9 +958,22 @@ exports.api = onRequest({
     if (req.method === 'POST' && p === '/me/customization') return await handleSetCustomization(req, res, claims);
     if (req.method === 'POST' && p === '/me/banner') return await handleBannerUpload(req, res, claims);
     if (req.method === 'POST' && p === '/me/banner/animated') return await handleAnimatedBannerUpload(req, res, claims);
-    if (req.method === 'POST' && p === '/me/paypal/link') return await handlePaypalLink(req, res, claims);
     if (req.method === 'POST' && p === '/report') return await handleReport(req, res, claims);
     if (req.method === 'GET' && p === '/me/reports') return await handleMyReports(req, res, claims);
+    if (req.method === 'POST' && p === '/track') { trackActive(claims.sub, (req.body && req.body.v) || null).catch(() => {}); return ok(res, {}); }
+
+    if (p.startsWith('/admin/')) {
+      if (!isOwner(claims)) return bad(res, 403, 'forbidden');
+      if (req.method === 'GET' && p === '/admin/overview') return await handleAdminOverview(req, res);
+      if (req.method === 'GET' && p === '/admin/reports') return await handleAdminReports(req, res);
+      if (req.method === 'POST' && p === '/admin/report/status') return await handleAdminReportStatus(req, res, claims);
+      if (req.method === 'GET' && p === '/admin/users') return await handleAdminUsers(req, res);
+      if (req.method === 'POST' && p === '/admin/user/tier') return await handleAdminSetTier(req, res, claims);
+      if (req.method === 'POST' && p === '/admin/banner/moderate') return await handleAdminBannerModerate(req, res, claims);
+      if (req.method === 'GET' && p === '/admin/config') return await handleAdminGetConfig(req, res);
+      if (req.method === 'POST' && p === '/admin/config') return await handleAdminSetConfig(req, res, claims);
+      return bad(res, 404, 'no such admin route');
+    }
 
     return bad(res, 404, 'no such route');
   } catch (e) {

@@ -531,3 +531,7 @@ body {
   text-align: center; color: var(--muted); font-size: 12px;
   padding: 24px 12px; border: 1px dashed var(--line); border-radius: 5px;
 }
+
+.force-update .app { filter: blur(3px) grayscale(0.4); pointer-events: none; user-select: none; }
+.force-update #update-modal { display: flex !important; }
+.force-update #update-modal .modal-card { border-color: var(--accent); }

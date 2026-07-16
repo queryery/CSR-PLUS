@@ -35,7 +35,7 @@
       <button class="btn ghost sm" id="btn-export" title="Copy your setup as JSON">Export</button>
       <button class="btn ghost sm" id="btn-import" title="Paste a setup JSON">Import</button>
       <button class="btn danger sm" id="btn-reset">Reset</button>
-      <button class="btn save" id="btn-save" title="Save locally, and publish to other CSR+ users if you're Pro">
+      <button class="btn save" id="btn-save" title="Save locally, and publish to other CSR+ users when signed in">
         <span id="save-lbl">Save</span></button>
     </div>
   </header>
@@ -78,25 +78,8 @@
             </button>
           </div>
 
-          <div class="acct-upgrade" id="acct-upgrade">
-            <div class="au-copy">
-              <div class="au-title">Go Pro or Premium</div>
-              <div class="au-sub">Shared banners, premium cosmetics, animated effects &amp; badges.</div>
-            </div>
-            <button class="btn tc-cta premium" id="btn-open-subs">View plans →</button>
-          </div>
-
           <label class="mini-toggle" id="hide-banners-row" hidden><input type="checkbox" id="c-hide-banners" />
             <span>Hide everyone's banners</span></label>
-
-          <div class="badge-preview-row">
-            <span class="bpr-lbl">Preview badge as</span>
-            <div class="pick sm" id="c-preview-tier" data-key="previewTier">
-              <button data-v="free" class="on">Free</button>
-              <button data-v="pro">Pro</button>
-              <button data-v="premium">Premium</button>
-            </div>
-          </div>
 
           <div class="mod-warn" id="mod-warn" hidden></div>
         </div>
@@ -111,11 +94,11 @@
       <div class="panel">
         <div class="panel-h"><span class="ph-no">◦</span> Banner image</div>
         <div class="drop" id="drop">
-          <input type="file" id="c-banner-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+          <input type="file" id="c-banner-file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" hidden />
           <div class="drop-inner" id="drop-inner">
             <div class="drop-ic">▦</div>
             <div class="drop-tx">Drop an image or <b>click to browse</b></div>
-            <div class="drop-sub">PNG / JPG / WebP · animated GIF up to 1.7 MB</div>
+            <div class="drop-sub" id="drop-sub">PNG / JPG / WebP · animated GIF/WebP · MP4/WebM</div>
           </div>
         </div>
         <div class="row-2">
@@ -245,7 +228,7 @@
       </div>
 
       <div class="panel prem-panel">
-        <div class="panel-h"><span class="ph-no">✦</span> Premium effects <span class="ph-hint prem-hint">Premium</span></div>
+        <div class="panel-h"><span class="ph-no">✦</span> Animated effects</div>
         <div class="pick" id="c-anim-name" data-key="animName">
           <button data-v="none">No animation</button>
           <button data-v="shimmer" class="prem">Chrome shimmer</button>
@@ -261,8 +244,6 @@
           <button data-v="particles" class="prem">Stardust</button>
           <button data-v="sweep" class="prem">Holo sweep</button>
         </div>
-        <p class="prem-note-txt" id="prem-lock" hidden>These require CSR+ Premium.
-          <a href="#" id="prem-upsell">Upgrade →</a></p>
       </div>
       </div>
 
@@ -384,12 +365,21 @@
           </article>
       </div>
 
-      <div class="prev-note">Sign in with Discord to share your look — your <b>colours, name style and card flair</b>
-        are seen by everyone for free. A <b>banner</b> and animated effects need <b>CSR+ Pro</b>.</div>
+      <div class="prev-note">Sign in with Discord to share your look — your <b>colours, name style, card flair,
+        banner and animated effects</b> are seen by everyone, <b>completely free</b>.</div>
     </section>
   </main>
 
   <div class="toast" id="toast" hidden></div>
+
+  <div class="upload-overlay" id="upload-overlay" hidden>
+    <div class="upload-card">
+      <div class="upload-title" id="upload-title">Publishing…</div>
+      <div class="upload-bar"><div class="upload-fill" id="upload-fill"></div></div>
+      <div class="upload-step" id="upload-step">Preparing…</div>
+    </div>
+  </div>
+
   <script src="customize.js"></script>
 </body>
 

@@ -1,4 +1,174 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>CSR+</title>
-<p>CSR+ backend host. See <a href="/checkout">/checkout</a>.</p>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSR+ — a better CS:Restored</title>
+<meta name="description" content="CSR+ is a browser extension that adds player insights, quality-of-life automation and profile customization to CS:Restored. Optional Pro and Premium subscriptions.">
+<style>
+  :root{
+    --bg:#07080a;--panel:#0b0d10;--panel2:#0e1116;--fg:#f4f6f8;--dim:#8b9099;
+    --line:#20242b;--accent:#e23a45;--ok:#9de8bd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);color:var(--fg);
+    font:15px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:#cdd2d8}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px}
+  header.top{
+    position:sticky;top:0;z-index:5;backdrop-filter:blur(8px);
+    background:rgba(7,8,10,.72);border-bottom:1px solid var(--line);
+  }
+  .top .wrap{display:flex;align-items:center;gap:14px;height:60px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.04em;font-size:18px}
+  .brand b{color:var(--accent)}
+  .top nav{margin-left:auto;display:flex;gap:20px;font-size:14px}
+  .top nav a{color:var(--dim);text-decoration:none}
+  .top nav a:hover{color:var(--fg)}
+  .hero{padding:78px 0 54px;text-align:center}
+  .hero h1{font-size:clamp(30px,6vw,52px);line-height:1.08;margin:0 0 16px;letter-spacing:-.01em}
+  .hero h1 span{color:var(--accent)}
+  .hero p{max-width:620px;margin:0 auto 26px;color:#c3c8cf;font-size:17px}
+  .cta{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn{
+    display:inline-block;padding:12px 22px;border-radius:999px;text-decoration:none;
+    font-weight:600;font-size:15px;border:1px solid var(--line);
+  }
+  .btn.primary{background:var(--fg);color:#07080a;border-color:var(--fg)}
+  .btn.ghost{color:var(--fg)}
+  section{padding:50px 0;border-top:1px solid var(--line)}
+  h2{font-size:26px;margin:0 0 8px;letter-spacing:-.01em}
+  .lead{color:var(--dim);margin:0 0 28px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 16px}
+  .feat h3{margin:0 0 6px;font-size:16px}
+  .feat p{margin:0;color:#b7bcc4;font-size:14px}
+  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .tier{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 20px;display:flex;flex-direction:column}
+  .tier.pop{border-color:#3a2a2c;box-shadow:0 0 0 1px rgba(226,58,69,.25)}
+  .tier .name{font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:13px;color:var(--dim)}
+  .tier .price{font-size:34px;font-weight:800;margin:8px 0 2px}
+  .tier .price small{font-size:14px;color:var(--dim);font-weight:400}
+  .tier ul{list-style:none;padding:0;margin:14px 0 20px;flex:1}
+  .tier li{padding:5px 0 5px 20px;position:relative;color:#c3c8cf;font-size:14px}
+  .tier li::before{content:"›";position:absolute;left:2px;color:var(--fg)}
+  .tier li.no{color:#6b7079}
+  .tier li.no::before{content:"·";color:#4a4f57}
+  .flag{align-self:flex-start;font-size:11px;letter-spacing:.14em;color:var(--accent);border:1px solid #3a2a2c;border-radius:999px;padding:3px 9px;margin-bottom:8px}
+  .note{color:var(--dim);font-size:13px;margin-top:18px;text-align:center}
+  .faq div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 17px;margin-bottom:10px;font-size:14px;color:#c3c8cf}
+  .faq b{color:var(--fg)}
+  footer{border-top:1px solid var(--line);padding:34px 0 60px;color:var(--dim);font-size:13px}
+  footer .cols{display:flex;flex-wrap:wrap;gap:26px;align-items:center}
+  footer a{color:var(--dim);text-decoration:none;margin-right:18px}
+  footer a:hover{color:var(--fg)}
+  .disc{margin-top:18px;line-height:1.7;max-width:720px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">CSR<b>+</b></div>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#pricing">Free</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="hero">
+      <h1>A better <span>CS:Restored</span>.</h1>
+      <p>CSR+ is a browser extension that layers player insights, match automation and
+        profile customization on top of the CS:Restored web client — so you spend less time
+        clicking and more time playing.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/queryery/CSR-PLUS/releases/latest">Get the extension</a>
+        <a class="btn ghost" href="#features">See features</a>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>What it does</h2>
+      <p class="lead">Everything below is free. Pro &amp; Premium add shared cosmetics on top.</p>
+      <div class="grid">
+        <div class="feat"><h3>Player insight badges</h3><p>Form, consistency and skill tiers on every player in the lobby and match room, computed from recent games.</p></div>
+        <div class="feat"><h3>Win-probability bar</h3><p>A live estimate of each team's chances, updated as the match room fills.</p></div>
+        <div class="feat"><h3>Queue automation</h3><p>Optional auto-accept, auto-invite friends and map-ban priority so you never miss a pop.</p></div>
+        <div class="feat"><h3>CSR+ Studio</h3><p>Customize your accent colors, name style, card flair and avatar frame — previewed live before you publish.</p></div>
+        <div class="feat"><h3>Player reports</h3><p>Report cheating or abuse with a screenshot or clip; reports reach a human moderator queue.</p></div>
+        <div class="feat"><h3>Trades &amp; docs</h3><p>Quick trade links with confirmed friends and an in-extension manual for every feature.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <h2>Everything is free</h2>
+      <p class="lead">No subscriptions, no paywalls. Every feature is unlocked for everyone.</p>
+      <div class="tiers">
+        <div class="tier pop">
+          <span class="flag">FREE FOREVER</span>
+          <div class="name">Full access</div>
+          <div class="price">$0</div>
+          <ul>
+            <li>All insights &amp; automation</li>
+            <li>Accent colors, name styles &amp; card flair</li>
+            <li>Avatar frames &amp; title chips</li>
+            <li>Shared static banner</li>
+            <li>Premium cosmetics (holo, aurora, metal…)</li>
+            <li>Animated banner (video / GIF)</li>
+            <li>Animated name &amp; avatar ring</li>
+            <li>Hide everyone's banners</li>
+          </ul>
+          <a class="btn primary" href="https://github.com/queryery/CSR-PLUS/releases/latest">Install CSR+</a>
+        </div>
+      </div>
+      <p class="note">CSR+ is free to use. Shared cosmetics require a quick Discord sign-in inside the
+        extension (so your banner belongs to you and can be moderated) — but nothing is ever charged.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap faq">
+      <h2>Questions</h2>
+      <p class="lead">The short version.</p>
+      <div><b>Who sees my banner and cosmetics?</b> Every player who also has CSR+ installed — on your
+        match-room card, lobby slot and profile. Players without CSR+ see the normal site.</div>
+      <div><b>Do I have to pay for anything?</b> No. CSR+ is completely free and there are no subscriptions.
+        Shared cosmetics just need a Discord sign-in so your uploads belong to you and can be moderated.</div>
+      <div><b>What data do you collect?</b> As little as possible — your Discord identity for sign-in, any
+        cosmetic content you publish, and reports you submit. See the <a href="/privacy">Privacy Policy</a>.</div>
+      <div><b>Is CSR+ affiliated with CS:Restored?</b> No. CSR+ is an independent, third-party enhancement
+        for the CS:Restored web client and is not endorsed by or affiliated with it.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div class="brand">CSR<b>+</b></div>
+      <div>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="mailto:lvivartemlviv@gmail.com">Contact</a>
+      </div>
+    </div>
+    <p class="disc">CSR+ is an independent browser extension and is not affiliated with, endorsed by, or
+      sponsored by CS:Restored or Valve Corporation. “Counter-Strike” and related marks are trademarks of
+      their respective owners. CSR+ is free to use. © CSR+.
+      Contact: <a href="mailto:lvivartemlviv@gmail.com">lvivartemlviv@gmail.com</a>.</p>
+  </div>
+</footer>
+</body>
+</html>

@@ -104,11 +104,41 @@
     };
   }
 
+  const upEl = () => ({
+    overlay: $('#upload-overlay'), fill: $('#upload-fill'),
+    step: $('#upload-step'), title: $('#upload-title'),
+  });
+  function upShow(title) {
+    const u = upEl(); if (!u.overlay) return;
+    if (u.title) u.title.textContent = title || 'Publishing…';
+    if (u.fill) { u.fill.classList.remove('indet'); u.fill.style.width = '0%'; }
+    u.overlay.hidden = false;
+  }
+  function upSet(pct, step, indet) {
+    const u = upEl(); if (!u.overlay) return;
+    if (u.step && step != null) u.step.textContent = step;
+    if (u.fill) {
+      if (indet) { u.fill.classList.add('indet'); u.fill.style.width = ''; }
+      else { u.fill.classList.remove('indet'); u.fill.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+    }
+  }
+  function upHide(delay) {
+    const u = upEl(); if (!u.overlay) return;
+    setTimeout(() => { u.overlay.hidden = true; }, delay || 0);
+  }
+
+  function persistableCfg() {
+    const big = typeof cfg.banner === 'string' && /^data:video\//.test(cfg.banner) && cfg.banner.length > 2.4e6;
+    if (!big) return cfg;
+    const copy = { ...cfg, banner: null, bannerOn: false, _bannerCloudOnly: true };
+    return copy;
+  }
+
   async function saveNow() {
     if (extStorage) {
-      await new Promise((r) => chrome.storage.local.set({ [KEY]: cfg }, r));
+      await new Promise((r) => chrome.storage.local.set({ [KEY]: persistableCfg() }, r));
     } else {
-      try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch {}
+      try { localStorage.setItem(KEY, JSON.stringify(persistableCfg())); } catch {}
       toast('Saved (preview only — open via the CSR+ popup to apply on the site)');
       clearDirty(); return;
     }
@@ -120,25 +150,29 @@
     }
 
     const wantsBanner = !!cfg.banner;
-    const wantsPremium = usesPremiumCosmetic(cfg);
-    const bannerLocked = wantsBanner && RANK[proTier] < RANK.pro;
-    const premiumLocked = wantsPremium && proTier !== 'premium';
-    const fullyUnlocked = !bannerLocked && !premiumLocked;
-
-    toast('Saving & publishing…');
-    const body = fullyUnlocked ? fullCustomizationBody(cfg) : freeCustomizationBody(cfg);
+    // Payments removed — every signed-in user has the full feature set, so everything publishes.
+    const willUploadBanner = wantsBanner;
+    upShow(willUploadBanner ? 'Publishing banner' : 'Publishing');
+    upSet(15, 'Saving your cosmetics…');
+    const body = fullCustomizationBody(cfg);
     const custom = await pro('/me/customization', { token, method: 'POST', body });
 
     let banner = { ok: true };
-    if (fullyUnlocked && wantsBanner) {
+    if (willUploadBanner) {
       const isAnim = /^data:(video\/|image\/gif)/.test(cfg.banner) ||
         (/^data:image\/webp/.test(cfg.banner) && cfg._animated);
+      const sizeMb = Math.round((cfg.banner.length * 0.75) / 1048576);
+      upSet(45, `Uploading ${isAnim ? 'video' : 'image'}${sizeMb ? ` (~${sizeMb} MB)` : ''}…`);
+      upSet(0, null, true);
       banner = isAnim
-        ? await pro('/me/banner/animated', { token, method: 'POST', body: { media: cfg.banner }, timeoutMs: 120000 })
+        ? await pro('/me/banner/animated', { token, method: 'POST', body: { media: cfg.banner }, timeoutMs: 180000 })
         : await pro('/me/banner', { token, method: 'POST', body: { image: cfg.banner }, timeoutMs: 90000 });
+      upSet(90, banner.ok ? 'Moderating & finishing…' : 'Upload failed');
     }
 
     clearDirty();
+    upSet(100, custom.ok && banner.ok ? 'Done' : 'Finished with errors');
+    upHide(600);
 
     if (!custom.ok) {
       toast((custom.data && custom.data.error) || 'Saved locally; publish failed');
@@ -149,35 +183,9 @@
       return;
     }
 
-    if (bannerLocked || premiumLocked) {
-      const need = bannerLocked && premiumLocked ? 'premium'
-        : premiumLocked ? 'premium' : 'pro';
-      openUpgradeModal({ need, wantsBanner: bannerLocked, wantsPremium: premiumLocked });
-    } else {
-      toast('Saved & published — visible to CSR+ users');
-    }
+    toast('Saved & published — visible to CSR+ users');
   }
 
-  function openUpgradeModal({ need, wantsBanner, wantsPremium }) {
-    const locked = [];
-    if (wantsBanner) locked.push('your profile banner');
-    if (wantsPremium) locked.push('premium effects (animated name/frame, holo/aurora flair, colour fill)');
-    const tierName = need === 'premium' ? 'CSR+ Premium' : 'CSR+ Pro';
-    const price = need === 'premium' ? '$4/mo' : '$2/mo';
-    confirmDialog({
-      title: `Unlock with ${tierName}`,
-      body: `Your free look — colours, name style and card flair — is now live for everyone. ` +
-        `${locked.join(' and ')} ${locked.length > 1 ? 'need' : 'needs'} ${tierName} (${price}) before ` +
-        `${locked.length > 1 ? 'they' : 'it'} can be published. Upgrade now?`,
-      okLabel: `Get ${tierName}`,
-    }).then(async (yes) => {
-      if (!yes) return;
-      const t = await proToken().catch(() => null);
-      const url = `${CHECKOUT_HOST}/checkout?plan=${encodeURIComponent(need)}` +
-        (t ? `&token=${encodeURIComponent(t)}` : '');
-      try { chrome.tabs.create({ url }); } catch { window.open(url, '_blank', 'noopener'); }
-    });
-  }
   function save() { markDirty(); }
   function load(cb) {
     if (extStorage) {
@@ -227,19 +235,39 @@
     });
   }
 
-  const MAX_W = 1920, MAX_STORE = 2.4e6, MAX_ANIMATED_BYTES = 1.7e6;
+  let cfgCaps = { free: 0, pro: 20 * 1048576, premium: 40 * 1048576 };
+  (async () => {
+    try {
+      const r = await pro('/config');
+      if (r && r.ok && r.data && r.data.bannerMaxBytes) cfgCaps = r.data.bannerMaxBytes;
+    } catch {}
+  })();
+  function bannerCapBytes() { return cfgCaps[proTier] || cfgCaps.premium || 40 * 1048576; }
+
+  const MAX_W = 1920, MAX_STORE = 2.4e6, MAX_ANIMATED_BYTES = 4e6;
+  function readAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+  }
   function processBanner(file) {
     return new Promise((resolve, reject) => {
-      if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) return reject(new Error('PNG, JPG, WebP or GIF only'));
-      if (file.type === 'image/gif') {
-        if (file.size > MAX_ANIMATED_BYTES) return reject(new Error('Animated GIFs must be 1.7 MB or smaller'));
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Could not read GIF'));
-        reader.readAsDataURL(file);
+      const cap = bannerCapBytes();
+      if (/^video\/(mp4|webm)$/.test(file.type)) {
+        if (file.size > cap) return reject(new Error(`Video too large — max ${Math.round(cap / 1048576)} MB on your plan`));
+        readAsDataUrl(file).then(resolve).catch(reject);
         return;
       }
-      if (file.size > 20 * 1024 * 1024) return reject(new Error('Max 20 MB'));
+      if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) return reject(new Error('PNG, JPG, WebP, GIF or MP4/WebM only'));
+      if (file.type === 'image/gif') {
+        if (file.size > MAX_ANIMATED_BYTES) return reject(new Error('Animated GIFs must be 4 MB or smaller'));
+        readAsDataUrl(file).then(resolve).catch(reject);
+        return;
+      }
+      if (file.size > cap) return reject(new Error(`Max ${Math.round(cap / 1048576)} MB`));
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
@@ -464,18 +492,9 @@
     paintTierBadge();
   }
 
+  // Pro/Premium tier badges were removed — never render the Studio preview badge.
   function paintTierBadge() {
-    const t = previewTier;
-    $$('.j-tier-badge').forEach((b) => {
-      const inline = b.classList.contains('inline');
-      const center = b.classList.contains('center');
-      b.className = 'j-tier-badge' + (inline ? ' inline' : '') + (center ? ' center' : '');
-      if (t !== 'pro' && t !== 'premium') { b.hidden = true; b.textContent = ''; return; }
-      b.hidden = false;
-      b.classList.add('tb-' + t);
-      b.textContent = t === 'premium' ? '◆ PREMIUM' : '◆ PRO';
-    });
-    $$('#c-preview-tier button').forEach((btn) => btn.classList.toggle('on', btn.dataset.v === previewTier));
+    $$('.j-tier-badge').forEach((b) => { b.hidden = true; b.textContent = ''; });
   }
 
   function set(patch) { Object.assign(cfg, patch); paint(); queueRescale(); save(); }
@@ -762,7 +781,6 @@
   }
 
   const PRO_API = 'https://europe-west1-csr-plus-331c8.cloudfunctions.net/api';
-  const CHECKOUT_HOST = 'https://csr-plus-331c8.web.app';
   const DISCORD_CLIENT_ID = '1526694025757851819';
   const JWT_KEY = 'csrpProToken';
   let proSession = null;
@@ -865,41 +883,23 @@
         : '../assets/icon128.png';
       avEl.onerror = () => { avEl.src = '../assets/icon128.png'; };
     }
-    if (dot) dot.className = 'acct-tier-dot' + (signedIn && proTier !== 'free' ? ' t-' + proTier : '');
+    if (dot) dot.className = 'acct-tier-dot' + (signedIn ? ' t-on' : '');
 
     const badge = $('#tier-badge');
     if (badge) {
-      badge.className = 'acct-tier' + (signedIn && proTier !== 'free' ? ' t-' + proTier : '');
-      badge.textContent = signedIn
-        ? (proTier === 'premium' ? 'Premium member' : proTier === 'pro' ? 'Pro member' : 'Free account')
-        : 'Free · local';
+      badge.className = 'acct-tier' + (signedIn ? ' t-on' : '');
+      badge.textContent = signedIn ? 'Sharing enabled' : 'Local preview';
     }
 
     $('#btn-signin').hidden = signedIn;
     $('#btn-signout').hidden = !signedIn;
     const note = $('#acct-note');
     if (note) note.hidden = signedIn;
-    const up = $('#acct-upgrade');
-    if (up) up.style.display = (signedIn && proTier === 'premium') ? 'none' : '';
 
     const hb = $('#hide-banners-row');
-    if (hb) hb.hidden = !(signedIn && rank[proTier] >= rank.pro);
+    if (hb) hb.hidden = !signedIn;
 
-    const prem = $('#c-anim-name')?.closest('.prem-panel');
-    if (prem) prem.classList.toggle('prem-locked', !(signedIn && proTier === 'premium'));
-    const lock = $('#prem-lock');
-    if (lock) lock.hidden = signedIn && proTier === 'premium';
-
-    if (chip) chip.textContent = signedIn
-      ? (proTier === 'free' ? 'SIGNED IN · FREE' : proTier.toUpperCase() + ' · SHARED')
-      : 'TEST MODE · LOCAL';
-
-    const tb = $('#tier-badge');
-    if (tb && signedIn && proTier !== 'free' && premiumUntil) {
-      const d = new Date(premiumUntil);
-      if (!isNaN(d)) tb.textContent = (proTier === 'premium' ? 'Premium' : 'Pro') +
-        ' · until ' + d.toISOString().slice(0, 10);
-    }
+    if (chip) chip.textContent = signedIn ? 'SIGNED IN · SHARED' : 'LOCAL PREVIEW';
 
     const mw = $('#mod-warn');
     if (mw) {
@@ -965,19 +965,6 @@
         okLabel: 'Log out', danger: true,
       });
       if (ok) proSignOut();
-    });
-
-    const openSubs = () => {
-      const url = chrome.runtime.getURL('subscribe/subscribe.html');
-      try { chrome.tabs.create({ url }); } catch { window.open(url, '_blank', 'noopener'); }
-    };
-    $('#btn-open-subs')?.addEventListener('click', openSubs);
-    $('#prem-upsell')?.addEventListener('click', (e) => { e.preventDefault(); openSubs(); });
-
-    $('#c-preview-tier')?.addEventListener('click', (e) => {
-      const b = e.target.closest('button'); if (!b) return;
-      previewTier = b.dataset.v;
-      paintTierBadge();
     });
   }
 

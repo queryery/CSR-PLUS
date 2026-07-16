@@ -472,6 +472,31 @@
     modal.hidden = false;
     snd('alert');
   }
+
+  async function enforceMinVersion() {
+    let cfg;
+    try {
+      const resp = await proProxy('/config');
+      cfg = resp && resp.ok && resp.data;
+    } catch { return; }
+    if (!cfg) return;
+    const current = chrome.runtime.getManifest().version;
+    const below = cfg.minVersion && cmpVer(current, cfg.minVersion) < 0;
+    if (!below && !cfg.updateRequired) return;
+    if (!below) return;
+    const modal = $('#update-modal');
+    const card = modal.querySelector('.modal-card');
+    $('#modal-ver').textContent = `v${cfg.minVersion}`;
+    $('#modal-go').href = cfg.updateUrl || `https://github.com/${REPO}/releases/latest`;
+    const body = modal.querySelector('.modal-body');
+    if (body) body.innerHTML = esc(cfg.updateMessage || 'This version of CSR+ is no longer supported. Update to keep using it.') +
+      `<br><b>Minimum required: v${esc(cfg.minVersion)}</b>`;
+    const later = $('#modal-later');
+    if (later) later.style.display = 'none';
+    modal.hidden = false;
+    document.documentElement.classList.add('force-update');
+    snd('alert');
+  }
   function bindModal() {
     const modal = $('#update-modal');
     $('#modal-later').addEventListener('click', () => { modal.hidden = true; snd('off'); });
@@ -489,9 +514,9 @@
       snd('click');
       chrome.tabs.create({ url: chrome.runtime.getURL('customize/customize.html') });
     });
-    $('#open-subs')?.addEventListener('click', () => {
+    $('#donate-btn')?.addEventListener('click', () => {
       snd('click');
-      chrome.tabs.create({ url: chrome.runtime.getURL('subscribe/subscribe.html') });
+      chrome.tabs.create({ url: 'https://www.paypal.com/paypalme/VYavorskiy' });
     });
     bindProAccount();
     bindReports();
@@ -622,17 +647,18 @@
     const signedIn = proValid(proSession);
     const st = $('#pro-status');
     if (st) st.textContent = signedIn
-      ? `${proSession.user?.name || 'Signed in'} · ${proTier === 'premium' ? 'Premium' : proTier === 'pro' ? 'Pro' : 'Free'}`
+      ? `${proSession.user?.name || 'Signed in'} · sharing enabled`
       : 'Not signed in';
     $('#pro-signin').hidden = signedIn;
     $('#pro-signout').hidden = !signedIn;
-    $('#hide-banners-set').hidden = !(signedIn && (proTier === 'pro' || proTier === 'premium'));
+    $('#hide-banners-set').hidden = !signedIn;
     const area = (chrome.storage && chrome.storage.sync) ? chrome.storage.sync : chrome.storage.local;
     area.get(['hideBanners'], (d) => { $('#pop-hide-banners')?.classList.toggle('on', d.hideBanners === true); });
   }
   async function refreshPro() {
     if (!proValid(proSession)) { proTier = 'free'; reflectPro(); return; }
-    const resp = await proProxy('/me', { token: proSession.token });
+    const v = chrome.runtime.getManifest().version;
+    const resp = await proProxy(`/me?v=${encodeURIComponent(v)}`, { token: proSession.token });
     if (resp.ok && resp.data) { proTier = resp.data.tier || 'free'; proSession.user = proSession.user || resp.data.user; }
     reflectPro();
   }
@@ -706,6 +732,7 @@
     renderChangelog();
     bindModal();
     loadLiveUsers();
+    enforceMinVersion();
     if (state.autoUpdate) checkForUpdate(false);
   });
 })();

@@ -2,6 +2,7 @@
 .history/
 .vscode/
 *.code-workspace
+.claude/
 
 # Dependencies
 node_modules/

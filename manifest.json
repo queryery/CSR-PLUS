@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CSR+ — Enhanced Match Suite",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzyX3157+l4dqak7AzegHDTrLxJ7JXkxrHNBcqR0xsF3s3n1GB7dbBZGcrrifInWCRHJT/bZuA9LrlvBlxaolqz7S/Ba/t5waxd/rt4IjsRsSpPkCH9sI7wUReE4xUHw2xXcO4Zmg+4fk6Ht2vgxFJPbKHLgOXt1lVMdYtX5ViPzHGBwcPlkQQEosyDrJhYlD0rDuLleahJIE7ghZw+A90PbABOIUeqz3/obZtqp/1ERoYpH3J9x7noYBlb4oz+/QWc0+N/2XJboiZuDP/KMWR7vaWyGbcDDa7xugK1R31UG7YABcc+FIdJ0aqc7FGy0Y5KZvVbg2WIHEtt/JYtdGuwIDAQAB",
   "permissions": [
@@ -93,8 +93,7 @@
         "cases/cases.html",
         "docs/docs.html",
         "customize/customize.html",
-        "report/report.html",
-        "subscribe/subscribe.html"
+        "report/report.html"
       ],
       "matches": ["https://csrestored.fun/*"]
     }

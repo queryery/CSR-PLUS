@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.0 — Everything free
+
+**CSR+ is now completely free**
+- Removed all paid tiers. Every cosmetic — shared banners, animated banners,
+  premium name styles, card flair, avatar frames and overlays — is now
+  available to everyone at no cost.
+- Removed all subscription and checkout flows. There is nothing to buy.
+- Sign in with Discord is still used only to share your look with other CSR+
+  players (so your uploads belong to you and can be moderated) — never charged.
+
+**Cleanup**
+- Removed every Pro/Premium badge and tag across the extension and Studio.
+  (Player skill/form badges — Very strong, On fire, Tilted, etc. — are
+  unchanged; those were always free.)
+- Banners no longer apply on the Friends page, where a featured-friend header
+  was being decorated by mistake.
+- Added a Donate button in the Studio tab for anyone who'd like to support
+  development and server costs.
+
+**Note**
+- This is a required update — clients below 0.1.0 are prompted to update.
+
 ## 0.0.9 — Studio, Pro & Premium, Reports
 
 **CSR+ Studio — profile customization**

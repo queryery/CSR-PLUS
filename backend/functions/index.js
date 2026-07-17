@@ -96,7 +96,7 @@ const DEFAULT_CONFIG = {
   minVersion: "0.1.1",
   updateRequired: true,
   updateUrl: "https://github.com/queryery/CSR-PLUS/releases/latest",
-  updateMessage: "CSR+ 0.1.0 is a required update — it removes the old paid tiers and makes every feature free. Please update to keep using CSR+.",
+  updateMessage: "CSR+ 0.1.1 is here — a redesigned Play tab, a live in-queue list, remade banner effects and a bunch of fixes. Update to keep using CSR+.",
   premium: {
     nameStyles: [ "rainbow", "glitch", "metal" ],
     cardFlairs: [ "holo", "aurora" ],

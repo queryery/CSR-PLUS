@@ -1,105 +1,108 @@
 (() => {
-  'use strict';
+  "use strict";
   if (window.__csrpHooked) return;
   window.__csrpHooked = true;
-
-  // CSR+ injects cosmetic nodes (banners, chips) into React-managed containers
-  // (lobby slots, player cards). When React later reconciles those containers it
-  // can call removeChild/insertBefore with stale expectations and throw
-  // NotFoundError, which crashes the whole React tree — that's how the Join
-  // Queue button "broke" when the party owner ran the extension. Make those two
-  // calls tolerant: on NotFoundError fall back instead of throwing.
   (function safeDom() {
     try {
       const origRemove = Node.prototype.removeChild;
-      Node.prototype.removeChild = function (child) {
-        try { return origRemove.call(this, child); }
-        catch (e) {
-          if (e && e.name === 'NotFoundError') { try { child.remove(); } catch { } return child; }
+      Node.prototype.removeChild = function(child) {
+        try {
+          return origRemove.call(this, child);
+        } catch (e) {
+          if (e && e.name === "NotFoundError") {
+            try {
+              child.remove();
+            } catch {}
+            return child;
+          }
           throw e;
         }
       };
       const origInsert = Node.prototype.insertBefore;
-      Node.prototype.insertBefore = function (node, ref) {
-        try { return origInsert.call(this, node, ref); }
-        catch (e) {
-          if (e && e.name === 'NotFoundError') { this.appendChild(node); return node; }
+      Node.prototype.insertBefore = function(node, ref) {
+        try {
+          return origInsert.call(this, node, ref);
+        } catch (e) {
+          if (e && e.name === "NotFoundError") {
+            this.appendChild(node);
+            return node;
+          }
           throw e;
         }
       };
-    } catch (e) { }
+    } catch (e) {}
   })();
-
-
   (function blockBeep() {
     if (window.__csrpBlockBeep === undefined) window.__csrpBlockBeep = true;
-    const isBeep = (src) => typeof src === 'string' && /beep(\.mp3|\b)/i.test(src);
+    const isBeep = src => typeof src === "string" && /beep(\.mp3|\b)/i.test(src);
     try {
       const origPlay = HTMLMediaElement.prototype.play;
-      HTMLMediaElement.prototype.play = function () {
+      HTMLMediaElement.prototype.play = function() {
         if (window.__csrpBlockBeep && isBeep(this.currentSrc || this.src)) {
-          try { this.pause(); this.currentTime = 0; } catch {}
+          try {
+            this.pause();
+            this.currentTime = 0;
+          } catch {}
           return Promise.resolve();
         }
         return origPlay.apply(this, arguments);
       };
-
       const OrigAudio = window.Audio;
-      window.Audio = function (src) {
+      window.Audio = function(src) {
         const a = new OrigAudio(src);
-        if (window.__csrpBlockBeep && isBeep(src)) { a.muted = true; a.volume = 0; }
+        if (window.__csrpBlockBeep && isBeep(src)) {
+          a.muted = true;
+          a.volume = 0;
+        }
         return a;
       };
       window.Audio.prototype = OrigAudio.prototype;
-    } catch (e) {  }
+    } catch (e) {}
   })();
-
   function findRootFiber() {
     let fiber, w = document.createTreeWalker(document.body, 1);
     while (!fiber && w.nextNode()) {
-      const k = Object.keys(w.currentNode).find((x) => x.startsWith('__reactFiber$'));
+      const k = Object.keys(w.currentNode).find(x => x.startsWith("__reactFiber$"));
       if (k) fiber = w.currentNode[k];
     }
     if (!fiber) return null;
     while (fiber.return) fiber = fiber.return;
     return fiber;
   }
-
   function searchValue(fiber, pick) {
     let found = null;
-    const visit = (n) => {
+    const visit = n => {
       if (!n || found) return;
       const v = n.memoizedProps?.value;
       if (v) {
         const got = pick(v);
-        if (got) { found = got; return; }
+        if (got) {
+          found = got;
+          return;
+        }
       }
       for (let c = n.child; c && !found; c = c.sibling) visit(c);
     };
     visit(fiber);
     return found;
   }
-
-
   function findMyId(fiber) {
-    return searchValue(fiber, (v) => {
+    return searchValue(fiber, v => {
       const u = v.user || v.currentUser || v.me || v.profile;
       if (u && (u.id || u.discord_id)) return String(u.id || u.discord_id);
       if (v.userId) return String(v.userId);
       return null;
     });
   }
-
   function readMatchData(fiber) {
-    const d = searchValue(fiber, (v) => v.matchData);
+    const d = searchValue(fiber, v => v.matchData);
     if (!d) return null;
     const mp = d.map_pick || {};
     const si = d.server_info || d.serverInfo || {};
-    const server = d.server || d.server_ip || d.ip || d.connect ||
-      (si.ip ? si.ip + (si.port ? ':' + si.port : '') : null) || null;
+    const server = d.server || d.server_ip || d.ip || d.connect || (si.ip ? si.ip + (si.port ? ":" + si.port : "") : null) || null;
     return {
       id: d.id,
-      server: typeof server === 'string' ? server : null,
+      server: typeof server === "string" ? server : null,
       team1: d.members?.[0] || [],
       team2: d.members?.[1] || [],
       playerData: d.members_data || {},
@@ -108,24 +111,23 @@
         remaining_maps: mp.remaining_maps || [],
         current_team: mp.current_team,
         finished: !!mp.finished,
-        picked_map: mp.picked_map || mp.map || null,
+        picked_map: mp.picked_map || mp.map || null
       },
-      myId: findMyId(fiber),
+      myId: findMyId(fiber)
     };
   }
-
-  // Party/lobby state: how many members the viewer's current team has. Shape of
-  // the context value isn't documented, so probe a few likely keys defensively.
   function readPartyData(fiber) {
-    return searchValue(fiber, (v) => {
+    return searchValue(fiber, v => {
       const t = v.teamData || v.lobbyData || v.lobby || v.party || v.team;
-      if (!t || typeof t !== 'object') return null;
+      if (!t || typeof t !== "object") return null;
       const members = t.members || t.players || t.users;
       if (!Array.isArray(members)) return null;
-      return { size: members.length, name: typeof t.name === 'string' ? t.name : null };
+      return {
+        size: members.length,
+        name: typeof t.name === "string" ? t.name : null
+      };
     });
   }
-
   let myIdSent = false;
   function emit() {
     const fiber = findRootFiber();
@@ -133,45 +135,47 @@
     const myId = findMyId(fiber);
     if (myId && !myIdSent) {
       myIdSent = true;
-      window.dispatchEvent(new CustomEvent('csrp:myid', { detail: { myId } }));
+      window.dispatchEvent(new CustomEvent("csrp:myid", {
+        detail: {
+          myId
+        }
+      }));
     }
     const data = readMatchData(fiber);
     if (data) {
-      window.dispatchEvent(new CustomEvent('csrp:matchdata', { detail: data }));
+      window.dispatchEvent(new CustomEvent("csrp:matchdata", {
+        detail: data
+      }));
     }
     const party = readPartyData(fiber);
     if (party) {
-      window.dispatchEvent(new CustomEvent('csrp:partydata', { detail: party }));
+      window.dispatchEvent(new CustomEvent("csrp:partydata", {
+        detail: party
+      }));
     }
   }
-
-
   function hookSocket() {
     const fiber = findRootFiber();
     if (!fiber) return false;
-    const ctx = searchValue(fiber, (v) => (v.socket ? v : null));
+    const ctx = searchValue(fiber, v => v.socket ? v : null);
     if (!ctx || !ctx.socket || ctx.socket.__csrp) return false;
     ctx.socket.__csrp = true;
     const orig = ctx.socket.decode;
-    ctx.socket.decode = function (data, cb) {
-      return orig.call(this, data, (ev) => {
+    ctx.socket.decode = function(data, cb) {
+      return orig.call(this, data, ev => {
         cb(ev);
-        if (ev && ev.topic && (ev.topic.startsWith('match:') ||
-            String(ev.event).includes('match') || String(ev.event).includes('map'))) {
+        if (ev && ev.topic && (ev.topic.startsWith("match:") || String(ev.event).includes("match") || String(ev.event).includes("map"))) {
           setTimeout(emit, 30);
         }
       });
     };
     return true;
   }
-
   let tries = 0;
   const boot = setInterval(() => {
     const ok = hookSocket();
     emit();
-    if ((ok && myIdSent) || ++tries > 40) clearInterval(boot);
+    if (ok && myIdSent || ++tries > 40) clearInterval(boot);
   }, 500);
-
-
-  window.addEventListener('csrp:pull', emit);
+  window.addEventListener("csrp:pull", emit);
 })();

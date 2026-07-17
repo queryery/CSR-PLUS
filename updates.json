@@ -3,8 +3,8 @@
     "csr-plus-listed@queryery.github.io": {
       "updates": [
         {
-          "version": "0.0.9",
-          "update_link": "https://github.com/queryery/CSR-PLUS/releases/download/v0.0.9/csr_plus-0.0.9.xpi",
+          "version": "0.1.1",
+          "update_link": "https://github.com/queryery/CSR-PLUS/releases/download/v0.1.1/csr-plus-firefox-0.1.1.xpi",
           "applications": {
             "gecko": { "strict_min_version": "115.0" }
           }

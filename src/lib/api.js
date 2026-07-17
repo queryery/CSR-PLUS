@@ -1,28 +1,22 @@
 (() => {
-  'use strict';
-  const CSRP = (window.CSRP = window.CSRP || {});
+  "use strict";
+  const CSRP = window.CSRP = window.CSRP || {};
   const BASE = CSRP.API_BASE;
-
-  const mem = new Map();
-  const inflight = new Map();
-
-
+  const mem = new Map;
+  const inflight = new Map;
   function ttlFor(path) {
-    if (path.startsWith('/users/')) return 30 * 60 * 1000;
-    if (path.startsWith('/history/')) return 6 * 60 * 1000;
-    return 5 * 60 * 1000;
+    if (path.startsWith("/users/")) return 30 * 60 * 1e3;
+    if (path.startsWith("/history/")) return 6 * 60 * 1e3;
+    return 5 * 60 * 1e3;
   }
-
   function cacheKey(path) {
-    return 'csrp:' + path;
+    return "csrp:" + path;
   }
-
-
   function readSession(path) {
     try {
       const raw = localStorage.getItem(cacheKey(path));
       if (!raw) return null;
-      const { t, v } = JSON.parse(raw);
+      const {t, v} = JSON.parse(raw);
       if (Date.now() - t > ttlFor(path)) return null;
       return v;
     } catch {
@@ -31,24 +25,27 @@
   }
   function writeSession(path, v) {
     try {
-      localStorage.setItem(cacheKey(path), JSON.stringify({ t: Date.now(), v }));
+      localStorage.setItem(cacheKey(path), JSON.stringify({
+        t: Date.now(),
+        v
+      }));
     } catch {
-
       try {
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const k = localStorage.key(i);
-          if (k && k.startsWith('csrp:')) localStorage.removeItem(k);
+          if (k && k.startsWith("csrp:")) localStorage.removeItem(k);
         }
-      } catch {  }
+      } catch {}
     }
   }
-
-
   function bgFetch(path) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let settled = false;
       try {
-        chrome.runtime.sendMessage({ type: 'csrp:api', path }, (resp) => {
+        chrome.runtime.sendMessage({
+          type: "csrp:api",
+          path
+        }, resp => {
           if (settled) return;
           settled = true;
           if (chrome.runtime.lastError || !resp) return directFetch(path).then(resolve);
@@ -60,18 +57,19 @@
       }
     });
   }
-
   function directFetch(path) {
-    return fetch(BASE + path, { credentials: 'include' })
-      .then(async (r) => {
-        if (!r.ok) return null;
-        const text = await r.text();
-        try { return JSON.parse(text.replace(/([:\[,]\s*)(-?\d{16,})(?=\s*[,}\]])/g, '$1"$2"')); }
-        catch { return null; }
-      })
-      .catch(() => null);
+    return fetch(BASE + path, {
+      credentials: "include"
+    }).then(async r => {
+      if (!r.ok) return null;
+      const text = await r.text();
+      try {
+        return JSON.parse(text.replace(/([:\[,]\s*)(-?\d{16,})(?=\s*[,}\]])/g, '$1"$2"'));
+      } catch {
+        return null;
+      }
+    }).catch(() => null);
   }
-
   async function get(path) {
     if (mem.has(path)) return mem.get(path);
     const cached = readSession(path);
@@ -80,8 +78,7 @@
       return cached;
     }
     if (inflight.has(path)) return inflight.get(path);
-
-    const p = bgFetch(path).then((data) => {
+    const p = bgFetch(path).then(data => {
       inflight.delete(path);
       if (data != null) {
         mem.set(path, data);
@@ -92,43 +89,38 @@
     inflight.set(path, p);
     return p;
   }
-
-
-  const histCache = new Map();
+  const histCache = new Map;
   const HIST_PAGES = 1;
   async function history(id) {
     if (histCache.has(id)) return histCache.get(id);
     const p = (async () => {
-      const pages = await Promise.all(
-        Array.from({ length: HIST_PAGES }, (_, i) => get(`/history/user/${id}/${i}`))
-      );
+      const pages = await Promise.all(Array.from({
+        length: HIST_PAGES
+      }, (_, i) => get(`/history/user/${id}/${i}`)));
       const all = [];
       for (const batch of pages) if (Array.isArray(batch)) all.push(...batch);
       return all;
     })();
     histCache.set(id, p);
     const result = await p;
-
-    if (result && result.length) histCache.set(id, result);
-    else histCache.delete(id);
+    if (result && result.length) histCache.set(id, result); else histCache.delete(id);
     return result;
   }
-
-
   async function getFresh(path) {
     const data = await bgFetch(path);
-    if (data != null) { mem.set(path, data); writeSession(path, data); }
+    if (data != null) {
+      mem.set(path, data);
+      writeSession(path, data);
+    }
     return data;
   }
-
   CSRP.api = {
-    me: () => getFresh('/users/@me'),
-    user: (id) => get(`/users/${id}`),
-    userFresh: (id) => getFresh(`/users/${id}`),
-    friends: () => get('/users/friends'),
+    me: () => getFresh("/users/@me"),
+    user: id => get(`/users/${id}`),
+    userFresh: id => getFresh(`/users/${id}`),
+    friends: () => get("/users/friends"),
     history,
     historyPage: (id, page = 0) => get(`/history/user/${id}/${page}`),
-    avatarUrl: (id, hash) =>
-      hash ? `https://cdn.discordapp.com/avatars/${id}/${hash}.png` : null,
+    avatarUrl: (id, hash) => hash ? `https://cdn.discordapp.com/avatars/${id}/${hash}.png` : null
   };
 })();

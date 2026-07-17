@@ -159,11 +159,57 @@
   }
 
   function membersFromAvatars(avatars) {
-    return avatars.map((im) => ({
+    const members = avatars.map((im) => ({
       id: CSRP.dom.idFromAvatar(im),
       avatarSrc: im.getAttribute('src') || '',
       nativeImg: im,
     }));
+
+    // Players with a default Discord avatar carry no id in the URL and used to
+    // stay "Anonymous". The socket match data has the full member id lists, so
+    // hand the ids that no avatar claimed to the unidentified slots in order.
+    const md = CSRP._matchData || {};
+    const all = [...(md.team1 || []), ...(md.team2 || [])].map(String);
+    if (all.length) {
+      const claimed = new Set(members.map((m) => m.id).filter(Boolean));
+      const leftover = all.filter((id) => !claimed.has(id));
+      for (const m of members) {
+        if (!m.id && leftover.length) m.id = leftover.shift();
+      }
+    }
+    return members;
+  }
+
+  // Warm the banner cache while the confirm window is up so the match room
+  // paints instantly if everyone accepts; dropped again if the match dies.
+  let preloadBox = null;
+  function preloadBanners(members) {
+    const ids = members.map((m) => m.id).filter(Boolean);
+    if (!ids.length || !CSRP.pro) return;
+    CSRP.pro.getPublicProfiles(ids).then((profiles) => {
+      if (!panel) return;
+      if (!preloadBox) {
+        preloadBox = h('div', { class: 'csrp-mf-preload', 'aria-hidden': 'true', style: { display: 'none' } });
+        document.body.appendChild(preloadBox);
+      }
+      for (const id of ids) {
+        const p = profiles[id];
+        if (!p || !p.banner) continue;
+        if (preloadBox.querySelector(`[data-src="${CSS.escape(p.banner)}"]`)) continue;
+        let el;
+        if (p.bannerKind === 'anim' && /webm|mp4/.test(p.bannerMime || '')) {
+          el = h('video', { muted: 'true', preload: 'auto', 'data-src': p.banner });
+          el.muted = true; el.src = p.banner;
+        } else {
+          el = h('img', { 'data-src': p.banner });
+          el.src = p.banner;
+        }
+        preloadBox.appendChild(el);
+      }
+    }).catch(() => { });
+  }
+  function unloadPreloads() {
+    if (preloadBox) { preloadBox.remove(); preloadBox = null; }
   }
 
 
@@ -203,6 +249,8 @@
 
     const a = buildTeam(groupA, 'Your Team');
     const b = buildTeam(groupB, 'Enemy Team');
+
+    preloadBanners(members);
 
 
     liveRows = [...a.built, ...b.built];
@@ -523,6 +571,7 @@
   function removePanel() {
     if (host) { host.remove(); host = null; }
     panel = null;
+    unloadPreloads();
     unlockPage();
     restoreNative();
     lastSig = '';

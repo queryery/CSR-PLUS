@@ -229,20 +229,43 @@
 
       <div class="panel prem-panel">
         <div class="panel-h"><span class="ph-no">✦</span> Animated effects</div>
+        <div class="pick-lbl">Name animation</div>
         <div class="pick" id="c-anim-name" data-key="animName">
           <button data-v="none">No animation</button>
           <button data-v="shimmer" class="prem">Chrome shimmer</button>
-          <button data-v="pulse" class="prem">Neon breathe</button>
+          <button data-v="pulse" class="prem">Neon glow</button>
+          <button data-v="wave" class="prem">Tide wave</button>
+          <button data-v="flicker" class="prem">Neon flicker</button>
+          <button data-v="breathe" class="prem">Soft breathe</button>
+          <button data-v="glitchpop" class="prem">Glitch pop</button>
         </div>
+        <div class="pick-lbl">Avatar animation</div>
         <div class="pick" id="c-anim-avatar" data-key="animAvatar">
           <button data-v="none">Static ring</button>
-          <button data-v="spin" class="prem">Aurora halo</button>
+          <button data-v="spin" class="prem">Aurora shift</button>
           <button data-v="orbit" class="prem">Energy pulse</button>
+          <button data-v="halo" class="prem">Chroma halo</button>
+          <button data-v="sonar" class="prem">Sonar ping</button>
+          <button data-v="prism" class="prem">Prism cycle</button>
         </div>
-        <div class="pick" id="c-overlay" data-key="overlay">
+        <div class="pick-lbl">Effect colors <span class="pick-note">— tint animations separately from your accents</span></div>
+        <div class="fx-colors" id="fx-colors">
+          <button id="fx-use-accents" class="fx-use">Match accent colors</button>
+          <label class="fx-c"><span>FX 1</span><input type="color" id="c-fx1" value="#e23a45" /></label>
+          <label class="fx-c"><span>FX 2</span><input type="color" id="c-fx2" value="#8fb4ff" /></label>
+        </div>
+        <div class="pick-lbl">Card overlays <span class="pick-note">— combine up to 3</span></div>
+        <div class="pick pick-multi" id="c-overlay" data-key="overlays">
           <button data-v="none">No overlay</button>
           <button data-v="particles" class="prem">Stardust</button>
           <button data-v="sweep" class="prem">Holo sweep</button>
+          <button data-v="rain" class="prem">Neon rain</button>
+          <button data-v="snow" class="prem">Snowfall</button>
+          <button data-v="embers" class="prem">Embers</button>
+          <button data-v="stars" class="prem">Starfield</button>
+          <button data-v="grid" class="prem">Neon grid</button>
+          <button data-v="bokeh" class="prem">Bokeh glow</button>
+          <button data-v="storm" class="prem">Thunderstorm</button>
         </div>
       </div>
       </div>

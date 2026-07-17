@@ -6,7 +6,7 @@
 
   const DEFAULTS = {
     masterEnabled: true,
-    autoMatch: true, autoInvite: true, autoQueue: true, autoBan: false,
+    autoMatch: true, autoInvite: true, inviteWhileInParty: false, autoQueue: true, autoBan: false,
     autoCopyServer: true, autoUpdate: true,
     acceptInstant: false, acceptDelay: 10,
     inviteFriends: {},
@@ -97,7 +97,8 @@
   }
 
   function reflectInvite() {
-
+    const child = $('#invite-in-party');
+    if (child) child.classList.toggle('set-disabled', !state.autoInvite);
   }
   function reflectMaster() {
     document.querySelector('.content').style.opacity = state.masterEnabled ? '1' : '0.45';
@@ -377,25 +378,23 @@
 
   async function loadLiveUsers() {
     const numEl = $('#lu-num');
+    const activeEl = $('#lu-active');
     if (!numEl) return;
     numEl.classList.add('loading');
+    if (activeEl) activeEl.classList.add('loading');
     try {
-      const last = Number(localStorage.getItem('csrp:counted') || 0);
-      const fresh = Date.now() - last > 3600e3;
-      const action = fresh ? 'up' : '';
-      const url = `https://api.counterapi.dev/v1/csrplus-ext/online${action ? '/up' : ''}`;
-      const r = await fetch(url);
+      const r = await fetch('https://europe-west1-csr-plus-331c8.cloudfunctions.net/api/stats');
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const data = await r.json();
-      if (fresh) localStorage.setItem('csrp:counted', String(Date.now()));
-      const n = Number(data.count || 0);
-      numEl.textContent = n.toLocaleString();
+      numEl.textContent = Number(data.total || 0).toLocaleString();
+      if (activeEl) activeEl.textContent = Number(data.active || 0).toLocaleString();
     } catch {
 
       const row = $('#live-users');
       if (row) row.style.display = 'none';
     } finally {
       numEl.classList.remove('loading');
+      if (activeEl) activeEl.classList.remove('loading');
     }
   }
 
@@ -728,6 +727,7 @@
     bindStudio();
     renderMaps();
     reflectMaster();
+    reflectInvite();
     showVersion();
     renderChangelog();
     bindModal();

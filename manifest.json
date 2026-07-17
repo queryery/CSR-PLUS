@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CSR+ — Enhanced Match Suite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Auto-accept, smart map bans, live player strength analytics and win-probability for csrestored.fun.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzyX3157+l4dqak7AzegHDTrLxJ7JXkxrHNBcqR0xsF3s3n1GB7dbBZGcrrifInWCRHJT/bZuA9LrlvBlxaolqz7S/Ba/t5waxd/rt4IjsRsSpPkCH9sI7wUReE4xUHw2xXcO4Zmg+4fk6Ht2vgxFJPbKHLgOXt1lVMdYtX5ViPzHGBwcPlkQQEosyDrJhYlD0rDuLleahJIE7ghZw+A90PbABOIUeqz3/obZtqp/1ERoYpH3J9x7noYBlb4oz+/QWc0+N/2XJboiZuDP/KMWR7vaWyGbcDDa7xugK1R31UG7YABcc+FIdJ0aqc7FGy0Y5KZvVbg2WIHEtt/JYtdGuwIDAQAB",
   "permissions": [
@@ -14,10 +14,10 @@
     "https://csrestored.fun/*",
     "https://api.csrestored.fun/*",
     "https://api.github.com/*",
-    "https://api.counterapi.dev/*",
     "https://europe-west1-csr-plus-331c8.cloudfunctions.net/*",
     "https://storage.googleapis.com/*",
-    "https://csr-plus-331c8.web.app/*"
+    "https://csr-plus-331c8.web.app/*",
+    "https://firestore.googleapis.com/*"
   ],
   "background": {
     "service_worker": "src/background.js",
@@ -73,6 +73,7 @@
         "src/features/leaderboardSearch.js",
         "src/features/eloTracker.js",
         "src/features/profileCustom.js",
+        "src/features/playTab.js",
         "src/features/reportButton.js",
         "src/main.js"
       ],

@@ -161,8 +161,13 @@
       }
       return;
     }
+    // The Match Found dialog can open while on the friends page and its avatar
+    // strip contains friend faces — never inject "Send trade" inside it.
+    const mfModal = CSRP.dom.findMatchFoundModal();
     for (const img of document.querySelectorAll('img')) {
-      if (img.closest('.csrp-pop, .csrp-panel, nav, header')) continue;
+      if (img.closest('.csrp-pop, .csrp-panel, .csrp-mf-host, nav, header')) continue;
+      if (mfModal && mfModal.host.contains(img)) continue;
+      if (img.closest('[role="dialog"]')) continue;
       const id = CSRP.dom.idFromAvatar(img);
       if (!id || !ids.has(id)) continue;
 

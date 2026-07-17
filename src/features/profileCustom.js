@@ -39,8 +39,58 @@
       bannerBlur: 0, bannerDim: p.bannerDim ?? 30,
       fillMode: p.fillMode || 'blur', fillColor: p.fillColor || null,
       surf: p.surf || null,
-      animName: p.animName || 'none', animAvatar: p.animAvatar || 'none', overlay: p.overlay || 'none',
+      animName: p.animName || 'none', animAvatar: p.animAvatar || 'none',
+      overlay: p.overlay || 'none',
+      overlays: Array.isArray(p.overlays) ? p.overlays : null,
+      fxColor: p.fxColor || null, fxColor2: p.fxColor2 || null,
     };
+  }
+
+  // ---- id resolution beyond the avatar URL --------------------------------
+  // Players with a default Discord avatar carry no id in their image URL. Try,
+  // in order: live match data (site names → ids), then the CSR+ backend's
+  // registered site-name → discord-id lookup (players who signed in to CSR+).
+  const nameIds = new Map();
+  let pendingNames = new Set();
+  let nameFetchScheduled = false;
+
+  function matchDataNameId(nameLower) {
+    const md = CSRP._matchData;
+    if (!md || !md.playerData) return null;
+    for (const [id, v] of Object.entries(md.playerData)) {
+      const n = v && (v.name || v.username || v.display_name);
+      if (n && String(n).trim().toLowerCase() === nameLower) return String(id);
+    }
+    return null;
+  }
+
+  function scheduleNameFetch() {
+    if (nameFetchScheduled) return;
+    nameFetchScheduled = true;
+    setTimeout(async () => {
+      nameFetchScheduled = false;
+      const names = [...pendingNames]; pendingNames.clear();
+      if (!names.length || !CSRP.pro || !CSRP.pro.lookupNames) return;
+      try {
+        const ids = await CSRP.pro.lookupNames(names);
+        for (const n of names) nameIds.set(n, ids[n] || null);
+      } catch { for (const n of names) nameIds.set(n, null); }
+    }, 80);
+  }
+
+  function idForName(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n || n === 'anonymous') return null;
+    const fromMatch = matchDataNameId(n);
+    if (fromMatch) return fromMatch;
+    if (nameIds.has(n)) return nameIds.get(n);
+    pendingNames.add(n); scheduleNameFetch();
+    return null;
+  }
+
+  function idForSlot(slot) {
+    const nameEl = slot && slot.querySelector('span');
+    return nameEl ? idForName(nameEl.textContent) : null;
   }
 
   function scheduleFetch() {
@@ -67,6 +117,7 @@
       if (out.animName && out.animName !== 'none') out.animName = 'none';
       if (out.animAvatar && out.animAvatar !== 'none') out.animAvatar = 'none';
       if (out.overlay && out.overlay !== 'none') out.overlay = 'none';
+      if (Array.isArray(out.overlays) && out.overlays.length) out.overlays = [];
       if (['rainbow', 'glitch', 'metal'].includes(out.nameStyle)) out.nameStyle = 'gradient';
       if (['holo', 'aurora'].includes(out.cardFlair)) out.cardFlair = 'ring';
       if (['hex', 'glow'].includes(out.avatarFrame)) out.avatarFrame = 'ring';
@@ -118,9 +169,9 @@
   const NAME_STYLES = ['gradient', 'glow', 'metal', 'rainbow', 'glitch', 'outline'];
   const FLAIRS = ['ring', 'corners', 'scanline', 'holo', 'kanji', 'aurora'];
   const AV_FRAMES = ['ring', 'hex', 'glow'];
-  const ANIM_NAMES = ['shimmer', 'pulse'];
-  const ANIM_AVS = ['spin', 'orbit'];
-  const OVERLAYS = ['particles', 'sweep'];
+  const ANIM_NAMES = ['shimmer', 'pulse', 'wave', 'flicker', 'breathe', 'glitchpop'];
+  const ANIM_AVS = ['spin', 'orbit', 'halo', 'sonar', 'prism'];
+  const OVERLAYS = ['particles', 'sweep', 'rain', 'snow', 'embers', 'stars', 'grid', 'bokeh', 'storm'];
   const STAT_LABELS = new Set(['matches', 'wins', 'winrate', 'kills', 'deaths', 'kdr', 'avg', 'elo']);
 
   function active() {
@@ -290,6 +341,9 @@
   function setVars(el) {
     el.style.setProperty('--pc1', cfg.accent || '#e23a45');
     el.style.setProperty('--pc2', cfg.accent2 || '#8fb4ff');
+    // Dedicated effect colors override the accents for animated effects only.
+    if (cfg.fxColor) el.style.setProperty('--fx1', cfg.fxColor); else el.style.removeProperty('--fx1');
+    if (cfg.fxColor2) el.style.setProperty('--fx2', cfg.fxColor2); else el.style.removeProperty('--fx2');
   }
 
   function styleName(el) {
@@ -320,18 +374,36 @@
     }
   }
 
+  // Active overlay list: new-style combinable `overlays` array wins, else the
+  // legacy single `overlay` value.
+  function activeOverlays() {
+    if (Array.isArray(cfg.overlays) && cfg.overlays.length) {
+      return cfg.overlays.filter((o) => OVERLAYS.includes(o)).slice(0, 3);
+    }
+    return cfg.overlay && cfg.overlay !== 'none' ? [cfg.overlay] : [];
+  }
+
   function ensureOverlay(el) {
     setVars(el);
-    let ov = el.querySelector(':scope > .csrp-pc-overlay');
+    const want = activeOverlays();
     for (const o of OVERLAYS) el.classList.remove('csrp-ov-' + o);
-    if (cfg.overlay && cfg.overlay !== 'none') {
-      if (!ov) {
-        ov = h('div', { class: 'csrp-pc-overlay', 'aria-hidden': 'true' });
-        if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    // One layer per effect so several can stack (each keys its art off the
+    // csrp-ovl-<name> class instead of the host's single class).
+    const layers = el.querySelectorAll(':scope > .csrp-pc-overlay');
+    if (!want.length) { layers.forEach((l) => l.remove()); return; }
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    const have = new Map();
+    layers.forEach((l) => {
+      const k = l.dataset.ov;
+      if (k && want.includes(k) && !have.has(k)) have.set(k, l); else l.remove();
+    });
+    for (const o of want) {
+      el.classList.add('csrp-ov-' + o);
+      if (!have.has(o)) {
+        const ov = h('div', { class: 'csrp-pc-overlay csrp-ovl-' + o, 'aria-hidden': 'true', 'data-ov': o });
         el.appendChild(ov);
       }
-      el.classList.add('csrp-ov-' + cfg.overlay);
-    } else if (ov) ov.remove();
+    }
   }
 
   function styleCard(card, key) {
@@ -352,7 +424,7 @@
     ensureCardBanner(card, key);
   }
 
-  function ensureChip(anchor) {
+  function ensureChip(anchor, mode) {
     if (!anchor) return;
     let chip = anchor.querySelector(':scope .csrp-pc-chip');
     if (!cfg.chip) { if (chip) chip.remove(); return; }
@@ -362,7 +434,8 @@
     }
     chip.textContent = cfg.chip;
     setVars(chip);
-    chip.className = 'csrp-pc-chip csrp-pcc-' + (cfg.chipStyle || 'outline');
+    // 'block' mode = its own line under the ELO row (lobby); default = inline.
+    chip.className = 'csrp-pc-chip csrp-pcc-' + (cfg.chipStyle || 'outline') + (mode === 'block' ? ' csrp-pc-chip-block' : '');
   }
 
   // The friends page has a featured-friend header with the same avatar/layout as a real
@@ -373,7 +446,9 @@
   function tickProfileHeader() {
     if (onFriendsPage()) return;
     for (const img of document.querySelectorAll('img[width="76"], img.mr-2')) {
-      const id = CSRP.dom.idFromAvatar(img);
+      // Profile pages carry the id in the URL — works even with a default pfp.
+      const urlId = (location.pathname.match(/\/user\/(\d{15,21})/) || [])[1] || null;
+      const id = CSRP.dom.idFromAvatar(img) || urlId;
       if (!id) continue;
       const c = cfgForId(id);
       if (!c || c.enabled === false) continue;
@@ -406,6 +481,7 @@
   function tickCards() {
     for (const card of CSRP.dom.findCards()) {
       const info = CSRP.dom.parseCard(card);
+      if (!info.id) info.id = idForName(info.name);
       if (!info.id) continue;
       const c = cfgForId(info.id);
       if (!c || c.enabled === false) { unstyleCard(card); continue; }
@@ -428,9 +504,9 @@
   const LOBBY_AV = 'img[alt="Avatar"][width="72"]';
   function tickLobby() {
     for (const img of document.querySelectorAll('div.rounded-2xl ' + LOBBY_AV)) {
-      const id = CSRP.dom.idFromAvatar(img);
       const slot = img.closest('div.rounded-2xl');
       if (!slot) continue;
+      const id = CSRP.dom.idFromAvatar(img) || idForSlot(slot);
       const c = id ? cfgForId(id) : null;
       if (!c || c.enabled === false) { if (slot.classList.contains('csrp-pc-card')) unstyleCard(slot); continue; }
       withCfg(c, () => {
@@ -441,6 +517,10 @@
         const eloEl = [...slot.querySelectorAll('div, span, p')]
           .filter((el) => /\bELO\b/i.test(el.textContent) && el.childElementCount <= 2 && el.textContent.trim().length <= 16)
           .sort((a, b) => a.textContent.length - b.textContent.length)[0];
+        // Chip goes UNDER the ELO row: anchor to the ELO row's column so it
+        // stacks below name + ELO (falls back to the name column).
+        const chipHost = (eloEl && eloEl.parentElement) || (nameEl && nameEl.parentElement);
+        ensureChip(chipHost, 'block');
         const anchor = eloEl || nameEl;
         slot.querySelectorAll('.csrp-tier-badge').forEach((b) => {
           if (b.previousElementSibling !== anchor) b.remove();
@@ -494,5 +574,5 @@
     try { tickLobby(); } catch { }
   }
 
-  CSRP.profileCustom = { tick, cleanup };
+  CSRP.profileCustom = { tick, cleanup, idForSlot, idForName };
 })();

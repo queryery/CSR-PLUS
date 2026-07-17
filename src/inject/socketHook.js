@@ -3,6 +3,33 @@
   if (window.__csrpHooked) return;
   window.__csrpHooked = true;
 
+  // CSR+ injects cosmetic nodes (banners, chips) into React-managed containers
+  // (lobby slots, player cards). When React later reconciles those containers it
+  // can call removeChild/insertBefore with stale expectations and throw
+  // NotFoundError, which crashes the whole React tree — that's how the Join
+  // Queue button "broke" when the party owner ran the extension. Make those two
+  // calls tolerant: on NotFoundError fall back instead of throwing.
+  (function safeDom() {
+    try {
+      const origRemove = Node.prototype.removeChild;
+      Node.prototype.removeChild = function (child) {
+        try { return origRemove.call(this, child); }
+        catch (e) {
+          if (e && e.name === 'NotFoundError') { try { child.remove(); } catch { } return child; }
+          throw e;
+        }
+      };
+      const origInsert = Node.prototype.insertBefore;
+      Node.prototype.insertBefore = function (node, ref) {
+        try { return origInsert.call(this, node, ref); }
+        catch (e) {
+          if (e && e.name === 'NotFoundError') { this.appendChild(node); return node; }
+          throw e;
+        }
+      };
+    } catch (e) { }
+  })();
+
 
   (function blockBeep() {
     if (window.__csrpBlockBeep === undefined) window.__csrpBlockBeep = true;
@@ -67,8 +94,12 @@
     const d = searchValue(fiber, (v) => v.matchData);
     if (!d) return null;
     const mp = d.map_pick || {};
+    const si = d.server_info || d.serverInfo || {};
+    const server = d.server || d.server_ip || d.ip || d.connect ||
+      (si.ip ? si.ip + (si.port ? ':' + si.port : '') : null) || null;
     return {
       id: d.id,
+      server: typeof server === 'string' ? server : null,
       team1: d.members?.[0] || [],
       team2: d.members?.[1] || [],
       playerData: d.members_data || {},
@@ -83,6 +114,18 @@
     };
   }
 
+  // Party/lobby state: how many members the viewer's current team has. Shape of
+  // the context value isn't documented, so probe a few likely keys defensively.
+  function readPartyData(fiber) {
+    return searchValue(fiber, (v) => {
+      const t = v.teamData || v.lobbyData || v.lobby || v.party || v.team;
+      if (!t || typeof t !== 'object') return null;
+      const members = t.members || t.players || t.users;
+      if (!Array.isArray(members)) return null;
+      return { size: members.length, name: typeof t.name === 'string' ? t.name : null };
+    });
+  }
+
   let myIdSent = false;
   function emit() {
     const fiber = findRootFiber();
@@ -95,6 +138,10 @@
     const data = readMatchData(fiber);
     if (data) {
       window.dispatchEvent(new CustomEvent('csrp:matchdata', { detail: data }));
+    }
+    const party = readPartyData(fiber);
+    if (party) {
+      window.dispatchEvent(new CustomEvent('csrp:partydata', { detail: party }));
     }
   }
 

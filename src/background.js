@@ -117,3 +117,60 @@ chrome.notifications && chrome.notifications.onClicked.addListener(() => {
     if (tabs && tabs[0]) chrome.tabs.update(tabs[0].id, { active: true });
   });
 });
+
+
+/* ---------------------------------------------------------------------------
+   Realtime "CSR+ users in queue" — ONE Firestore listener for the whole
+   browser (shared across all tabs), pushed instantly with no polling. The
+   worker holds the connection and rebroadcasts the latest queue to content
+   scripts; content scripts fall back to the /stats poll if this never arrives.
+--------------------------------------------------------------------------- */
+let _fbQueue = { users: [], count: 0, at: 0 };
+let _fbReady = false;
+
+function broadcastQueue() {
+  try {
+    chrome.tabs.query({ url: 'https://csrestored.fun/*' }, (tabs) => {
+      for (const t of tabs || []) {
+        chrome.tabs.sendMessage(t.id, { type: 'csrp:queue', queue: _fbQueue }, () => void chrome.runtime.lastError);
+      }
+    });
+  } catch {}
+}
+
+function initQueueListener() {
+  if (_fbReady) return;
+  try {
+    // importScripts resolves relative to this worker (src/), so the bundle at
+    // src/vendor/… is referenced as vendor/….
+    importScripts('vendor/firebase-firestore.bundle.js');
+    const FB = globalThis.CSRPFirebase;
+    if (!FB) throw new Error('firebase bundle missing');
+    const app = FB.initializeApp({ projectId: 'csr-plus-331c8' });
+    // Long-polling transport is the reliable choice inside a service worker.
+    const fs = FB.initializeFirestore(app, { experimentalForceLongPolling: true });
+    FB.onSnapshot(FB.doc(fs, 'public/queue'), (snap) => {
+      const d = (snap && snap.data && snap.data()) || {};
+      _fbQueue = {
+        users: Array.isArray(d.users) ? d.users.slice(0, 25) : [],
+        count: Number.isFinite(d.count) ? d.count : (Array.isArray(d.users) ? d.users.length : 0),
+        at: Date.now(),
+      };
+      broadcastQueue();
+    }, (err) => { console.warn('[CSR+] queue listener error', err && err.message); });
+    _fbReady = true;
+  } catch (e) {
+    console.warn('[CSR+] queue listener unavailable, clients will poll', e && e.message);
+  }
+}
+
+// Content scripts ask for the current queue (also lazily starts the listener).
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.type === 'csrp:queue:get') {
+    initQueueListener();
+    sendResponse({ ok: true, queue: _fbQueue, live: _fbReady });
+    return true;
+  }
+});
+
+initQueueListener();

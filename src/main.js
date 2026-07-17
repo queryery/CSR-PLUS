@@ -33,11 +33,77 @@
   window.addEventListener('csrp:matchdata', (e) => {
     CSRP._matchData = e.detail;
   });
+  CSRP._party = null;
+  window.addEventListener('csrp:partydata', (e) => {
+    CSRP._party = e.detail || null;
+  });
 
+  // In-queue detection: the play tab's primary CTA flips away from "Join Queue"
+  // while searching. The site keeps you queued across tab changes, so when the
+  // button isn't on screen (any tab other than Play) we KEEP the last known
+  // state rather than resetting it — only an explicit "Join Queue" on screen
+  // means we are not searching.
+  CSRP._inQueue = false;
+  function detectQueue() {
+    let joinSeen = false, searchSeen = false;
+    for (const btn of document.querySelectorAll('button.rounded-full.bg-theme-primary.px-12')) {
+      const t = (btn.textContent || '').trim();
+      if (/^join queue$/i.test(t)) { joinSeen = true; continue; }
+      if (/leave queue|searching|cancel|in queue|matchmaking|\d{1,2}:\d{2}/i.test(t)) searchSeen = true;
+    }
+    if (searchSeen) return true;
+    if (joinSeen) return false;
+    // CTA not on screen (different tab) → keep the latched state.
+    return CSRP._inQueue;
+  }
+
+  // In-party detection: socket party data when available, else count filled
+  // lobby slots on the play tab (latched while the lobby isn't on screen).
+  let partyLatch = false;
+  function detectInParty() {
+    if (CSRP._party && Number.isFinite(CSRP._party.size)) { partyLatch = CSRP._party.size >= 2; return partyLatch; }
+    const slots = document.querySelectorAll('div.rounded-2xl img[alt="Avatar"][width="72"]');
+    if (slots.length) partyLatch = slots.length >= 2;
+    return partyLatch;
+  }
+  CSRP.inParty = detectInParty;
+
+
+  // Apply the .csrp-play class the instant the play tab is on screen, so its
+  // styling never lags behind the site. This is deliberately independent of the
+  // masterEnabled gate and the throttled loops: it's also fired from the
+  // MutationObserver and on focus/visibility so a SECOND (background) tab still
+  // gets styled without waiting for a throttled setInterval.
+  function fastPlayClass() {
+    if (CSRP.store && CSRP.store.get && CSRP.store.get('masterEnabled') === false) {
+      document.documentElement.classList.remove('csrp-play', 'csrp-in-queue');
+      return;
+    }
+    let onPlay = false;
+    for (const btn of document.querySelectorAll('button.rounded-full.bg-theme-primary.px-12')) {
+      const t = (btn.textContent || '').trim();
+      if (/join queue|leave queue|searching|in queue|matchmaking|\d{1,2}:\d{2}/i.test(t)) { onPlay = true; break; }
+    }
+    document.documentElement.classList.toggle('csrp-play', onPlay);
+    if (onPlay) document.documentElement.classList.toggle('csrp-in-queue', !!CSRP._inQueue);
+    else document.documentElement.classList.remove('csrp-in-queue');
+  }
+  CSRP._fastPlayClass = fastPlayClass;
+  // Re-check on focus/visibility (background tabs throttle setInterval, so a
+  // second tab could otherwise sit unstyled until it's foregrounded + a tick).
+  const playRecheck = () => { try { fastPlayClass(); } catch { } };
+  window.addEventListener('focus', playRecheck);
+  window.addEventListener('pageshow', playRecheck);
+  document.addEventListener('visibilitychange', playRecheck);
+  // Standalone light interval so the play-tab class is applied even before/if
+  // boot()'s heavier loops are running — guarantees every tab gets styled.
+  setInterval(playRecheck, 700);
+  playRecheck();
 
   function fastLoop() {
     if (CSRP.store.get('masterEnabled') === false) return;
     try {
+      fastPlayClass();
       CSRP.autoAccept.tick();
       CSRP.mapBan.tick();
       CSRP.serverCopy.tick();
@@ -61,7 +127,7 @@
     if (uiBusy) return;
     if (CSRP.store.get('masterEnabled') === false) {
 
-      document.querySelectorAll('.csrp-badge-wrap, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv, #csrp-open-trades, #csrp-open-cases, #csrp-lb-search, .csrp-lb-empty, .csrp-lb-remote, .csrp-st-btn, .csrp-report-btn, .csrp-tier-badge').forEach((n) => n.remove());
+      document.querySelectorAll('.csrp-badge-wrap, .csrp-tip-body, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv, #csrp-open-trades, #csrp-open-cases, #csrp-lb-search, .csrp-lb-empty, .csrp-lb-remote, .csrp-st-btn, .csrp-report-btn, .csrp-tier-badge, #csrp-queue-panel').forEach((n) => n.remove());
 
       CSRP.cases.unmountOverlay();
 
@@ -70,6 +136,7 @@
       document.querySelectorAll('.csrp-lobby-card').forEach((n) => { n.classList.remove('csrp-lobby-card'); n.style.cursor = ''; });
 
       CSRP.profileCustom?.cleanup();
+      document.documentElement.classList.remove('csrp-play', 'csrp-in-queue');
       return;
     }
     uiBusy = true;
@@ -82,6 +149,7 @@
       await runUiFeature('Leaderboard search', () => CSRP.leaderboardSearch.tick());
       await runUiFeature('ELO tracker', () => CSRP.eloTracker.tick());
       await runUiFeature('Profile customization', () => CSRP.profileCustom.tick());
+      await runUiFeature('Play tab', () => CSRP.playTab.tick());
       await runUiFeature('Report button', () => CSRP.reportButton.tick());
       await runUiFeature('Match overlay', () => CSRP.matchOverlay.tick());
       await runUiFeature('Win probability', () => CSRP.winProbability.tick());
@@ -112,9 +180,107 @@
     }).catch(() => { });
 
     CSRP.api.me().then((u) => {
-      if (u && u.id && !u.message) storeMyId(u.id);
+      if (u && u.id && !u.message) { storeMyId(u.id); CSRP._myName = u.name || null; }
     }).catch(() => {});
 
+    // Active-on-site heartbeat: marks this device present while the tab is open
+    // and visible, so the popup's live counter reflects real presence. Signed-in
+    // users also register their site name (name→id banner resolution) and their
+    // queue state (the play tab's "CSR+ users in queue" list).
+    // Persist queue state across SPA tab navigation and content-script reloads,
+    // so switching tabs never drops you out of the "in queue" list. The stamp
+    // guards against a stale flag surviving a page reload while not searching.
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('csrpInQueue') || 'null');
+      if (saved && Date.now() - saved.t < 90000) CSRP._inQueue = !!saved.q;
+    } catch { }
+    function persistQueue() {
+      try { sessionStorage.setItem('csrpInQueue', JSON.stringify({ q: CSRP._inQueue, t: Date.now() })); } catch { }
+    }
+
+    const beat = () => {
+      if (document.visibilityState !== 'visible') return;
+      try { CSRP.pro?.track({ name: CSRP._myName, inQueue: CSRP._inQueue }); } catch { }
+    };
+    beat();
+    // Beat faster while queued (keeps the shared list live) than when idle.
+    let beatTimer = null;
+    function scheduleBeat() {
+      clearInterval(beatTimer);
+      beatTimer = setInterval(beat, CSRP._inQueue ? 20000 : 45000);
+    }
+    scheduleBeat();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') beat(); });
+
+    // Re-read queue state often; beat immediately when it flips so the shared
+    // queue list stays honest. Also nudge the page-world hook to re-emit
+    // party/match data (it otherwise only emits on socket traffic).
+    setInterval(() => {
+      const q = detectQueue();
+      if (q !== CSRP._inQueue) { CSRP._inQueue = q; persistQueue(); scheduleBeat(); beat(); }
+      try { window.dispatchEvent(new CustomEvent('csrp:pull')); } catch { }
+    }, 2500);
+
+
+    // ---- Cloud settings backup/restore (survives manual reinstalls) ----
+    // Backup: all DEFAULTS keys + csrpCustom (minus the banner data URL — the
+    // published banner already lives in the cloud). Restore: once per install,
+    // as soon as the user is signed in with Discord.
+    const CLOUD_MARK = 'csrpCloudRestored';
+    function collectSettings() {
+      return new Promise((resolve) => {
+        const storeCfg = {};
+        const all = CSRP.store.get();
+        for (const k of Object.keys(CSRP.DEFAULTS)) if (k in all) storeCfg[k] = all[k];
+        try {
+          chrome.storage.local.get(['csrpCustom'], (d) => {
+            let custom = d.csrpCustom || null;
+            if (custom) { custom = { ...custom }; delete custom.banner; }
+            resolve({ store: storeCfg, custom });
+          });
+        } catch { resolve({ store: storeCfg, custom: null }); }
+      });
+    }
+    let backupTimer = null;
+    async function cloudBackup() {
+      try {
+        if (!CSRP.pro || !(await CSRP.pro.isSignedIn())) return;
+        CSRP.pro.saveSettings(await collectSettings());
+      } catch { }
+    }
+    const scheduleBackup = () => { clearTimeout(backupTimer); backupTimer = setTimeout(cloudBackup, 4000); };
+
+    async function cloudRestore() {
+      try {
+        const marked = await new Promise((r) => chrome.storage.local.get([CLOUD_MARK], (d) => r(!!(d && d[CLOUD_MARK]))));
+        if (marked) return;
+        if (!CSRP.pro || !(await CSRP.pro.isSignedIn())) return;
+        const resp = await CSRP.pro.loadSettings();
+        if (!resp.ok) return;
+        const s = resp.data && resp.data.settings;
+        if (s) {
+          if (s.store && typeof s.store === 'object') {
+            for (const k of Object.keys(CSRP.DEFAULTS)) if (k in s.store) await CSRP.store.set(k, s.store[k]);
+          }
+          if (s.custom && typeof s.custom === 'object') {
+            await new Promise((r) => chrome.storage.local.get(['csrpCustom'], (d) => {
+              const merged = { ...s.custom };
+              if (d.csrpCustom && d.csrpCustom.banner) merged.banner = d.csrpCustom.banner;
+              chrome.storage.local.set({ csrpCustom: merged }, r);
+            }));
+          }
+          CSRP.log('settings restored from cloud backup');
+        }
+        chrome.storage.local.set({ [CLOUD_MARK]: true });
+      } catch { }
+    }
+    cloudRestore().then(() => scheduleBackup());
+    try {
+      chrome.storage.onChanged.addListener((c, areaName) => {
+        if (areaName === 'local' && c.csrpCustom) scheduleBackup();
+        if (areaName === 'local' && c.csrpProToken && c.csrpProToken.newValue) { cloudRestore(); }
+      });
+    } catch { }
 
     CSRP.store.onChange((cfg) => {
       applyTheme(cfg);
@@ -122,6 +288,7 @@
 
       CSRP.playerBadges.reset();
       CSRP.winProbability.reset();
+      scheduleBackup();
     });
 
     setInterval(fastLoop, 500);
@@ -132,6 +299,9 @@
 
     let pending = null;
     new MutationObserver(() => {
+      // Toggle the play-tab class synchronously on every DOM change so its
+      // styling appears with the tab, not a frame later.
+      try { fastPlayClass(); } catch { }
       clearTimeout(pending);
       pending = setTimeout(uiLoop, 250);
     }).observe(document.body, { childList: true, subtree: true });

@@ -194,6 +194,20 @@
   transform: translateX(-50%) translateY(0);
 }
 
+/* Body-mounted tooltip variant: escapes overflow-clipped (banner) cards so the
+   tip always paints ABOVE the match card instead of sliding under it. */
+.csrp-tip.csrp-tip-body {
+  position: fixed;
+  bottom: auto;
+  left: 0; top: 0;
+  transform: translate(-50%, -100%) translateY(4px);
+  z-index: 2147483400;
+}
+.csrp-tip.csrp-tip-body.csrp-tip-show {
+  opacity: 1;
+  transform: translate(-50%, -100%);
+}
+
 .csrp-tip::after {
   content: '';
   position: absolute;
@@ -1024,10 +1038,12 @@
 .csrp-mf-row-best .csrp-mf-av { border-color: rgba(245, 183, 60, 0.8); box-shadow: 0 0 12px rgba(245, 183, 60, 0.45); }
 .csrp-mf-row-best .csrp-mf-name { color: #ffd96b; }
 
+.csrp-mf-avwrap { overflow: visible; }
 .csrp-mf-check {
-  position: absolute; right: -4px; top: -4px;
+  position: absolute; right: -3px; top: -3px; left: auto; bottom: auto;
   width: 15px; height: 15px; border-radius: 50%;
   display: grid; place-items: center;
+  box-sizing: border-box; line-height: 1; z-index: 3;
   font-size: 9px; font-weight: 900; color: #04210f;
   background: linear-gradient(180deg, #7dffb0, #33c06f);
   border: 1.5px solid rgba(8, 8, 11, 0.9);
@@ -1603,11 +1619,11 @@ div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
       transparent 0%, transparent 38%,
       rgba(255,255,255,0.95) 47%, #fff 50%, rgba(255,255,255,0.95) 53%,
       transparent 62%, transparent 100%),
-    linear-gradient(92deg, var(--pc1, #fff), var(--pc2, #8fb4ff), var(--pc1, #fff));
+    linear-gradient(92deg, var(--e1, #fff), var(--e2, #8fb4ff), var(--e1, #fff));
   background-size: 260% 100%, 100% 100%;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent !important;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--pc2,#8fb4ff) 45%, transparent));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--e2,#8fb4ff) 45%, transparent));
   animation: csrpNameShimmer 3.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 @keyframes csrpNameShimmer { 0% { background-position: 220% 0, 0 0; } 60%,100% { background-position: -60% 0, 0 0; } }
@@ -1619,16 +1635,16 @@ div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
 @keyframes csrpNamePulse {
   0%, 100% {
     text-shadow:
-      0 0 3px color-mix(in srgb, var(--pc1,#fff) 55%, transparent),
-      0 0 8px color-mix(in srgb, var(--pc2,#8fb4ff) 30%, transparent);
+      0 0 3px color-mix(in srgb, var(--e1,#fff) 55%, transparent),
+      0 0 8px color-mix(in srgb, var(--e2,#8fb4ff) 30%, transparent);
     filter: brightness(0.96);
   }
   50% {
     text-shadow:
       0 0 6px #fff,
-      0 0 16px var(--pc1,#fff),
-      0 0 30px color-mix(in srgb, var(--pc2,#8fb4ff) 75%, transparent),
-      0 0 46px color-mix(in srgb, var(--pc1,#fff) 45%, transparent);
+      0 0 16px var(--e1,#fff),
+      0 0 30px color-mix(in srgb, var(--e2,#8fb4ff) 75%, transparent),
+      0 0 46px color-mix(in srgb, var(--e1,#fff) 45%, transparent);
     filter: brightness(1.12);
   }
 }
@@ -1640,34 +1656,34 @@ div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
 @keyframes csrpAvAurora {
   0%, 100% {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 85%, transparent),
-      0 0 0 4px color-mix(in srgb, var(--pc2,#8fb4ff) 35%, transparent),
-      0 0 12px 2px color-mix(in srgb, var(--pc2,#8fb4ff) 45%, transparent);
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 85%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--e2,#8fb4ff) 35%, transparent),
+      0 0 12px 2px color-mix(in srgb, var(--e2,#8fb4ff) 45%, transparent);
     filter: brightness(1);
   }
   50% {
     box-shadow:
       0 0 0 2px #fff,
-      0 0 0 5px color-mix(in srgb, var(--pc2,#8fb4ff) 70%, transparent),
-      0 0 26px 5px color-mix(in srgb, var(--pc1,#fff) 65%, transparent);
+      0 0 0 5px color-mix(in srgb, var(--e2,#8fb4ff) 70%, transparent),
+      0 0 26px 5px color-mix(in srgb, var(--e1,#fff) 65%, transparent);
     filter: brightness(1.12);
   }
 }
 
 .csrp-anim-av-orbit {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 80%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--e1,#fff) 80%, transparent);
   animation: csrpAvPulse 2.2s cubic-bezier(0.22,1,0.36,1) infinite !important;
 }
 @keyframes csrpAvPulse {
   0% {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 85%, transparent),
-      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 60%, transparent),
-      0 0 0 2px color-mix(in srgb, var(--pc2,#8fb4ff) 50%, transparent);
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 85%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 60%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--e2,#8fb4ff) 50%, transparent);
   }
   100% {
     box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--pc1,#fff) 85%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 85%, transparent),
       0 0 0 9px transparent,
       0 0 0 16px transparent;
   }
@@ -1675,50 +1691,227 @@ div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
 
 .csrp-pc-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; border-radius: inherit; overflow: hidden; }
 
-.csrp-ov-particles .csrp-pc-overlay { mix-blend-mode: screen; }
-.csrp-ov-particles .csrp-pc-overlay::before,
-.csrp-ov-particles .csrp-pc-overlay::after {
-  content: ""; position: absolute; inset: -20% 0; }
-.csrp-ov-particles .csrp-pc-overlay::before {
+/* Overlays: one layer PER effect (csrp-ovl-<name>) so up to three stack on a card.
+   Reworked for depth — layered gradients, real drop-shadows, varied motion. */
+
+/* Stardust — three parallax depths, soft glowing motes + twinkle */
+.csrp-pc-overlay.csrp-ovl-particles { mix-blend-mode: screen; }
+.csrp-pc-overlay.csrp-ovl-particles::before,
+.csrp-pc-overlay.csrp-ovl-particles::after { content: ""; position: absolute; inset: -25% 0; }
+.csrp-pc-overlay.csrp-ovl-particles::before {
   background-image:
-    radial-gradient(1.6px 1.6px at 18% 30%, #fff, transparent 60%),
-    radial-gradient(1.4px 1.4px at 68% 62%, color-mix(in srgb, var(--pc2,#8fb4ff) 90%, #fff), transparent 60%),
-    radial-gradient(1.2px 1.2px at 88% 22%, #fff, transparent 60%),
-    radial-gradient(1.8px 1.8px at 40% 82%, color-mix(in srgb, var(--pc1,#fff) 85%, #fff), transparent 60%);
+    radial-gradient(2.5px 2.5px at 18% 30%, #fff 40%, color-mix(in srgb, var(--e1,#fff) 35%, transparent) 60%, transparent 72%),
+    radial-gradient(2px 2px at 68% 62%, color-mix(in srgb, var(--e2,#8fb4ff) 95%, #fff) 40%, transparent 72%),
+    radial-gradient(1.6px 1.6px at 88% 22%, #fff 40%, transparent 72%),
+    radial-gradient(3px 3px at 40% 82%, color-mix(in srgb, var(--e1,#fff) 90%, #fff) 35%, transparent 70%),
+    radial-gradient(2px 2px at 8% 55%, color-mix(in srgb, var(--e1,#fff) 75%, #fff) 40%, transparent 72%);
   background-size: 200px 200px;
-  animation: csrpParticles 7s linear infinite, csrpTwinkle 2.3s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--e2,#8fb4ff) 60%, transparent));
+  animation: csrpParticles 8s linear infinite, csrpTwinkle 2.3s ease-in-out infinite;
 }
-.csrp-ov-particles .csrp-pc-overlay::after {
+.csrp-pc-overlay.csrp-ovl-particles::after {
   background-image:
-    radial-gradient(1px 1px at 55% 12%, #fff, transparent 60%),
-    radial-gradient(1px 1px at 12% 70%, color-mix(in srgb, var(--pc2,#8fb4ff) 80%, #fff), transparent 60%),
-    radial-gradient(1px 1px at 78% 88%, #fff, transparent 60%);
-  background-size: 150px 150px; opacity: 0.6;
-  animation: csrpParticles 11s linear infinite reverse, csrpTwinkle 3.1s ease-in-out infinite 0.6s;
+    radial-gradient(1.4px 1.4px at 55% 12%, #fff, transparent 66%),
+    radial-gradient(1.4px 1.4px at 12% 70%, color-mix(in srgb, var(--e2,#8fb4ff) 85%, #fff), transparent 66%),
+    radial-gradient(1.2px 1.2px at 78% 88%, #fff, transparent 66%),
+    radial-gradient(1px 1px at 30% 45%, #fff, transparent 66%);
+  background-size: 150px 150px; opacity: 0.55;
+  animation: csrpParticles 13s linear infinite reverse, csrpTwinkle 3.1s ease-in-out infinite 0.6s;
 }
 @keyframes csrpParticles { to { background-position: 0 -200px; } }
-@keyframes csrpTwinkle { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes csrpTwinkle { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
 
-.csrp-ov-sweep .csrp-pc-overlay {
-  background:
-    linear-gradient(115deg,
-      transparent 34%,
-      color-mix(in srgb, var(--pc1,#fff) 22%, transparent) 46%,
-      rgba(255,255,255,0.5) 50%,
-      color-mix(in srgb, var(--pc2,#8fb4ff) 30%, transparent) 54%,
-      transparent 66%);
-  background-size: 280% 100%;
-  mix-blend-mode: screen;
-  animation: csrpSweep 4.8s cubic-bezier(0.55, 0, 0.45, 1) infinite;
+/* Holo sweep — bright core beam with a trailing chroma echo */
+.csrp-pc-overlay.csrp-ovl-sweep {
+  background: linear-gradient(115deg, transparent 34%,
+    color-mix(in srgb, var(--e1,#fff) 28%, transparent) 46%, rgba(255,255,255,0.65) 50%,
+    color-mix(in srgb, var(--e2,#8fb4ff) 36%, transparent) 54%, transparent 66%);
+  background-size: 280% 100%; mix-blend-mode: screen;
+  animation: csrpSweep 4.4s cubic-bezier(0.55,0,0.45,1) infinite;
 }
-.csrp-ov-sweep .csrp-pc-overlay::after {
+.csrp-pc-overlay.csrp-ovl-sweep::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(115deg, transparent 44%,
-    color-mix(in srgb, var(--pc2,#8fb4ff) 18%, transparent) 50%, transparent 56%);
+  background: linear-gradient(115deg, transparent 42%,
+    color-mix(in srgb, var(--e2,#8fb4ff) 26%, transparent) 50%, transparent 58%);
   background-size: 280% 100%; mix-blend-mode: overlay;
-  animation: csrpSweep 4.8s cubic-bezier(0.55, 0, 0.45, 1) infinite 0.18s;
+  animation: csrpSweep 4.4s cubic-bezier(0.55,0,0.45,1) infinite 0.22s;
 }
 @keyframes csrpSweep { 0% { background-position: 135% 0; } 70%,100% { background-position: -55% 0; } }
+
+/* Rain — sharp thin streaks in two depths + drizzle haze. Each layer is a set
+   of individual streaks (repeating gradient) so it reads as rain, not a sheet. */
+.csrp-pc-overlay.csrp-ovl-rain {
+  mix-blend-mode: screen;
+  background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--e2,#9ecbff) 12%, transparent));
+}
+.csrp-pc-overlay.csrp-ovl-rain::before,
+.csrp-pc-overlay.csrp-ovl-rain::after { content: ""; position: absolute; inset: -60% -20%; }
+.csrp-pc-overlay.csrp-ovl-rain::before {
+  background-image: repeating-linear-gradient(74deg,
+    transparent 0 13px,
+    color-mix(in srgb, var(--e2,#bcd8ff) 90%, #fff) 13px 14px,
+    transparent 14px 26px);
+  background-size: 100% 60px;
+  opacity: 0.55;
+  filter: drop-shadow(0 0 1px color-mix(in srgb, var(--e2,#9ecbff) 80%, transparent));
+  animation: csrpRain 0.55s linear infinite;
+}
+.csrp-pc-overlay.csrp-ovl-rain::after {
+  background-image: repeating-linear-gradient(74deg,
+    transparent 0 21px,
+    color-mix(in srgb, var(--e2,#dcecff) 85%, #fff) 21px 21.8px,
+    transparent 21.8px 40px);
+  background-size: 100% 90px;
+  opacity: 0.3;
+  animation: csrpRain 0.9s linear infinite;
+}
+@keyframes csrpRain { to { background-position: -26px 300px; } }
+
+/* Snow — soft flakes, two depths, gentle sideways sway */
+.csrp-pc-overlay.csrp-ovl-snow { mix-blend-mode: screen; }
+.csrp-pc-overlay.csrp-ovl-snow::before,
+.csrp-pc-overlay.csrp-ovl-snow::after {
+  content: ""; position: absolute; inset: -30% 0;
+  background-image:
+    radial-gradient(3px 3px at 22% 18%, rgba(255,255,255,0.98), transparent 62%),
+    radial-gradient(2.2px 2.2px at 58% 44%, rgba(255,255,255,0.82), transparent 62%),
+    radial-gradient(3.4px 3.4px at 82% 12%, rgba(255,255,255,0.92), transparent 62%),
+    radial-gradient(2px 2px at 38% 74%, rgba(255,255,255,0.72), transparent 62%),
+    radial-gradient(2.6px 2.6px at 8% 52%, rgba(255,255,255,0.88), transparent 62%);
+  background-size: 190px 190px;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+}
+.csrp-pc-overlay.csrp-ovl-snow::before { animation: csrpSnow 9s linear infinite, csrpSway 5s ease-in-out infinite; }
+.csrp-pc-overlay.csrp-ovl-snow::after {
+  background-size: 130px 130px; opacity: 0.55;
+  animation: csrpSnow 15s linear infinite, csrpSway 7s ease-in-out infinite reverse;
+}
+@keyframes csrpSnow { from { background-position: 0 -190px; } to { background-position: 0 190px; } }
+@keyframes csrpSway { 0%,100% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
+
+/* Embers — glowing sparks rising from a hot base, flickering */
+.csrp-pc-overlay.csrp-ovl-embers {
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(75% 48% at 50% 112%, color-mix(in srgb, #ff5e2a 48%, transparent), transparent 72%),
+    linear-gradient(0deg, color-mix(in srgb, #ff7a2a 20%, transparent), transparent 46%);
+  animation: csrpEmberGlow 2.4s ease-in-out infinite alternate;
+}
+.csrp-pc-overlay.csrp-ovl-embers::before,
+.csrp-pc-overlay.csrp-ovl-embers::after {
+  content: ""; position: absolute; inset: 0 0 -30% 0;
+  background-image:
+    radial-gradient(2.4px 3px at 20% 80%, #ffc271, transparent 62%),
+    radial-gradient(1.8px 2.4px at 46% 90%, #ff7a3c, transparent 62%),
+    radial-gradient(1.5px 2px at 72% 84%, #ffd89a, transparent 62%),
+    radial-gradient(2.6px 3.2px at 88% 92%, #ff5e2a, transparent 62%),
+    radial-gradient(1.6px 2px at 34% 70%, #ffab5a, transparent 62%);
+  background-size: 175px 175px;
+  filter: drop-shadow(0 0 3px rgba(255,120,40,0.7));
+}
+.csrp-pc-overlay.csrp-ovl-embers::before { animation: csrpEmbers 4.5s linear infinite, csrpTwinkle 1.7s ease-in-out infinite; }
+.csrp-pc-overlay.csrp-ovl-embers::after {
+  background-size: 115px 115px; opacity: 0.55;
+  animation: csrpEmbers 7s linear infinite 1s, csrpTwinkle 2.4s ease-in-out infinite 0.4s;
+}
+@keyframes csrpEmberGlow { from { filter: brightness(0.9); } to { filter: brightness(1.2) saturate(1.15); } }
+@keyframes csrpEmbers { to { background-position: 16px -175px; } }
+
+/* Starfield — parallax sky with periodic shooting star */
+.csrp-pc-overlay.csrp-ovl-stars { mix-blend-mode: screen; }
+.csrp-pc-overlay.csrp-ovl-stars::before {
+  content: ""; position: absolute; inset: 0 -30% 0 0;
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 22%, #fff, transparent 62%),
+    radial-gradient(1.6px 1.6px at 34% 68%, #dbe7ff, transparent 62%),
+    radial-gradient(1.2px 1.2px at 56% 34%, #fff, transparent 62%),
+    radial-gradient(2px 2px at 74% 76%, #fff, transparent 62%),
+    radial-gradient(1.4px 1.4px at 90% 18%, #cfe0ff, transparent 62%),
+    radial-gradient(1px 1px at 46% 52%, #fff, transparent 62%);
+  background-size: 230px 230px;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+  animation: csrpStarsDrift 30s linear infinite, csrpTwinkle 3.4s ease-in-out infinite;
+}
+.csrp-pc-overlay.csrp-ovl-stars::after {
+  content: ""; position: absolute; top: 10%; left: -14%;
+  width: 110px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, #fff 70%, #cfe0ff);
+  filter: drop-shadow(0 0 6px #fff);
+  transform: rotate(18deg); opacity: 0;
+  animation: csrpShooting 7s cubic-bezier(0.4,0,1,1) infinite;
+}
+@keyframes csrpStarsDrift { to { background-position: -230px 0; } }
+@keyframes csrpShooting {
+  0%, 80% { opacity: 0; transform: translate(0,0) rotate(18deg); }
+  82% { opacity: 1; }
+  94%, 100% { opacity: 0; transform: translate(150%, 62px) rotate(18deg); }
+}
+
+/* Neon grid — synthwave floor rushing to a glowing horizon sun */
+.csrp-pc-overlay.csrp-ovl-grid { perspective: 200px; mix-blend-mode: screen; overflow: hidden; }
+.csrp-pc-overlay.csrp-ovl-grid::before {
+  content: ""; position: absolute; left: -40%; right: -40%; top: 46%; bottom: -40%;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--e1,#ff71ce) 65%, transparent) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, color-mix(in srgb, var(--e2,#01cdfe) 60%, transparent) 1.5px, transparent 1.5px);
+  background-size: 30px 30px;
+  transform: rotateX(62deg); transform-origin: 50% 0;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--e2,#01cdfe) 50%, transparent));
+  animation: csrpGridScroll 1.3s linear infinite;
+}
+.csrp-pc-overlay.csrp-ovl-grid::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(44% 30% at 50% 46%, color-mix(in srgb, var(--e1,#ff71ce) 60%, transparent), color-mix(in srgb, var(--e1,#ff71ce) 20%, transparent) 48%, transparent 72%),
+    linear-gradient(180deg, transparent calc(46% - 2px), color-mix(in srgb, var(--e2,#01cdfe) 90%, #fff) calc(46% - 1px), color-mix(in srgb, var(--e2,#01cdfe) 90%, #fff) 46%, transparent calc(46% + 2px)),
+    linear-gradient(180deg, transparent 30%, color-mix(in srgb, var(--e1,#ff71ce) 12%, transparent));
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--e2,#01cdfe) 70%, transparent));
+  animation: csrpGridSun 5s ease-in-out infinite alternate;
+}
+@keyframes csrpGridScroll { to { background-position: 0 30px, 0 0; } }
+@keyframes csrpGridSun { from { opacity: 0.8; } to { opacity: 1; } }
+
+/* Bokeh — big soft glow orbs breathing and drifting */
+.csrp-pc-overlay.csrp-ovl-bokeh { mix-blend-mode: screen; filter: blur(1px); }
+.csrp-pc-overlay.csrp-ovl-bokeh::before,
+.csrp-pc-overlay.csrp-ovl-bokeh::after {
+  content: ""; position: absolute; inset: -15%;
+  background-image:
+    radial-gradient(28px 28px at 16% 30%, color-mix(in srgb, var(--e1,#fff) 40%, transparent), transparent 70%),
+    radial-gradient(38px 38px at 70% 66%, color-mix(in srgb, var(--e2,#8fb4ff) 34%, transparent), transparent 70%),
+    radial-gradient(22px 22px at 88% 22%, rgba(255,255,255,0.3), transparent 70%),
+    radial-gradient(32px 32px at 38% 84%, color-mix(in srgb, var(--e2,#8fb4ff) 28%, transparent), transparent 70%);
+  background-size: 340px 260px;
+  animation: csrpBokehDrift 16s ease-in-out infinite alternate, csrpTwinkle 5s ease-in-out infinite;
+}
+.csrp-pc-overlay.csrp-ovl-bokeh::after {
+  background-size: 260px 200px; opacity: 0.5;
+  animation: csrpBokehDrift 21s ease-in-out infinite alternate-reverse, csrpTwinkle 6.4s ease-in-out infinite 1.2s;
+}
+@keyframes csrpBokehDrift { from { background-position: 0 0; } to { background-position: -60px -30px; } }
+
+/* Storm — dark drifting scud with sudden lightning flashes */
+.csrp-pc-overlay.csrp-ovl-storm::before {
+  content: ""; position: absolute; inset: -20%;
+  background:
+    radial-gradient(60% 45% at 30% 20%, rgba(8,8,14,0.55), transparent 70%),
+    radial-gradient(50% 40% at 75% 30%, rgba(8,8,14,0.46), transparent 70%);
+  animation: csrpScud 11s ease-in-out infinite alternate;
+}
+.csrp-pc-overlay.csrp-ovl-storm::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(70% 90% at 62% 8%, rgba(255,255,255,0.95), color-mix(in srgb, var(--e2,#9ecbff) 60%, transparent) 34%, transparent 70%);
+  mix-blend-mode: screen; opacity: 0;
+  animation: csrpLightning 6s linear infinite;
+}
+@keyframes csrpScud { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+@keyframes csrpLightning {
+  0%, 54.6%, 55.4%, 56.8%, 57.4%, 100% { opacity: 0; }
+  55% { opacity: 1; }
+  57% { opacity: 0.6; }
+}
+
+
 
 .csrp-pc-banner .csrp-pc-bfill {
   position: absolute;
@@ -1961,6 +2154,14 @@ div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
   white-space: nowrap;
 }
 
+/* Block chip: its own centered line under the ELO row (lobby slots) */
+.csrp-pc-chip.csrp-pc-chip-block {
+  display: flex;
+  margin-left: 0;
+  margin-top: 5px;
+  align-self: center;
+}
+
 .csrp-pcc-outline {
   color: var(--pc1);
   border: 1px solid var(--pc1);
@@ -1978,3 +2179,411 @@ div:has(> .csrp-st-btn)>button:not(.csrp-st-btn) {
   background: linear-gradient(92deg, var(--pc1), var(--pc2));
   border: 0;
 }
+/* ============ 0.1.1+ effect expansion ============ */
+
+/* Name FX — Tide wave: gradient rolls through the letters */
+.csrp-anim-name-wave {
+  background: linear-gradient(90deg,
+    var(--e1,#fff) 0%, var(--e2,#8fb4ff) 25%, #fff 50%, var(--e2,#8fb4ff) 75%, var(--e1,#fff) 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent !important;
+  animation: csrpNameWave 4.2s ease-in-out infinite;
+}
+@keyframes csrpNameWave { 0% { background-position: 0% 0; } 100% { background-position: 300% 0; } }
+
+/* Name FX — Neon flicker: buzzing sign that occasionally cuts out */
+.csrp-anim-name-flicker {
+  color: #fff !important;
+  text-shadow:
+    0 0 4px var(--e1,#fff),
+    0 0 12px color-mix(in srgb, var(--e1,#fff) 70%, transparent),
+    0 0 26px color-mix(in srgb, var(--e2,#8fb4ff) 55%, transparent);
+  animation: csrpNameFlicker 3.4s linear infinite;
+}
+@keyframes csrpNameFlicker {
+  0%, 6.9%, 7.4%, 8.9%, 9.4%, 43.9%, 44.4%, 100% { opacity: 1; }
+  7%, 9%, 44% { opacity: 0.35; text-shadow: none; }
+  62% { opacity: 0.85; }
+}
+
+/* Name FX — Breathe: slow warm glow inhale/exhale */
+.csrp-anim-name-breathe {
+  color: #fff !important;
+  animation: csrpNameBreathe 4.6s ease-in-out infinite;
+}
+@keyframes csrpNameBreathe {
+  0%, 100% { text-shadow: 0 0 2px color-mix(in srgb, var(--e1,#fff) 40%, transparent); letter-spacing: 0; }
+  50% {
+    text-shadow:
+      0 0 8px var(--e1,#fff),
+      0 0 22px color-mix(in srgb, var(--e2,#8fb4ff) 60%, transparent);
+    letter-spacing: 0.035em;
+  }
+}
+
+/* Name FX — Glitch pop: chroma split that snaps back */
+.csrp-anim-name-glitchpop {
+  position: relative;
+  color: #fff !important;
+  animation: csrpGlitchPop 2.8s steps(1) infinite;
+}
+@keyframes csrpGlitchPop {
+  0%, 88%, 100% { text-shadow: 0 0 6px color-mix(in srgb, var(--e1,#fff) 45%, transparent); transform: none; }
+  90% { text-shadow: -2px 0 var(--e1,#ff2a55), 2px 0 var(--e2,#26c6ff); transform: translateX(1px); }
+  92% { text-shadow: 2px 0 var(--e1,#ff2a55), -2px 0 var(--e2,#26c6ff); transform: translateX(-1px) skewX(2deg); }
+  94% { text-shadow: -1px 0 var(--e1,#ff2a55), 1px 0 var(--e2,#26c6ff); transform: none; }
+}
+
+/* Avatar FX — Halo: soft breathing chroma corona */
+.csrp-anim-av-halo {
+  animation: csrpAvHalo 3.6s ease-in-out infinite !important;
+}
+@keyframes csrpAvHalo {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 60%, transparent),
+      0 0 14px 4px color-mix(in srgb, var(--e2,#8fb4ff) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--e2,#8fb4ff) 80%, transparent),
+      0 0 30px 10px color-mix(in srgb, var(--e1,#fff) 45%, transparent);
+  }
+}
+
+/* Avatar FX — Sonar: sharp expanding ping rings */
+.csrp-anim-av-sonar {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--e1,#fff) 85%, transparent);
+  animation: csrpAvSonar 1.9s cubic-bezier(0.22,1,0.36,1) infinite !important;
+}
+@keyframes csrpAvSonar {
+  0% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 85%, transparent),
+      0 0 0 3px color-mix(in srgb, var(--e2,#8fb4ff) 75%, transparent),
+      0 0 0 6px color-mix(in srgb, var(--e1,#fff) 45%, transparent);
+  }
+  100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--e1,#fff) 85%, transparent),
+      0 0 0 14px transparent,
+      0 0 0 26px transparent;
+  }
+}
+
+/* Avatar FX — Prism: ring cycling through the spectrum */
+.csrp-anim-av-prism {
+  box-shadow:
+    0 0 0 2.5px var(--e1,#fff),
+    0 0 16px 3px color-mix(in srgb, var(--e1,#fff) 55%, transparent);
+  animation: csrpAvPrism 5s linear infinite !important;
+}
+@keyframes csrpAvPrism {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(180deg) brightness(1.08); }
+  100% { filter: hue-rotate(360deg) brightness(1); }
+}
+
+/* ---- Lobby slot sizing: only the party OWNER's card is big. The site scales
+   the viewer's own slot; counteract per-role so members stay compact. ---- */
+div.rounded-2xl.csrp-lobby-member { transform: scale(1) !important; }
+div.rounded-2xl.csrp-lobby-owner { transform: scale(1.1) !important; }
+
+/* ============================================================================
+   PLAY TAB — v4 "Tactical" (Valorant × CS2)
+   Sharp angular geometry, tactical mono labels, one red accent, restrained
+   motion. EVERY decorative pseudo-element is pointer-events:none so native
+   controls (kick ✕, ready, join queue) always receive their clicks.
+   All scoped to .csrp-play.
+   ============================================================================ */
+
+.csrp-play {
+  --tac: #e23a45;
+  --tac-dim: rgba(226, 58, 69, 0.14);
+  --tac-line: rgba(255, 255, 255, 0.08);
+  --tac-line-2: rgba(255, 255, 255, 0.14);
+  --tac-panel: linear-gradient(160deg, rgba(24, 25, 31, 0.78), rgba(13, 14, 18, 0.86));
+  --tac-mono: "Rajdhani", "Segoe UI", -apple-system, sans-serif;
+  --tac-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Lobby: a tactical staging bay -------------------------------------- */
+.csrp-play .mb-4.mt-2.flex.flex-row.items-center.justify-center.gap-10 {
+  position: relative;
+  padding: 30px 14px 34px;
+  isolation: isolate;
+}
+.csrp-play .mb-4.mt-2.flex.flex-row.items-center.justify-center.gap-10::before {
+  content: "";
+  position: absolute; inset: -16px -70px; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(48% 55% at 50% 20%, rgba(226, 58, 69, 0.08), transparent 68%),
+    radial-gradient(62% 26% at 50% 100%, rgba(226, 58, 69, 0.1), transparent 74%);
+}
+/* tactical baseline with center notch */
+.csrp-play .mb-4.mt-2.flex.flex-row.items-center.justify-center.gap-10::after {
+  content: "";
+  position: absolute; left: 5%; right: 5%; bottom: 12px; height: 1px; z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--tac-line-2) 20%, rgba(226,58,69,0.55) 50%, var(--tac-line-2) 80%, transparent);
+}
+
+/* Occupied slot cards — sharp cut corner, matte glass */
+.csrp-play div.rounded-2xl.border.border-theme-gray {
+  position: relative;
+  border-radius: 4px !important;
+  background: var(--tac-panel) !important;
+  border-color: var(--tac-line) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  transition: transform 0.26s var(--tac-ease), border-color 0.26s, box-shadow 0.3s var(--tac-ease);
+}
+/* top accent hairline */
+.csrp-play div.rounded-2xl.border.border-theme-gray::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 16px; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg, var(--tac), transparent);
+  opacity: 0.5; transition: opacity 0.26s;
+}
+.csrp-play div.rounded-2xl.border.border-theme-gray:not([role="button"]):hover {
+  transform: translateY(-3px);
+  border-color: var(--tac-line-2) !important;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.55), 0 0 26px rgba(226, 58, 69, 0.14);
+}
+.csrp-play div.rounded-2xl.border.border-theme-gray:not([role="button"]):hover::before { opacity: 1; }
+
+/* Empty slots — dashed recruit tiles, quiet */
+.csrp-play div[role="button"].rounded-2xl {
+  border-radius: 4px !important;
+  border-style: dashed !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(160deg, rgba(16, 17, 22, 0.4), rgba(9, 10, 13, 0.55)) !important;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  box-shadow: none;
+  transition: transform 0.26s var(--tac-ease), border-color 0.26s, background 0.26s;
+}
+.csrp-play div[role="button"].rounded-2xl svg {
+  opacity: 0.28;
+  transition: opacity 0.24s, transform 0.28s var(--tac-ease), color 0.24s;
+}
+.csrp-play div[role="button"].rounded-2xl:hover {
+  transform: translateY(-3px);
+  border-color: rgba(226, 58, 69, 0.6) !important;
+  background: linear-gradient(160deg, rgba(226, 58, 69, 0.08), rgba(9, 10, 13, 0.7)) !important;
+}
+.csrp-play div[role="button"].rounded-2xl:hover svg {
+  opacity: 0.85; transform: scale(1.14) rotate(90deg); color: #ff6b76;
+}
+
+/* Party owner — commanding, with a mono OWNER tag (non-interactive) */
+.csrp-play div.rounded-2xl.csrp-lobby-owner {
+  border-color: rgba(226, 58, 69, 0.5) !important;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.55), 0 0 36px rgba(226, 58, 69, 0.22), inset 0 1px 0 rgba(255,255,255,0.05);
+  z-index: 2;
+}
+.csrp-play div.rounded-2xl.csrp-lobby-owner::before { opacity: 1; }
+.csrp-play div.rounded-2xl.csrp-lobby-owner::after {
+  content: "◆ LEADER";
+  position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+  font-family: var(--tac-mono);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.26em;
+  color: #ff858c; opacity: 0.92; pointer-events: none;
+  text-shadow: 0 0 8px rgba(226, 58, 69, 0.6);
+}
+
+/* Avatars: crisp ring, lifts with the card */
+.csrp-play div.rounded-2xl img[alt="Avatar"] {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 8px 18px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.26s var(--tac-ease);
+}
+.csrp-play div.rounded-2xl:hover img[alt="Avatar"] {
+  box-shadow: 0 0 0 2px rgba(226, 58, 69, 0.6), 0 10px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* Ready state: the site marks accepted/ready players — surface it clearly.
+   A ready slot gets a green edge + a READY tag; not-ready stays neutral.
+   (These target the site's own ready styling; the tag is pointer-events:none.) */
+.csrp-play div.rounded-2xl:has(.text-green-500),
+.csrp-play div.rounded-2xl.csrp-ready {
+  border-color: rgba(86, 214, 138, 0.55) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.44), 0 0 22px rgba(86, 214, 138, 0.18), inset 0 0 0 1px rgba(86,214,138,0.12);
+}
+.csrp-play div.rounded-2xl:has(.text-green-500)::before,
+.csrp-play div.rounded-2xl.csrp-ready::before {
+  background: linear-gradient(90deg, #56d68a, transparent); opacity: 1;
+}
+.csrp-play .csrp-ready-tag {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  font-family: var(--tac-mono); font-size: 8.5px; font-weight: 700; letter-spacing: 0.2em;
+  padding: 2px 8px; border-radius: 2px; pointer-events: none;
+  color: #061; background: rgba(86, 214, 138, 0.9);
+  text-transform: uppercase;
+}
+
+/* Team title (team_xxx) — tactical mono caps with accent bracket */
+.csrp-play .mb-4.flex.w-full.flex-row.items-center.justify-between > p {
+  font-family: var(--tac-mono);
+  font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  font-size: 0.82rem; color: rgba(255, 255, 255, 0.8);
+  padding-left: 11px; border-left: 3px solid var(--tac);
+}
+.csrp-play button.flex.items-center.space-x-1.text-theme-primary {
+  opacity: 0.55; transition: opacity 0.2s, filter 0.2s;
+}
+.csrp-play button.flex.items-center.space-x-1.text-theme-primary:hover {
+  opacity: 1; filter: drop-shadow(0 0 8px rgba(226, 58, 69, 0.6));
+}
+
+/* ---- Join Queue: solid tactical CTA, NO sheen/pulse gimmicks ------------ */
+.csrp-play button.rounded-full.bg-theme-primary.px-12 {
+  position: relative;
+  border-radius: 4px !important;
+  height: 3.1rem !important;
+  min-width: 15rem;
+  font-family: var(--tac-mono);
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  background: linear-gradient(180deg, #ef3b48, #cf1f2c) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 10px 30px rgba(226, 58, 69, 0.38);
+  transition: filter 0.18s, box-shadow 0.24s var(--tac-ease), transform 0.14s var(--tac-ease);
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 14px 40px rgba(226, 58, 69, 0.55);
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12:active { transform: translateY(0) scale(0.985); }
+/* searching → a calm status bar under the label, no button flashing */
+.csrp-play.csrp-in-queue button.rounded-full.bg-theme-primary.px-12::after {
+  content: "";
+  position: absolute; left: 8px; right: 8px; bottom: 5px; height: 2px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  background-size: 40% 100%; background-repeat: no-repeat;
+  animation: csrpScan 1.3s linear infinite; pointer-events: none;
+}
+@keyframes csrpScan { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
+
+/* Stats line → three tactical chips */
+.csrp-play .rounded-md.px-12.py-2.text-center {
+  display: inline-flex; gap: 8px; padding: 0 !important;
+}
+.csrp-play .rounded-md.px-12.py-2.text-center span {
+  display: inline-flex; align-items: center;
+  padding: 5px 13px; border-radius: 3px;
+  border: 1px solid var(--tac-line); background: rgba(255, 255, 255, 0.03);
+  font-family: var(--tac-mono); font-size: 12.5px; letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.82);
+}
+
+/* 2x COINS — steady ember, no jitter */
+.csrp-play .font-rajdhani.text-theme-primary { text-shadow: 0 0 12px rgba(226, 58, 69, 0.5); }
+
+/* ---- Section headings --------------------------------------------------- */
+.csrp-play .flex.flex-col.justify-center > p.font-semibold {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--tac-mono);
+  letter-spacing: 0.08em; text-transform: uppercase; font-size: 1.05rem !important;
+}
+.csrp-play .flex.flex-col.justify-center > p.font-semibold::before {
+  content: ""; width: 16px; height: 2px; background: var(--tac);
+  box-shadow: 0 0 10px rgba(226, 58, 69, 0.7); pointer-events: none;
+}
+
+/* ---- Mode / server pickers --------------------------------------------- */
+.csrp-play button.group > div.rounded-md {
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(21, 22, 28, 0.7), rgba(13, 14, 18, 0.7));
+  border-color: var(--tac-line);
+  transition: transform 0.2s var(--tac-ease), border-color 0.22s, box-shadow 0.24s, background 0.22s;
+}
+.csrp-play button.group:hover > div.rounded-md {
+  transform: translateX(3px);
+  border-color: rgba(226, 58, 69, 0.4);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+}
+.csrp-play button.group img { transition: transform 0.22s var(--tac-ease), filter 0.22s; }
+.csrp-play button.group:hover img { transform: scale(1.08); }
+.csrp-play button.group:has(span.bg-theme-primary.block) > div.rounded-md {
+  border-color: rgba(226, 58, 69, 0.55);
+  background: linear-gradient(90deg, var(--tac-dim), rgba(14, 15, 19, 0.85) 55%);
+  box-shadow: inset 0 0 24px rgba(226, 58, 69, 0.08), 0 6px 18px rgba(0, 0, 0, 0.32);
+}
+.csrp-play button.group:has(span.bg-theme-primary.block) img { filter: drop-shadow(0 0 6px rgba(226, 58, 69, 0.5)); }
+.csrp-play button.group span.bg-theme-primary.block { box-shadow: 0 0 14px rgba(226, 58, 69, 0.85); }
+
+/* ---- Live matches table ------------------------------------------------- */
+.csrp-play .grid.grid-cols-7.rounded-xl.py-2 {
+  border-color: transparent; background: none;
+  font-family: var(--tac-mono);
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.4);
+}
+.csrp-play .grid.grid-cols-7.items-center.rounded-xl {
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(19, 20, 26, 0.6), rgba(11, 12, 16, 0.6));
+  border-color: var(--tac-line);
+  transition: transform 0.2s var(--tac-ease), border-color 0.22s, box-shadow 0.24s;
+}
+.csrp-play .grid.grid-cols-7.items-center.rounded-xl:hover {
+  transform: translateY(-2px);
+  border-color: rgba(226, 58, 69, 0.4);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42);
+}
+.csrp-play .grid.grid-cols-7.items-center.rounded-xl p > span.text-green-500 { text-shadow: 0 0 10px rgba(86, 214, 138, 0.6); }
+.csrp-play .grid.grid-cols-7.items-center.rounded-xl p > span.text-red-500 { text-shadow: 0 0 10px rgba(255, 93, 106, 0.6); }
+
+/* ---- CSR+ queue panel (structural id from playTab.js) ------------------- */
+.csrp-qp {
+  margin: 14px auto 0;
+  max-width: 620px;
+  border: 1px solid rgba(226, 58, 69, 0.22);
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(21, 15, 16, 0.92), rgba(11, 12, 15, 0.94));
+  padding: 12px 16px 14px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.csrp-qp-h {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--tac-mono, "Segoe UI");
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.62);
+}
+.csrp-qp-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #56d68a; box-shadow: 0 0 9px rgba(86, 214, 138, 0.85);
+  animation: csrpQpDot 2s ease-in-out infinite;
+}
+@keyframes csrpQpDot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+.csrp-qp-n {
+  margin-left: auto; min-width: 22px; text-align: center;
+  padding: 1px 9px; border-radius: 3px;
+  background: rgba(226, 58, 69, 0.16); color: #ff858c;
+  font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 700;
+}
+.csrp-qp-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.csrp-qp-user {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 12px; border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--tac-line-2, rgba(255,255,255,0.14));
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: transform 0.16s var(--tac-ease, ease), border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.csrp-qp-user:hover {
+  transform: translateY(-1px); background: rgba(226, 58, 69, 0.1);
+  border-color: rgba(226, 58, 69, 0.55); box-shadow: 0 4px 14px rgba(226, 58, 69, 0.22);
+}
+.csrp-qp-live {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #56d68a; box-shadow: 0 0 7px rgba(86, 214, 138, 0.85);
+  animation: csrpQpDot 1.8s ease-in-out infinite;
+}
+.csrp-qp-none { font-size: 11.5px; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
+.csrp-qp-empty .csrp-qp-dot { background: rgba(255,255,255,0.4); box-shadow: none; animation: none; }
+.csrp-qp-empty .csrp-qp-n { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55); }

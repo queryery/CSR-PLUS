@@ -1,5 +1,60 @@
 # Changelog
 
+## 0.1.1 — Tactical Play tab, live queue, effects remade & fixes
+
+**Play tab — full restructure (Valorant × CS2 look)**
+- A sharp tactical redesign: angular cut-corner slot cards, mono labels, one
+  confident red accent, staging-bay lighting behind the lobby.
+- The party owner ("◆ LEADER") now sits in the **middle** of the lobby.
+- **Ready status** is shown clearly — ready players get a green edge and a
+  READY tag.
+- **Kick (✕)** and every other native lobby control now always work; the card
+  click (open profile) never swallows them.
+- Solid Join Queue button — no gimmicky sheen; a calm scan line shows while
+  searching.
+- Styling appears instantly with the tab (no load-in delay), including in a
+  second tab.
+
+**Live "CSR+ users in queue" — instant, no request burn**
+- The queue list is now pushed in realtime over a single shared connection
+  (one Firestore listener for the whole browser), so it updates the moment
+  someone joins or leaves — with effectively no polling.
+- Being in queue survives switching tabs; it no longer resets.
+- The live user counter is real: active-on-site / total.
+
+**Effects — remade (Studio + in-game)**
+- Every card overlay rebuilt with real depth: layered gradients, glows, varied
+  motion. Rain is sharp diagonal streaks, the neon grid has a glowing horizon
+  sun, embers rise from a flickering base, snow sways, starfield has a shooting
+  star.
+- Overlays combine — stack up to 3 at once.
+- New name animations (Tide wave, Neon flicker, Soft breathe, Glitch pop) and
+  avatar animations (Chroma halo, Sonar ping, Prism cycle).
+- Effect colors: tint animations with their own two colors, independent of your
+  accents (or keep them matched — the default).
+- MP4/WebM banners preview live in Studio and upload reliably.
+
+**Players without a profile picture**
+- Match-found rows are no longer "Anonymous" for default-avatar players.
+- Banners and cosmetics load for them too: signed-in CSR+ users register their
+  site name so any client can resolve name → account.
+
+**Cloud settings backup**
+- Your settings and Studio look are backed up to your CSR+ account and restored
+  automatically after a manual reinstall — just sign in with Discord.
+
+**Fixes**
+- Firefox: Discord sign-in works (make sure the Firefox redirect URL is
+  registered in the Discord application).
+- Join Queue no longer breaks when the party owner runs CSR+.
+- "Send trade" no longer appears inside the Match found window.
+- Strength-badge tooltip always paints above the card.
+- Server IP copy falls back to live match data when the site hides the address.
+- Party invites aren't auto-accepted while you're already in a party (optional
+  child toggle to restore the old behavior).
+- The title chip ("AWP enjoyer") sits under the ELO on lobby cards.
+- Match-found window pre-loads everyone's banners so the room paints instantly.
+
 ## 0.1.0 — Everything free
 
 **CSR+ is now completely free**

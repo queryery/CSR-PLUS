@@ -26,6 +26,7 @@
     masterEnabled: true,
     autoMatch: true,
     autoInvite: true,
+    inviteWhileInParty: false,
     autoQueue: true,
     autoBan: false,
     autoCopyServer: true,

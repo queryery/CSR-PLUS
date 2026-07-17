@@ -2,6 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // The public realtime queue doc is the ONLY client-readable path: it holds
+    // just {users:[{id,name}], count} of CSR+ users currently searching, which
+    // the extension already exposes. All writes still go through the Function.
+    match /public/queue {
+      allow read: if true;
+      allow write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

@@ -19,8 +19,12 @@
     accent: '#e23a45', accent2: '#8fb4ff',
     nameStyle: 'gradient', cardFlair: 'ring', avatarFrame: 'ring',
     kanji: '東京', chip: '', chipStyle: 'gradient',
-    animName: 'none', animAvatar: 'none', overlay: 'none',
+    animName: 'none', animAvatar: 'none', overlay: 'none', overlays: [],
+    fxColor: null, fxColor2: null,
   };
+
+  const OVERLAY_VALUES = ['particles', 'sweep', 'rain', 'snow', 'embers', 'stars', 'grid', 'bokeh', 'storm'];
+  const MAX_OVERLAYS = 3;
 
   const PRESETS = {
     'Tokyo': { accent: '#ff2a55', accent2: '#26c6ff', nameStyle: 'gradient', cardFlair: 'kanji', avatarFrame: 'ring', kanji: '東京', chipStyle: 'gradient' },
@@ -52,6 +56,13 @@
       lobby: { ...DEFAULTS.surf.lobby, ...(c.surf ? s.lobby : { on: !!c.cardBanner, ...legacy }) },
     };
     if (out.nameStyle === 'glow') out.nameStyle = 'gradient';
+    // Migrate the legacy single `overlay` into the combinable `overlays` list.
+    if (!Array.isArray(out.overlays)) out.overlays = [];
+    out.overlays = [...new Set(out.overlays.filter((o) => OVERLAY_VALUES.includes(o)))].slice(0, MAX_OVERLAYS);
+    if (!out.overlays.length && out.overlay && out.overlay !== 'none' && OVERLAY_VALUES.includes(out.overlay)) {
+      out.overlays = [out.overlay];
+    }
+    out.overlay = 'none';
     delete out.bannerX; delete out.bannerY; delete out.bannerScale; delete out.cardBanner;
     return out;
   }
@@ -80,7 +91,8 @@
       c.fillMode === 'color' ||
       (c.animName && c.animName !== 'none') ||
       (c.animAvatar && c.animAvatar !== 'none') ||
-      (c.overlay && c.overlay !== 'none');
+      (c.overlay && c.overlay !== 'none') ||
+      (Array.isArray(c.overlays) && c.overlays.length > 0);
   }
   function freeCustomizationBody(c) {
     return {
@@ -90,7 +102,7 @@
       avatarFrame: PREMIUM_FRAMES.includes(c.avatarFrame) ? 'ring' : c.avatarFrame,
       chip: c.chip, chipStyle: PREMIUM_CHIPS.includes(c.chipStyle) ? 'outline' : c.chipStyle,
       kanji: c.kanji, fillMode: 'blur',
-      animName: 'none', animAvatar: 'none', overlay: 'none',
+      animName: 'none', animAvatar: 'none', overlay: 'none', overlays: [],
       bannerEnabled: false, bannerOn: false,
     };
   }
@@ -101,6 +113,8 @@
       fillMode: c.fillMode, fillColor: c.fillColor, bannerBlur: c.bannerBlur, bannerDim: c.bannerDim,
       bannerOn: c.bannerOn, bannerEnabled: !!c.banner, surf: c.surf,
       animName: c.animName, animAvatar: c.animAvatar, overlay: c.overlay,
+      overlays: Array.isArray(c.overlays) ? c.overlays.slice(0, MAX_OVERLAYS) : [],
+      fxColor: c.fxColor || null, fxColor2: c.fxColor2 || null,
     };
   }
 
@@ -257,7 +271,10 @@
     return new Promise((resolve, reject) => {
       const cap = bannerCapBytes();
       if (/^video\/(mp4|webm)$/.test(file.type)) {
-        if (file.size > cap) return reject(new Error(`Video too large — max ${Math.round(cap / 1048576)} MB on your plan`));
+        // The upload travels as base64 JSON and Cloud Functions caps HTTP
+        // bodies at 32 MB — so the real video ceiling is ~22 MB of file.
+        const vcap = Math.min(cap, 22 * 1048576);
+        if (file.size > vcap) return reject(new Error(`Video too large — max ${Math.round(vcap / 1048576)} MB (server upload limit)`));
         readAsDataUrl(file).then(resolve).catch(reject);
         return;
       }
@@ -287,7 +304,7 @@
   }
 
   function layoutBannerImg(layer, img, s) {
-    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const iw = img.naturalWidth || img.videoWidth, ih = img.naturalHeight || img.videoHeight;
     const W = layer.clientWidth, H = layer.clientHeight;
     if (!iw || !ih || !W || !H) return;
     const zoom = clamp(+s.scale || 1, ZOOM_MIN, ZOOM_MAX);
@@ -332,13 +349,20 @@
     } catch {  }
   }
 
+  const isVideoBanner = () => /^data:video\//.test(cfg.banner || '');
+
   function bannerStyle(layer, key) {
     const s = surf(key);
+    const wantVideo = isVideoBanner();
     let fill = layer.querySelector('img.pc-bfill');
-    let img = layer.querySelector('img.pc-bimg');
-    if (cfg.fillMode === 'color') {
+    let img = layer.querySelector('.pc-bimg');
+    // mp4/webm banners preview as a muted looping <video>, not an <img>.
+    if (img && ((wantVideo && img.tagName !== 'VIDEO') || (!wantVideo && img.tagName !== 'IMG'))) {
+      img.remove(); img = null;
+    }
+    if (cfg.fillMode === 'color' || wantVideo) {
       if (fill) fill.remove();
-      layer.style.background = cfg.fillColor || '#0b0b12';
+      layer.style.background = cfg.fillMode === 'color' ? (cfg.fillColor || '#0b0b12') : '#0b0b12';
     } else {
       if (!fill) {
         fill = document.createElement('img');
@@ -348,26 +372,39 @@
       layer.style.background = '';
     }
     if (!img) {
-      img = document.createElement('img');
-      img.className = 'pc-bimg'; img.alt = '';
-      img.addEventListener('load', () => {
-        layoutBannerImg(layer, img, surf(key));
-        setBannerTextContrast(layer, img, key);
-      });
+      if (wantVideo) {
+        img = document.createElement('video');
+        img.className = 'pc-bimg';
+        img.muted = true; img.loop = true; img.autoplay = true; img.playsInline = true;
+        img.addEventListener('loadeddata', () => {
+          layoutBannerImg(layer, img, surf(key));
+          img.play().catch(() => { });
+        });
+      } else {
+        img = document.createElement('img');
+        img.className = 'pc-bimg'; img.alt = '';
+        img.addEventListener('load', () => {
+          layoutBannerImg(layer, img, surf(key));
+          setBannerTextContrast(layer, img, key);
+        });
+      }
       layer.appendChild(img);
     }
-    if (img.dataset.src !== cfg.banner) { img.src = cfg.banner; img.dataset.src = cfg.banner; }
+    if (img.dataset.src !== cfg.banner) {
+      img.src = cfg.banner; img.dataset.src = cfg.banner;
+      if (wantVideo) { img.load?.(); img.play?.().catch(() => { }); }
+    }
     if (fill && fill.dataset.src !== cfg.banner) { fill.src = cfg.banner; fill.dataset.src = cfg.banner; }
     img.style.filter = cfg.bannerBlur ? `blur(${cfg.bannerBlur}px)` : '';
     layoutBannerImg(layer, img, s);
-    if (img.complete) setBannerTextContrast(layer, img, key);
+    if (!wantVideo && img.complete) setBannerTextContrast(layer, img, key);
   }
 
   const layerOf = (key) => $('#bn-' + key);
   function layoutAll() {
     for (const key of SURFACES) {
       const layer = layerOf(key);
-      const img = layer && layer.querySelector('img.pc-bimg');
+      const img = layer && layer.querySelector('.pc-bimg');
       if (img) layoutBannerImg(layer, img, surf(key));
     }
   }
@@ -395,6 +432,17 @@
   function paint() {
     document.documentElement.style.setProperty('--a1', cfg.accent);
     document.documentElement.style.setProperty('--a2', cfg.accent2);
+    const de = document.documentElement.style;
+    if (cfg.fxColor) de.setProperty('--fx1', cfg.fxColor); else de.removeProperty('--fx1');
+    if (cfg.fxColor2) de.setProperty('--fx2', cfg.fxColor2); else de.removeProperty('--fx2');
+    const fxRow = $('#fx-colors');
+    if (fxRow) {
+      const usingAccents = !cfg.fxColor && !cfg.fxColor2;
+      fxRow.classList.toggle('using-accents', usingAccents);
+      $('#fx-use-accents')?.classList.toggle('on', usingAccents);
+      if ($('#c-fx1')) $('#c-fx1').value = cfg.fxColor || cfg.accent;
+      if ($('#c-fx2')) $('#c-fx2').value = cfg.fxColor2 || cfg.accent2;
+    }
 
     $('#c-enabled').checked = !!cfg.enabled;
     $('#c-banner-on').checked = !!cfg.bannerOn;
@@ -423,13 +471,18 @@
 
     for (const [elId, key] of [['#c-name', 'nameStyle'],
     ['#c-flair', 'cardFlair'], ['#c-avatar', 'avatarFrame'], ['#c-chipstyle', 'chipStyle'],
-    ['#c-anim-name', 'animName'], ['#c-anim-avatar', 'animAvatar'], ['#c-overlay', 'overlay']]) {
+    ['#c-anim-name', 'animName'], ['#c-anim-avatar', 'animAvatar']]) {
       $$(elId + ' button').forEach((b) => b.classList.toggle('on', b.dataset.v === cfg[key]));
     }
+    // Overlay picks are multi-select (up to MAX_OVERLAYS).
+    $$('#c-overlay button').forEach((b) => {
+      b.classList.toggle('on', b.dataset.v === 'none' ? !cfg.overlays.length : cfg.overlays.includes(b.dataset.v));
+    });
 
     const drop = $('#drop');
     drop.classList.toggle('has-img', !!cfg.banner);
-    drop.style.backgroundImage = cfg.banner ? `url(${cfg.banner})` : '';
+    drop.classList.toggle('has-vid', isVideoBanner());
+    drop.style.backgroundImage = cfg.banner && !isVideoBanner() ? `url(${cfg.banner})` : '';
 
     for (const key of SURFACES) {
       const layer = layerOf(key);
@@ -468,11 +521,22 @@
     for (const boxId of ['#box-profile', '#box-card', '#box-lobby']) {
       const box = $(boxId); if (!box) continue;
       box.className = box.className.replace(/\bov-\w+/g, '').trim();
-      let ov = box.querySelector(':scope > .pc-overlay');
-      if (cfg.overlay && cfg.overlay !== 'none') {
-        if (!ov) { ov = document.createElement('div'); ov.className = 'pc-overlay'; ov.setAttribute('aria-hidden', 'true'); box.appendChild(ov); }
-        box.classList.add('ov-' + cfg.overlay);
-      } else if (ov) ov.remove();
+      const want = cfg.overlays;
+      const have = new Map();
+      box.querySelectorAll(':scope > .pc-overlay').forEach((l) => {
+        const k = l.dataset.ov;
+        if (k && want.includes(k) && !have.has(k)) have.set(k, l); else l.remove();
+      });
+      for (const o of want) {
+        box.classList.add('ov-' + o);
+        if (!have.has(o)) {
+          const ov = document.createElement('div');
+          ov.className = 'pc-overlay ovl-' + o;
+          ov.dataset.ov = o;
+          ov.setAttribute('aria-hidden', 'true');
+          box.appendChild(ov);
+        }
+      }
     }
 
     const avFx = (cfg.animAvatar && cfg.animAvatar !== 'none') ? 'avfx-' + cfg.animAvatar : '';
@@ -521,7 +585,7 @@
     });
     box.addEventListener('pointermove', (e) => {
       if (!dragging) return;
-      const img = layer.querySelector('img.pc-bimg');
+      const img = layer.querySelector('.pc-bimg');
       if (!img) return;
       const W = layer.clientWidth, H = layer.clientHeight;
       const vs = (layer.getBoundingClientRect().width / W) || 1;
@@ -548,7 +612,7 @@
 
   function fitWholeImage(key) {
     const layer = layerOf(key);
-    const img = layer && layer.querySelector('img.pc-bimg');
+    const img = layer && layer.querySelector('.pc-bimg');
     if (!img || !img.naturalWidth) return;
     const W = layer.clientWidth, H = layer.clientHeight;
     const cover = Math.max(W / img.naturalWidth, H / img.naturalHeight);
@@ -592,7 +656,7 @@
 
     for (const [elId, key] of [['#c-name', 'nameStyle'],
     ['#c-flair', 'cardFlair'], ['#c-avatar', 'avatarFrame'], ['#c-chipstyle', 'chipStyle'],
-    ['#c-anim-name', 'animName'], ['#c-anim-avatar', 'animAvatar'], ['#c-overlay', 'overlay']]) {
+    ['#c-anim-name', 'animName'], ['#c-anim-avatar', 'animAvatar']]) {
       $(elId).addEventListener('click', (e) => {
         const b = e.target.closest('button'); if (!b) return;
         if (b.classList.contains('prem') && proTier !== 'premium') {
@@ -601,6 +665,29 @@
         set({ [key]: b.dataset.v });
       });
     }
+
+    // Effect colors: independent of the accents; the button restores accent-follow.
+    $('#c-fx1')?.addEventListener('input', (e) => set({ fxColor: e.target.value }));
+    $('#c-fx2')?.addEventListener('input', (e) => set({ fxColor2: e.target.value }));
+    $('#fx-use-accents')?.addEventListener('click', () => {
+      const useAccents = !(!cfg.fxColor && !cfg.fxColor2);
+      set(useAccents ? { fxColor: null, fxColor2: null } : { fxColor: cfg.accent, fxColor2: cfg.accent2 });
+    });
+
+    // Card overlays: toggle membership, up to MAX_OVERLAYS at once.
+    $('#c-overlay').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      const v = b.dataset.v;
+      if (v === 'none') { set({ overlays: [] }); return; }
+      const list = cfg.overlays.slice();
+      const i = list.indexOf(v);
+      if (i >= 0) list.splice(i, 1);
+      else {
+        if (list.length >= MAX_OVERLAYS) { toast(`Up to ${MAX_OVERLAYS} overlays — remove one first`); return; }
+        list.push(v);
+      }
+      set({ overlays: list });
+    });
 
     const PANE_HINTS = {
       account: 'Sign in with Discord to share your look — colours, name and flair are free for everyone.',
@@ -799,6 +886,7 @@
       if (c.animName && c.animName !== 'none') patch.animName = 'none';
       if (c.animAvatar && c.animAvatar !== 'none') patch.animAvatar = 'none';
       if (c.overlay && c.overlay !== 'none') patch.overlay = 'none';
+      if (Array.isArray(c.overlays) && c.overlays.length) patch.overlays = [];
       if (PREMIUM_NAMES.includes(c.nameStyle)) patch.nameStyle = 'gradient';
       if (PREMIUM_FLAIRS.includes(c.cardFlair)) patch.cardFlair = 'ring';
       if (PREMIUM_FRAMES.includes(c.avatarFrame)) patch.avatarFrame = 'ring';

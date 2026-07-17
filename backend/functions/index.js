@@ -47,7 +47,7 @@ const DEFAULT_CONFIG = {
   bannerMaxBytes: { free: 0, pro: 20 * 1024 * 1024, premium: 40 * 1024 * 1024 },
   animatedBanner: { pro: false, premium: true },
   reportVideoMaxBytes: 50 * 1024 * 1024,
-  minVersion: '0.1.0',
+  minVersion: '0.1.1',
   updateRequired: true,
   updateUrl: 'https://github.com/queryery/CSR-PLUS/releases/latest',
   updateMessage: 'CSR+ 0.1.0 is a required update — it removes the old paid tiers and makes every feature free. Please update to keep using CSR+.',
@@ -168,9 +168,10 @@ const AVATAR_FRAMES = ['none', 'ring', 'hex', 'glow'];
 const CHIP_STYLES = ['outline', 'solid', 'gradient'];
 const FILL_MODES = ['blur', 'color'];
 const SURFACES = ['profile', 'card', 'lobby'];
-const ANIM_NAMES = ['none', 'shimmer', 'pulse'];
-const ANIM_AVATARS = ['none', 'spin', 'orbit'];
-const OVERLAYS = ['none', 'particles', 'sweep'];
+const ANIM_NAMES = ['none', 'shimmer', 'pulse', 'wave', 'flicker', 'breathe', 'glitchpop'];
+const ANIM_AVATARS = ['none', 'spin', 'orbit', 'halo', 'sonar', 'prism'];
+const OVERLAYS = ['none', 'particles', 'sweep', 'rain', 'snow', 'embers', 'stars', 'grid', 'bokeh', 'storm'];
+const MAX_OVERLAYS = 3;
 
 const clampNum = (v, lo, hi) => Math.max(lo, Math.min(hi, +v));
 const pct = (v) => Math.max(0, Math.min(100, Math.round(+v)));
@@ -180,6 +181,17 @@ function sanitizeCustomization(body) {
   const b = body || {};
   if (b.accent != null) { if (!HEX.test(String(b.accent))) throw new Error('accent must be #rrggbb'); out.accent = String(b.accent).toLowerCase(); }
   if (b.accent2 != null) { if (!HEX.test(String(b.accent2))) throw new Error('accent2 must be #rrggbb'); out.accent2 = String(b.accent2).toLowerCase(); }
+  // Effect colors: hex or explicit null = follow the accent colors.
+  if (b.fxColor !== undefined) {
+    if (b.fxColor === null || b.fxColor === '') out.fxColor = null;
+    else if (HEX.test(String(b.fxColor))) out.fxColor = String(b.fxColor).toLowerCase();
+    else throw new Error('fxColor must be #rrggbb');
+  }
+  if (b.fxColor2 !== undefined) {
+    if (b.fxColor2 === null || b.fxColor2 === '') out.fxColor2 = null;
+    else if (HEX.test(String(b.fxColor2))) out.fxColor2 = String(b.fxColor2).toLowerCase();
+    else throw new Error('fxColor2 must be #rrggbb');
+  }
   if (b.fillColor != null) { if (!HEX.test(String(b.fillColor))) throw new Error('fillColor must be #rrggbb'); out.fillColor = String(b.fillColor).toLowerCase(); }
   if (b.nameStyle != null) { if (!NAME_STYLES.includes(b.nameStyle)) throw new Error('bad nameStyle'); out.nameStyle = b.nameStyle; }
   if (b.cardFlair != null) { if (!CARD_FLAIRS.includes(b.cardFlair)) throw new Error('bad cardFlair'); out.cardFlair = b.cardFlair; }
@@ -191,6 +203,13 @@ function sanitizeCustomization(body) {
   if (b.animName != null) { if (!ANIM_NAMES.includes(b.animName)) throw new Error('bad animName'); out.animName = b.animName; }
   if (b.animAvatar != null) { if (!ANIM_AVATARS.includes(b.animAvatar)) throw new Error('bad animAvatar'); out.animAvatar = b.animAvatar; }
   if (b.overlay != null) { if (!OVERLAYS.includes(b.overlay)) throw new Error('bad overlay'); out.overlay = b.overlay; }
+  // Combinable card overlays (up to MAX_OVERLAYS from the overlay category).
+  if (b.overlays != null) {
+    if (!Array.isArray(b.overlays)) throw new Error('overlays must be an array');
+    const list = [...new Set(b.overlays.filter((x) => typeof x === 'string' && x !== 'none'))];
+    for (const x of list) if (!OVERLAYS.includes(x)) throw new Error('bad overlay');
+    out.overlays = list.slice(0, MAX_OVERLAYS);
+  }
   if (b.bannerEnabled != null) out.bannerEnabled = !!b.bannerEnabled;
   if (b.bannerOn != null) out.bannerOn = !!b.bannerOn;
   if (b.bannerBlur != null) out.bannerBlur = Math.round(clampNum(b.bannerBlur, 0, 16));
@@ -238,12 +257,17 @@ function publicView(d) {
     animName: tier === 'premium' ? (d.animName || 'none') : 'none',
     animAvatar: tier === 'premium' ? (d.animAvatar || 'none') : 'none',
     overlay: tier === 'premium' ? (d.overlay || 'none') : 'none',
+    overlays: tier === 'premium' && Array.isArray(d.overlays) ? d.overlays.slice(0, 3) : null,
+    fxColor: d.fxColor || null,
+    fxColor2: d.fxColor2 || null,
   };
 }
 
-const hot = (v) => v === 'LIKELY' || v === 'VERY_LIKELY';
+// Loose policy: only block the most extreme content — gore (violence) and
+// adult — and only when Vision is VERY_LIKELY. racy is not moderated.
+const hot = (v) => v === 'VERY_LIKELY';
 function safeSearchBlocks(s) {
-  return !!(s && (hot(s.adult) || hot(s.violence) || hot(s.racy)));
+  return !!(s && (hot(s.adult) || hot(s.violence)));
 }
 async function moderateStill(buf) {
   const [result] = await visionClient().safeSearchDetection({ image: { content: buf } });
@@ -261,7 +285,8 @@ async function strike(uid, d) {
 
 function allowedRedirect(redirectUri) {
   if (/^https:\/\/[a-p]{32}\.chromiumapp\.org\/?$/.test(redirectUri)) return true;
-  if (/^https:\/\/[0-9a-f-]{36}\.extensions\.allizom\.org\/?$/.test(redirectUri)) return true;
+  // Firefox identity redirects are a 40-char hex hash of the add-on id (not a UUID).
+  if (/^https:\/\/[0-9a-f-]{32,64}\.extensions\.allizom\.org\/?$/.test(redirectUri)) return true;
   const host = (CHECKOUT_HOST.value() || '').replace(/\/+$/, '');
   if (host && (redirectUri === `${host}/admin` || redirectUri === `${host}/admin/`)) return true;
   return false;
@@ -487,13 +512,20 @@ async function handleAnimatedBannerUpload(req, res, claims) {
 
 function transcodeWebm(inPath, outPath) {
   return new Promise((resolve, reject) => {
+    // Speed flags matter: default VP9 encoding is far slower than realtime and
+    // regularly blew the 120s function timeout on mp4 uploads (the "mp4 doesn't
+    // work" bug). realtime + cpu-used 8 + row-mt keeps a 10s clip well inside it.
     ffmpeg(inPath)
+      .inputOptions(['-t', String(ANIM_MAX_SECONDS + 1)])
       .noAudio()
       .duration(ANIM_MAX_SECONDS)
       .videoCodec('libvpx-vp9')
-      .size(`${BANNER_W}x${BANNER_H}`)
-      .autopad(false)
-      .outputOptions(['-b:v', '1M', '-crf', '34', '-pix_fmt', 'yuv420p', '-an', '-t', String(ANIM_MAX_SECONDS)])
+      .outputOptions([
+        '-b:v', '1.2M', '-crf', '34', '-pix_fmt', 'yuv420p', '-an',
+        '-t', String(ANIM_MAX_SECONDS),
+        '-deadline', 'realtime', '-cpu-used', '8', '-row-mt', '1', '-threads', '4',
+        '-r', '30',
+      ])
       .videoFilters(`scale=${BANNER_W}:${BANNER_H}:force_original_aspect_ratio=increase,crop=${BANNER_W}:${BANNER_H}`)
       .format('webm')
       .on('end', () => resolve())
@@ -620,6 +652,173 @@ async function trackActive(uid, version) {
     if (firstSeen) await recordEvent('install', { uid });
     if (!prev || prev.lastDay !== day) await recordEvent('active', { uid, day });
   } catch (e) { console.error('trackActive failed', e); }
+}
+
+// Anonymous presence heartbeat — counts distinct devices on the site, no login.
+// The client sends a random per-install device id; we store its lastSeen under
+// presence/{deviceId}. "active" = distinct devices seen in the last window.
+const ACTIVE_WINDOW_MS = 15 * 60 * 1000;
+const QUEUE_WINDOW_MS = 45 * 1000;
+async function handleBeat(req, res) {
+  const raw = (req.body && req.body.d) || '';
+  const dev = String(raw).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+  if (dev.length < 8) return bad(res, 400, 'bad device id');
+
+  // Optional JWT: signed-in users register their SITE identity (name) so other
+  // clients can resolve "name on screen → discord id" even when the player has
+  // no custom avatar (default pfp carries no id). Identity comes ONLY from the
+  // verified token sub — the body can never claim someone else's id.
+  const claims = auth(req);
+  const siteName = String((req.body && req.body.sn) || '').slice(0, 40).trim();
+  const inQueue = !!(req.body && req.body.q);
+
+  const pres = {
+    lastSeen: admin.firestore.FieldValue.serverTimestamp(),
+    v: (req.body && String(req.body.v || '').slice(0, 20)) || null,
+    q: inQueue,
+    uid: claims ? String(claims.sub) : null,
+    name: claims && siteName ? siteName : null,
+  };
+  const writes = [db.doc(`presence/${dev}`).set(pres, { merge: true })];
+  if (claims && siteName) {
+    writes.push(db.doc(`profiles/${claims.sub}`).set({
+      siteName,
+      siteNameLower: siteName.toLowerCase(),
+      siteSeenAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }));
+  }
+  await Promise.all(writes);
+
+  // Keep the public realtime queue doc fresh so listening clients get pushed
+  // updates instantly (no polling). Only recompute when this beat is queue-
+  // relevant (a signed-in user reporting a queue state) or occasionally to age
+  // out stale entries — this bounds the extra reads sanely.
+  const queueRelevant = claims && (inQueue || pres.name);
+  await maybeRefreshQueueDoc(queueRelevant);
+  return ok(res, {});
+}
+
+// The realtime queue doc (public/queue) mirrors the /stats queue list. It is
+// rebuilt from presence at most once per QUEUE_DOC_MIN_MS, or immediately when
+// a queue-relevant beat arrives — whichever keeps it live without hammering
+// Firestore. Written only when the membership actually changed.
+const QUEUE_DOC_MIN_MS = 4000;
+let _queueDoc = { at: 0, sig: null, building: false };
+async function maybeRefreshQueueDoc(force) {
+  const now = Date.now();
+  if (_queueDoc.building) return;
+  if (!force && now - _queueDoc.at < QUEUE_DOC_MIN_MS) return;
+  _queueDoc.building = true;
+  try {
+    const qSince = admin.firestore.Timestamp.fromMillis(now - QUEUE_WINDOW_MS);
+    const snap = await db.collection('presence')
+      .where('lastSeen', '>=', qSince).limit(200).get();
+    const users = [];
+    const seen = new Set();
+    snap.forEach((doc) => {
+      const d = doc.data() || {};
+      if (d.q && d.uid && d.name && !seen.has(d.uid)) {
+        seen.add(d.uid);
+        users.push({ id: String(d.uid), name: String(d.name).slice(0, 40) });
+      }
+    });
+    users.sort((a, b) => a.name.localeCompare(b.name));
+    const trimmed = users.slice(0, 25);
+    const sig = trimmed.map((u) => u.id).join(',');
+    _queueDoc.at = now;
+    if (sig !== _queueDoc.sig) {
+      _queueDoc.sig = sig;
+      await db.doc('public/queue').set({
+        users: trimmed,
+        count: trimmed.length,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+  } catch (e) {
+    console.error('queue doc refresh failed', e);
+  } finally {
+    _queueDoc.building = false;
+  }
+}
+
+// Per-user extension settings backup, so a manual reinstall can restore them.
+// Stored in an isolated collection (never merged into the profile doc, never
+// served publicly) as an opaque size-capped JSON blob owned by claims.sub.
+const SETTINGS_MAX_BYTES = 32768;
+async function handleGetSettings(req, res, claims) {
+  const snap = await db.doc(`settings/${claims.sub}`).get();
+  if (!snap.exists) return ok(res, { settings: null, updatedAtMs: null });
+  const d = snap.data() || {};
+  return ok(res, { settings: d.data || null, updatedAtMs: d.updatedAtMs || null });
+}
+async function handleSaveSettings(req, res, claims) {
+  const s = req.body && req.body.settings;
+  if (!s || typeof s !== 'object' || Array.isArray(s)) return bad(res, 400, 'settings object required');
+  let raw;
+  try { raw = JSON.stringify(s); } catch { return bad(res, 400, 'bad settings'); }
+  if (raw.length > SETTINGS_MAX_BYTES) return bad(res, 413, 'settings too large');
+  await db.doc(`settings/${claims.sub}`).set({
+    data: JSON.parse(raw),
+    updatedAtMs: Date.now(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  return ok(res, {});
+}
+
+// Resolve on-screen site names → discord ids for players registered with CSR+.
+// Public + cached; returns ids only (cosmetics then come from /pub/profiles).
+async function handlePublicLookup(req, res) {
+  const names = String(req.query.names || '').split(',')
+    .map((s) => s.trim().toLowerCase()).filter((s) => s && s.length <= 40).slice(0, 25);
+  if (!names.length) return bad(res, 400, 'names required');
+  const out = {};
+  for (let i = 0; i < names.length; i += 10) {
+    const chunk = names.slice(i, i + 10);
+    const snap = await db.collection('profiles').where('siteNameLower', 'in', chunk).get();
+    snap.forEach((doc) => {
+      const d = doc.data() || {};
+      if (d.siteNameLower) out[d.siteNameLower] = doc.id;
+    });
+  }
+  res.set('Cache-Control', 'public, max-age=120');
+  return ok(res, { ids: out });
+}
+
+// Real user counts for the extension's live-users widget.
+// total  = number of profile docs.
+// active = presence docs seen in the last ACTIVE_WINDOW_MS.
+let _statsCache = { at: 0, val: null };
+async function handlePublicStats(req, res) {
+  const now = Date.now();
+  if (_statsCache.val && now - _statsCache.at < 8e3) {
+    res.set('Cache-Control', 'public, max-age=8');
+    return ok(res, _statsCache.val);
+  }
+  const since = admin.firestore.Timestamp.fromMillis(now - ACTIVE_WINDOW_MS);
+  const [totalAgg, activeSnap] = await Promise.all([
+    db.collection('profiles').count().get(),
+    db.collection('presence').where('lastSeen', '>=', since).limit(500).get(),
+  ]);
+  // "In queue" list = signed-in CSR+ users whose latest beat said q:true recently.
+  const qSince = now - QUEUE_WINDOW_MS;
+  const queue = [];
+  const seen = new Set();
+  activeSnap.forEach((doc) => {
+    const d = doc.data() || {};
+    const t = d.lastSeen && d.lastSeen.toMillis ? d.lastSeen.toMillis() : 0;
+    if (d.q && d.uid && d.name && t >= qSince && !seen.has(d.uid)) {
+      seen.add(d.uid);
+      queue.push({ id: String(d.uid), name: String(d.name).slice(0, 40) });
+    }
+  });
+  const val = {
+    total: totalAgg.data().count || 0,
+    active: activeSnap.size || 0,
+    queue: queue.slice(0, 25),
+  };
+  _statsCache = { at: now, val };
+  res.set('Cache-Control', 'public, max-age=8');
+  return ok(res, val);
 }
 
 async function dcSendReport(content, media, priority) {
@@ -934,6 +1133,21 @@ exports.api = onRequest({
       if (!(await rateLimit(`ip_${ip.split(',')[0].trim()}_pub`, 300))) return bad(res, 429, 'slow down');
       return await handlePublicProfiles(req, res);
     }
+    if (req.method === 'GET' && p === '/stats') {
+      const ip = req.get('x-forwarded-for') || req.ip || 'anon';
+      if (!(await rateLimit(`ip_${ip.split(',')[0].trim()}_stats`, 300))) return bad(res, 429, 'slow down');
+      return await handlePublicStats(req, res);
+    }
+    if (req.method === 'POST' && p === '/beat') {
+      const ip = req.get('x-forwarded-for') || req.ip || 'anon';
+      if (!(await rateLimit(`ip_${ip.split(',')[0].trim()}_beat`, 600))) return bad(res, 429, 'slow down');
+      return await handleBeat(req, res);
+    }
+    if (req.method === 'GET' && p === '/pub/lookup') {
+      const ip = req.get('x-forwarded-for') || req.ip || 'anon';
+      if (!(await rateLimit(`ip_${ip.split(',')[0].trim()}_lookup`, 300))) return bad(res, 429, 'slow down');
+      return await handlePublicLookup(req, res);
+    }
     if (req.method === 'POST' && p === '/auth/exchange') return await handleAuthExchange(req, res);
     if (req.method === 'POST' && p === '/tg/webhook') return await handleTelegramWebhook(req, res);
     if (req.method === 'GET' && p === '/config') {
@@ -960,6 +1174,11 @@ exports.api = onRequest({
     if (req.method === 'POST' && p === '/me/banner/animated') return await handleAnimatedBannerUpload(req, res, claims);
     if (req.method === 'POST' && p === '/report') return await handleReport(req, res, claims);
     if (req.method === 'GET' && p === '/me/reports') return await handleMyReports(req, res, claims);
+    if (req.method === 'GET' && p === '/me/settings') return await handleGetSettings(req, res, claims);
+    if (req.method === 'POST' && p === '/me/settings') {
+      if (!(await rateLimit(`${claims.sub}_settings`, 120))) return bad(res, 429, 'slow down');
+      return await handleSaveSettings(req, res, claims);
+    }
     if (req.method === 'POST' && p === '/track') { trackActive(claims.sub, (req.body && req.body.v) || null).catch(() => {}); return ok(res, {}); }
 
     if (p.startsWith('/admin/')) {

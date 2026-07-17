@@ -38,10 +38,13 @@
         <button class="nav-i" data-tab="about"><span class="ni-ic">⌬</span><span class="ni-tx">About</span><span class="ni-no">10</span></button>
       </nav>
 
-      <div class="live-users" id="live-users" title="People using CSR+">
+      <div class="live-users" id="live-users" title="CSR+ users — active now / total">
         <span class="lu-dot"></span>
+        <span class="lu-num" id="lu-active">—</span>
+        <span class="lu-lbl">active</span>
+        <span class="lu-sep">/</span>
         <span class="lu-num" id="lu-num">—</span>
-        <span class="lu-lbl">users</span>
+        <span class="lu-lbl">total</span>
       </div>
       <div class="side-foot">
         <span class="status-dot"></span>
@@ -101,6 +104,10 @@
         </div>
         <div class="set" data-key="autoInvite">
           <div class="set-txt"><div class="set-t">Accept party invites</div><div class="set-d">Only from people on your Friends list. Empty list accepts everyone.</div></div>
+          <span class="sw"><span class="sw-dot"></span></span>
+        </div>
+        <div class="set set-child" data-key="inviteWhileInParty" id="invite-in-party">
+          <div class="set-txt"><div class="set-t">Accept while in a party</div><div class="set-d">Also auto-accept invites when you are already in a party. Off keeps your current party safe.</div></div>
           <span class="sw"><span class="sw-dot"></span></span>
         </div>
 

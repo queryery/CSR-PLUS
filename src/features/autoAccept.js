@@ -99,8 +99,13 @@
     }
     if (cfg.autoQueue) clickOnce(findPrimaryCTA('Accept'), 'Accept Queue');
     if (cfg.autoInvite) {
-      for (const t of inviteToasts()) {
-        if (inviteAllowed(t.name, cfg)) clickOnce(t.btn, `Invite: ${t.name}`);
+      // While already in a party, invites are ignored unless the child setting
+      // "accept invites while in a party" is enabled (off by default).
+      const blocked = !cfg.inviteWhileInParty && CSRP.inParty && CSRP.inParty();
+      if (!blocked) {
+        for (const t of inviteToasts()) {
+          if (inviteAllowed(t.name, cfg)) clickOnce(t.btn, `Invite: ${t.name}`);
+        }
       }
     }
   }

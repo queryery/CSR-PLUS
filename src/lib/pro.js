@@ -110,6 +110,79 @@
   const uploadBanner = (dataUrl) => authed('/me/banner', { method: 'POST', body: { image: dataUrl }, timeoutMs: 90000 });
   const uploadAnimatedBanner = (dataUrl) => authed('/me/banner/animated', { method: 'POST', body: { media: dataUrl }, timeoutMs: 120000 });
   const report = (payload) => authed('/report', { method: 'POST', body: payload, timeoutMs: 90000 });
+  const saveSettings = (settings) => authed('/me/settings', { method: 'POST', body: { settings } });
+  const loadSettings = () => authed('/me/settings');
+
+  // Anonymous presence heartbeat — no sign-in needed. A random per-install id is
+  // stored locally and sent to the public /beat endpoint so "active" reflects
+  // everyone on the site, not just signed-in users. Best-effort, silent.
+  const DEV_KEY = 'csrpDeviceId';
+  function deviceId() {
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.get([DEV_KEY], (d) => {
+          let id = d && d[DEV_KEY];
+          if (!id) {
+            id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g, '');
+            try { chrome.storage.local.set({ [DEV_KEY]: id }); } catch { }
+          }
+          resolve(id);
+        });
+      } catch { resolve(null); }
+    });
+  }
+  // opts: { name: site display name, inQueue: boolean }. When signed in the JWT
+  // rides along so the backend can register siteName → discord id (that mapping
+  // is how banners resolve for players whose default avatar carries no id).
+  const track = async (opts = {}) => {
+    const d = await deviceId();
+    if (!d) return null;
+    const v = (chrome.runtime.getManifest && chrome.runtime.getManifest().version) || null;
+    const s = await loadSession();
+    const token = tokenValid(s) ? s.token : null;
+    const body = { d, v };
+    if (opts.name) body.sn = String(opts.name).slice(0, 40);
+    if (opts.inQueue) body.q = true;
+    return call('/beat', { method: 'POST', body, token, timeoutMs: 10000 });
+  };
+
+  const stats = () => call('/stats', { timeoutMs: 10000 });
+
+  // Site-name → discord-id resolution for players we can't identify from their
+  // avatar URL. Cached; unresolved names are cached as null to avoid re-asking.
+  const nameMem = new Map();
+  const nameInflight = new Map();
+  const NAME_TTL = 5 * 60 * 1000;
+  async function lookupNames(names) {
+    const uniq = [...new Set((names || []).map((n) => String(n || '').trim().toLowerCase())
+      .filter((n) => n && n.length <= 40))];
+    const out = {};
+    const missing = [];
+    for (const n of uniq) {
+      const e = nameMem.get(n);
+      if (e && Date.now() - e.t < NAME_TTL) out[n] = e.v;
+      else missing.push(n);
+    }
+    if (!missing.length) return out;
+    for (let i = 0; i < missing.length; i += 25) {
+      const chunk = missing.slice(i, i + 25);
+      const key = chunk.join(',');
+      let p = nameInflight.get(key);
+      if (!p) {
+        p = call('/pub/lookup?names=' + encodeURIComponent(key)).then((resp) => {
+          nameInflight.delete(key);
+          const ids = (resp.ok && resp.data && resp.data.ids) || {};
+          const now = Date.now();
+          for (const n of chunk) nameMem.set(n, { t: now, v: ids[n] || null });
+          return ids;
+        });
+        nameInflight.set(key, p);
+      }
+      const ids = await p;
+      for (const n of chunk) out[n] = ids[n] || null;
+    }
+    return out;
+  }
 
   const mem = new Map();
   const inflight = new Map();
@@ -158,7 +231,7 @@
 
   CSRP.pro = {
     signIn, signOut, isSignedIn, currentUser, ensureToken,
-    getMe, getMyReports, saveCustomization, uploadBanner, uploadAnimatedBanner, report,
-    getPublicProfiles, invalidateProfile,
+    getMe, getMyReports, saveCustomization, uploadBanner, uploadAnimatedBanner, report, track,
+    getPublicProfiles, invalidateProfile, stats, lookupNames, saveSettings, loadSettings,
   };
 })();

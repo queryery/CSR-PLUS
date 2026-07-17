@@ -24,6 +24,18 @@
         return { el: p, text: m ? `connect ${m[1]}` : t };
       }
     }
+
+    // DOM shows "Hidden" and the steam:// link is gone on newer site builds —
+    // fall back to the live match data from the socket hook.
+    const md = CSRP._matchData;
+    if (md && md.server) {
+      const m = String(md.server).match(IP_RE);
+      if (m) {
+        const monoEl = document.querySelector('p.font-mono, .font-mono');
+        if (monoEl) return { el: monoEl, text: `connect ${m[1]}` };
+        return { el: null, text: `connect ${m[1]}` };
+      }
+    }
     return null;
   }
 
@@ -88,11 +100,11 @@
     if (!found) return;
     const text = found.text;
 
-
-    armClickToCopy(found.el, text);
-
-    const box = found.el.closest('.border')?.parentElement;
-    if (box) armClickToCopy(box, text);
+    if (found.el) {
+      armClickToCopy(found.el, text);
+      const box = found.el.closest('.border')?.parentElement;
+      if (box) armClickToCopy(box, text);
+    }
 
     if (text === lastCopied) return;
     lastCopied = text;

@@ -2834,7 +2834,13 @@ div.rounded-2xl.csrp-lobby-owner {
   white-space: nowrap;
   z-index: 4
 }
-.csrp-kick-native {
+div.rounded-2xl.csrp-lobby-card,
+div.rounded-2xl.csrp-kick-host,
+div.rounded-2xl.csrp-ready {
+  position: relative
+}
+.csrp-kick-native,
+.csrp-ready-native {
   opacity: 0!important;
   pointer-events: none!important
 }
@@ -2842,7 +2848,7 @@ div.rounded-2xl.csrp-lobby-owner {
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 6;
+  z-index: 30;
   width: 22px;
   height: 22px;
   display: grid;
@@ -2874,6 +2880,10 @@ div.rounded-2xl:hover > .csrp-kick,
 }
 .csrp-kick:active {
   transform: scale(.9)
+}
+.csrp-kick[disabled] {
+  opacity: .15!important;
+  pointer-events: none
 }
 .csrp-ready-tag {
   position: absolute;

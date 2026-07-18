@@ -103,7 +103,7 @@
     lobbySig = "";
     clearCenterOrder();
     document.querySelectorAll(".csrp-ready-tag, .csrp-kick").forEach(n => n.remove());
-    document.querySelectorAll(".csrp-kick-native").forEach(n => n.classList.remove("csrp-kick-native"));
+    document.querySelectorAll(".csrp-kick-native, .csrp-ready-native").forEach(n => n.classList.remove("csrp-kick-native", "csrp-ready-native"));
     document.querySelectorAll("." + LOBBY_CLASSES.join(", .")).forEach(n => {
       n.classList.remove(...LOBBY_CLASSES);
       n.style.cursor = "";
@@ -163,15 +163,13 @@
     }
     if (ownerSlot) centerOwner(ownerSlot); else clearCenterOrder();
   }
-  function slotOwnText(slot) {
-    let t = slot.textContent || "";
-    slot.querySelectorAll(".csrp-ready-tag").forEach(n => {
-      t = t.replace(n.textContent || "", "");
-    });
-    return t;
-  }
   function markReady(slot) {
-    const ready = !!(slot.querySelector('.text-green-500, .bg-green-500, svg[class*="green"], [class*="text-green"]') || /\bready\b/i.test(slotOwnText(slot)));
+    const check = slot.querySelector("svg.text-green-500");
+    const ready = !!check;
+    if (check) {
+      const holder = check.closest("div.absolute");
+      if (holder && holder !== slot) holder.classList.add("csrp-ready-native");
+    }
     slot.classList.toggle("csrp-ready", ready);
     let tag = slot.querySelector(":scope > .csrp-ready-tag");
     if (ready && !tag) {
@@ -184,14 +182,9 @@
     }
   }
   function findNativeKick(slot) {
-    for (const b of slot.querySelectorAll("button")) {
-      if (b.classList.contains("csrp-kick")) continue;
-      if (b.querySelector("img")) continue;
-      if (b.offsetWidth > 48 || b.offsetHeight > 48) continue;
-      const t = (b.textContent || "").trim();
-      if (t && !/^[✕×✖xX]$/.test(t)) continue;
-      if (!t && !b.querySelector("svg")) continue;
-      return b;
+    for (const d of slot.querySelectorAll("div.absolute.right-2.top-2")) {
+      if (d.classList.contains("csrp-ready-native")) continue;
+      if (d.querySelector("svg") && !d.querySelector("svg.text-green-500")) return d;
     }
     return null;
   }
@@ -221,6 +214,7 @@
     }
     native.classList.add("csrp-kick-native");
     slot.classList.add("csrp-kick-host");
+    if (proxy) proxy.disabled = !native.classList.contains("cursor-pointer");
     if (!proxy) {
       proxy = h("button", {
         class: "csrp-kick",
@@ -234,6 +228,7 @@
         }
       });
       proxy.innerHTML = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg>';
+      proxy.disabled = !native.classList.contains("cursor-pointer");
       slot.appendChild(proxy);
     }
   }

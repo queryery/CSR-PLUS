@@ -498,3 +498,7 @@ main {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent)
 }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent
+}

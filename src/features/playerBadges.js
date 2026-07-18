@@ -56,6 +56,21 @@
     }
     return null;
   }
+  const LOBBY_AV = 'img[alt="Avatar"][width="72"]';
+  const LOBBY_CLASSES = [ "csrp-lobby-card", "csrp-lobby-owner", "csrp-lobby-member", "csrp-ready", "csrp-kick-host" ];
+  let lobbySig = "";
+  function lobbySlots() {
+    const out = [];
+    for (const img of document.querySelectorAll("div.rounded-2xl " + LOBBY_AV)) {
+      const slot = img.closest("div.rounded-2xl");
+      if (slot && !out.includes(slot)) out.push(slot);
+    }
+    return out;
+  }
+  function slotName(slot) {
+    const el = slot.querySelector("span");
+    return el ? (el.textContent || "").trim() : "";
+  }
   function centerOwner(ownerSlot) {
     let ownerWrap = ownerSlot;
     while (ownerWrap && ownerWrap.parentElement && !(ownerWrap.parentElement.classList.contains("flex") && ownerWrap.parentElement.children.length >= 3)) {
@@ -69,6 +84,7 @@
     const mid = Math.floor((n - 1) / 2);
     let side = 0;
     items.forEach(it => {
+      it.dataset.csrpOrdered = "1";
       if (it === ownerWrap) {
         it.style.order = String(mid);
         return;
@@ -78,67 +94,147 @@
     });
   }
   function clearCenterOrder() {
-    document.querySelectorAll('[style*="order"]').forEach(el => {
-      if (el.closest("div.rounded-2xl") || el.querySelector && el.querySelector("div.rounded-2xl")) el.style.order = "";
+    document.querySelectorAll('[data-csrp-ordered="1"]').forEach(el => {
+      el.style.order = "";
+      delete el.dataset.csrpOrdered;
     });
   }
+  function resetLobby() {
+    lobbySig = "";
+    clearCenterOrder();
+    document.querySelectorAll(".csrp-ready-tag, .csrp-kick").forEach(n => n.remove());
+    document.querySelectorAll(".csrp-kick-native").forEach(n => n.classList.remove("csrp-kick-native"));
+    document.querySelectorAll("." + LOBBY_CLASSES.join(", .")).forEach(n => {
+      n.classList.remove(...LOBBY_CLASSES);
+      n.style.cursor = "";
+      delete n.dataset.csrpLobbyClick;
+      delete n.dataset.csrpId;
+    });
+  }
+  function onSlotClick(e) {
+    const slot = e.currentTarget;
+    if (!slot.classList.contains("csrp-lobby-card")) return;
+    const id = slot.dataset.csrpId;
+    if (!id) return;
+    const path = e.composedPath ? e.composedPath() : [ e.target ];
+    for (const el of path) {
+      if (el === slot) break;
+      if (el.nodeType !== 1) continue;
+      if (el.matches && el.matches(INTERACTIVE)) return;
+      if (el.tagName === "BUTTON" || el.tagName === "A" || el.tagName === "SVG" || el.tagName === "PATH") return;
+    }
+    CSRP.sound?.play("click");
+    CSRP.notes?.openProfile(id);
+  }
   function tickLobby() {
-    for (const n of document.querySelectorAll("div.rounded-2xl.csrp-lobby-card")) {
-      if (!n.querySelector('img[alt="Avatar"][width="72"]')) {
-        n.classList.remove("csrp-lobby-card", "csrp-lobby-owner", "csrp-lobby-member");
-        n.style.cursor = "";
-      }
+    const slots = lobbySlots();
+    if (!slots.length) {
+      if (lobbySig) resetLobby();
+      return;
     }
     const owner = lobbyOwnerName();
+    const sig = slots.map(slotName).join("|") + "@" + (owner || "");
+    if (sig !== lobbySig) {
+      resetLobby();
+      lobbySig = sig;
+    }
     let ownerSlot = null;
-    for (const img of document.querySelectorAll('div.rounded-2xl img[alt="Avatar"][width="72"]')) {
-      const slot = img.closest("div.rounded-2xl");
-      if (!slot) continue;
+    for (const slot of slots) {
+      const img = slot.querySelector(LOBBY_AV);
+      const nm = slotName(slot).toLowerCase();
+      if (getComputedStyle(slot).position === "static") slot.style.position = "relative";
       if (owner) {
-        const nameEl = slot.querySelector("span");
-        const nm = nameEl ? (nameEl.textContent || "").trim().toLowerCase() : "";
         const isOwner = !!nm && nm === owner;
         slot.classList.toggle("csrp-lobby-owner", isOwner);
-        slot.classList.toggle("csrp-lobby-member", !!nm && nm !== owner);
+        slot.classList.toggle("csrp-lobby-member", !!nm && !isOwner);
         if (isOwner) ownerSlot = slot;
       }
       markReady(slot);
+      dressKick(slot);
       const id = CSRP.dom.idFromAvatar(img) || CSRP.profileCustom?.idForSlot?.(slot);
       if (!id) continue;
+      slot.dataset.csrpId = id;
+      slot.classList.add("csrp-lobby-card");
+      slot.style.cursor = "pointer";
       if (slot.dataset.csrpLobbyClick !== "1") {
         slot.dataset.csrpLobbyClick = "1";
-        slot.classList.add("csrp-lobby-card");
-        slot.style.cursor = "pointer";
-        slot.addEventListener("click", e => {
-          if (!slot.classList.contains("csrp-lobby-card")) return;
-          const path = e.composedPath ? e.composedPath() : [ e.target ];
-          for (const el of path) {
-            if (el === slot) break;
-            if (el.nodeType !== 1) continue;
-            if (el.matches && el.matches(INTERACTIVE)) return;
-            if (el.tagName === "BUTTON" || el.tagName === "A" || el.tagName === "SVG" || el.tagName === "PATH") return;
-          }
-          CSRP.sound?.play("click");
-          CSRP.notes?.openProfile(id);
-        });
-      } else {
-        slot.classList.add("csrp-lobby-card");
+        slot.addEventListener("click", onSlotClick);
       }
     }
     if (ownerSlot) centerOwner(ownerSlot); else clearCenterOrder();
   }
+  function slotOwnText(slot) {
+    let t = slot.textContent || "";
+    slot.querySelectorAll(".csrp-ready-tag").forEach(n => {
+      t = t.replace(n.textContent || "", "");
+    });
+    return t;
+  }
   function markReady(slot) {
-    const ready = !!(slot.querySelector(".text-green-500, .bg-green-500") || /\bready\b/i.test(slot.textContent || "") || slot.querySelector('svg[class*="green"], [class*="text-green"]'));
+    const ready = !!(slot.querySelector('.text-green-500, .bg-green-500, svg[class*="green"], [class*="text-green"]') || /\bready\b/i.test(slotOwnText(slot)));
     slot.classList.toggle("csrp-ready", ready);
     let tag = slot.querySelector(":scope > .csrp-ready-tag");
     if (ready && !tag) {
-      tag = document.createElement("span");
-      tag.className = "csrp-ready-tag";
-      tag.textContent = "Ready";
-      if (getComputedStyle(slot).position === "static") slot.style.position = "relative";
+      tag = h("span", {
+        class: "csrp-ready-tag"
+      }, "Ready");
       slot.appendChild(tag);
     } else if (!ready && tag) {
       tag.remove();
+    }
+  }
+  function findNativeKick(slot) {
+    for (const b of slot.querySelectorAll("button")) {
+      if (b.classList.contains("csrp-kick")) continue;
+      if (b.querySelector("img")) continue;
+      if (b.offsetWidth > 48 || b.offsetHeight > 48) continue;
+      const t = (b.textContent || "").trim();
+      if (t && !/^[✕×✖xX]$/.test(t)) continue;
+      if (!t && !b.querySelector("svg")) continue;
+      return b;
+    }
+    return null;
+  }
+  function pressNativeKick(slot) {
+    const native = findNativeKick(slot);
+    if (!native) return;
+    native.dispatchEvent(new MouseEvent("pointerdown", {
+      bubbles: true
+    }));
+    native.dispatchEvent(new MouseEvent("mousedown", {
+      bubbles: true
+    }));
+    native.dispatchEvent(new MouseEvent("mouseup", {
+      bubbles: true
+    }));
+    native.click();
+    CSRP.sound?.play("cancel");
+  }
+  function dressKick(slot) {
+    const native = findNativeKick(slot);
+    let proxy = slot.querySelector(":scope > .csrp-kick");
+    if (!native) {
+      if (proxy) proxy.remove();
+      slot.classList.remove("csrp-kick-host");
+      slot.querySelectorAll(".csrp-kick-native").forEach(n => n.classList.remove("csrp-kick-native"));
+      return;
+    }
+    native.classList.add("csrp-kick-native");
+    slot.classList.add("csrp-kick-host");
+    if (!proxy) {
+      proxy = h("button", {
+        class: "csrp-kick",
+        type: "button",
+        title: "Kick from group",
+        "aria-label": "Kick from group",
+        onclick: e => {
+          e.preventDefault();
+          e.stopPropagation();
+          pressNativeKick(slot);
+        }
+      });
+      proxy.innerHTML = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg>';
+      slot.appendChild(proxy);
     }
   }
   async function decorate(card) {
@@ -204,6 +300,7 @@
   CSRP.playerBadges = {
     tick,
     reset,
+    resetLobby,
     getAgg
   };
 })();

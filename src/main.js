@@ -76,11 +76,12 @@
     let onPlay = false;
     for (const btn of document.querySelectorAll("button.rounded-full.bg-theme-primary.px-12")) {
       const t = (btn.textContent || "").trim();
-      if (/join queue|leave queue|searching|in queue|matchmaking|\d{1,2}:\d{2}/i.test(t)) {
+      if (/join queue|leave queue|searching|in queue|matchmaking|ready|\d{1,2}:\d{2}/i.test(t)) {
         onPlay = true;
         break;
       }
     }
+    if (!onPlay && document.querySelector('div.rounded-2xl img[alt="Avatar"][width="72"]')) onPlay = true;
     document.documentElement.classList.toggle("csrp-play", onPlay);
     if (onPlay) document.documentElement.classList.toggle("csrp-in-queue", !!CSRP._inQueue); else document.documentElement.classList.remove("csrp-in-queue");
   }
@@ -121,10 +122,7 @@
       document.querySelectorAll('div.grid.grid-cols-5.items-center[style*="display"]').forEach(r => {
         r.style.display = "";
       });
-      document.querySelectorAll(".csrp-lobby-card").forEach(n => {
-        n.classList.remove("csrp-lobby-card");
-        n.style.cursor = "";
-      });
+      CSRP.playerBadges.resetLobby?.();
       CSRP.profileCustom?.cleanup();
       document.documentElement.classList.remove("csrp-play", "csrp-in-queue");
       return;

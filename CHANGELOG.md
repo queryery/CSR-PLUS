@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.1.2 — Lobby fixed & polished, Firefox fixes
+
+**Lobby — works in anyone's party, cleans up after itself**
+- The tactical lobby style no longer vanishes when you join **someone else's**
+  party. It was keyed to the Join Queue button, which only the leader has —
+  the lobby itself is now the signal, so members get the full look too.
+- **New kick control**: the native ✕ is replaced by a clean cut-corner button
+  pinned to the card's top-left corner — it never sits on top of the avatar or
+  the ready tag, brightens on hover and turns red when armed. Clicking it
+  drives the real site button underneath, so kicking always works.
+- **Ready status fixed**: the old detector was fooled by its own READY tag, so
+  a card could stay "ready" forever. Ready state now tracks the site's real
+  indicator and clears the moment a player unreadies.
+- **No more broken lobbies**: whenever the party changes — someone joins,
+  leaves, or you get kicked — every CSR+ decoration (leader/member styling,
+  card ordering, ready tags, kick buttons, click targets) is wiped and rebuilt
+  from scratch. Getting kicked also clears the stored party data, so nothing
+  stale leaks into the next lobby.
+- Card clicks now read the player id live instead of capturing it once, so a
+  reshuffled lobby can't open the wrong profile.
+
+**Firefox**
+- The popup no longer renders cropped: explicit page sizing plus proper
+  scroll constraints, and thin themed scrollbars (Firefox ignores WebKit
+  scrollbar styling, so it was drawing fat default bars into the layout).
+- Scrolling fixed on the popup and all CSR+ pages (profile, inventory,
+  trades).
+
 ## 0.1.1 — Tactical Play tab, live queue, effects remade & fixes
 
 **Play tab — full restructure (Valorant × CS2 look)**

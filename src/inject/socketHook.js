@@ -129,6 +129,7 @@
     });
   }
   let myIdSent = false;
+  let hadParty = false;
   function emit() {
     const fiber = findRootFiber();
     if (!fiber) return;
@@ -149,8 +150,18 @@
     }
     const party = readPartyData(fiber);
     if (party) {
+      hadParty = party.size >= 2;
       window.dispatchEvent(new CustomEvent("csrp:partydata", {
         detail: party
+      }));
+    } else if (hadParty) {
+      hadParty = false;
+      window.dispatchEvent(new CustomEvent("csrp:partydata", {
+        detail: {
+          size: 1,
+          name: null,
+          cleared: true
+        }
       }));
     }
   }

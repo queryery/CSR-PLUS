@@ -96,7 +96,7 @@ const DEFAULT_CONFIG = {
   minVersion: "0.1.1",
   updateRequired: true,
   updateUrl: "https://github.com/queryery/CSR-PLUS/releases/latest",
-  updateMessage: "CSR+ 0.1.1 is here — a redesigned Play tab, a live in-queue list, remade banner effects and a bunch of fixes. Update to keep using CSR+.",
+  updateMessage: "CSR+ 0.1.2 is here — the lobby now stays styled in any party, a clean kick control, solid ready states and Firefox fixes. Update to keep using CSR+.",
   premium: {
     nameStyles: [ "rainbow", "glitch", "metal" ],
     cardFlairs: [ "holo", "aurora" ],

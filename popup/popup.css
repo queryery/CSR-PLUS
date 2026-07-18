@@ -38,7 +38,14 @@
 * {
   box-sizing: border-box;
   margin: 0;
-  padding: 0
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent
+}
+html {
+  width: 500px;
+  height: 470px;
+  overflow: hidden
 }
 body {
   width: 500px;
@@ -220,6 +227,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   background: linear-gradient(180deg,var(--bg-2),var(--panel));
   border-right: 1px solid var(--line)
 }
@@ -414,6 +422,8 @@ body {
 }
 .content {
   overflow-y: auto;
+  min-height: 0;
+  max-height: 470px;
   padding: 18px 20px 24px;
   position: relative
 }

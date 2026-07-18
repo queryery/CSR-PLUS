@@ -2826,9 +2826,71 @@ div.rounded-2xl.csrp-lobby-owner {
   padding: 2px 8px;
   border-radius: 2px;
   pointer-events: none;
-  color: #061;
-  background: rgba(86,214,138,.9);
-  text-transform: uppercase
+  color: #04140a;
+  background: linear-gradient(180deg,#63e29a,#3fbf76);
+  box-shadow: 0 0 10px rgba(86,214,138,.4);
+  clip-path: polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 4
+}
+.csrp-kick-native {
+  opacity: 0!important;
+  pointer-events: none!important
+}
+.csrp-kick {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 6;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 3px;
+  background: rgba(10,11,14,.82);
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  opacity: .45;
+  clip-path: polygon(0 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%);
+  transition: opacity .18s,background .18s,border-color .18s,color .18s,box-shadow .22s,transform .14s
+}
+.csrp-kick svg {
+  width: 10px;
+  height: 10px;
+  display: block
+}
+div.rounded-2xl:hover > .csrp-kick,
+.csrp-kick:focus-visible {
+  opacity: 1
+}
+.csrp-kick:hover {
+  background: linear-gradient(180deg,#ef3b48,#cf1f2c);
+  border-color: rgba(255,255,255,.3);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(226,58,69,.5)
+}
+.csrp-kick:active {
+  transform: scale(.9)
+}
+.csrp-ready-tag {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  padding: 2px 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  color: #04140a;
+  background: linear-gradient(180deg,#63e29a,#3fbf76);
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 4
 }
 .csrp-play .mb-4.flex.w-full.flex-row.items-center.justify-between > p {
   font-family: var(--tac-mono);

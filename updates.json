@@ -15,6 +15,13 @@
           "applications": {
             "gecko": { "strict_min_version": "115.0" }
           }
+        },
+        {
+          "version": "0.1.3",
+          "update_link": "https://github.com/queryery/CSR-PLUS/releases/download/v0.1.3/csr-plus-firefox-0.1.3.xpi",
+          "applications": {
+            "gecko": { "strict_min_version": "115.0" }
+          }
         }
       ]
     }

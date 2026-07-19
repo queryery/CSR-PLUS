@@ -28,6 +28,9 @@
 - Ready tag no longer sits in the wrong place when a player has a banner.
 - Fixed the ready countdown showing a garbled time.
 - Tightened ready detection and fixed a lobby flicker.
+- When someone dodges a found match, the queue button no longer goes dark
+  and stuck on "Not available" — it keeps the queue look and shows your
+  running queue time while the server re-forms the match.
 
 **Effects**
 - Animated card effects render correctly over bright banners and look cleaner.

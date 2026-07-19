@@ -44,7 +44,7 @@
   });
   CSRP._inQueue = false;
   function detectQueue() {
-    let joinSeen = false, searchSeen = false;
+    let joinSeen = false, searchSeen = false, limboSeen = false;
     for (const btn of document.querySelectorAll("button.rounded-full.bg-theme-primary.px-12")) {
       const t = (btn.textContent || "").trim();
       if (/^join queue$/i.test(t)) {
@@ -52,8 +52,10 @@
         continue;
       }
       if (/leave queue|searching|cancel|in queue|matchmaking|\d{1,2}:\d{2}/i.test(t)) searchSeen = true;
+      else if (/not available|unavailable/i.test(t)) limboSeen = true;
     }
     if (searchSeen) return true;
+    if (limboSeen) return CSRP._inQueue;
     if (joinSeen) return false;
     return CSRP._inQueue;
   }
@@ -76,7 +78,7 @@
     let onPlay = false;
     for (const btn of document.querySelectorAll("button.rounded-full.bg-theme-primary.px-12")) {
       const t = (btn.textContent || "").trim();
-      if (/join queue|leave queue|searching|in queue|matchmaking|ready|\d{1,2}:\d{2}/i.test(t)) {
+      if (/join queue|leave queue|searching|in queue|matchmaking|ready|\d{1,2}:\d{2}/i.test(t) || (CSRP._inQueue && /not available|unavailable/i.test(t))) {
         onPlay = true;
         break;
       }
@@ -120,18 +122,49 @@
     e.stopPropagation();
     CSRP.notes?.openProfile(m[1]);
   }, true);
+  function elapsedText() {
+    const real = Math.max(0, Math.floor((Date.now() - CSRP._qStart) / 1e3));
+    return String(Math.floor(real / 60)).padStart(2, "0") + ":" + String(real % 60).padStart(2, "0");
+  }
+  function clearAllLimboClocks() {
+    document.querySelectorAll("button.csrp-q-limbo").forEach(clearLimboClock);
+  }
   function syncQueueTimer() {
-    if (!CSRP._inQueue || !CSRP._qStart) return;
+    if (!CSRP._inQueue || !CSRP._qStart) {
+      clearAllLimboClocks();
+      return;
+    }
     if (CSRP.dom.findMatchFoundModal && CSRP.dom.findMatchFoundModal()) return;
     for (const btn of document.querySelectorAll("button.rounded-full.bg-theme-primary.px-12")) {
-      const m = (btn.textContent || "").trim().match(/^(\d{1,2}):(\d{2})$/);
-      if (!m) continue;
-      const real = Math.max(0, Math.floor((Date.now() - CSRP._qStart) / 1e3));
-      if (Math.abs(+m[1] * 60 + +m[2] - real) <= 2) continue;
-      const txt = String(Math.floor(real / 60)).padStart(2, "0") + ":" + String(real % 60).padStart(2, "0");
-      const node = [ ...btn.childNodes ].find(n => n.nodeType === 3 && /\d{1,2}:\d{2}/.test(n.nodeValue));
-      if (node) node.nodeValue = node.nodeValue.replace(/\d{1,2}:\d{2}/, txt);
+      const clockEl = btn.querySelector(":scope > .csrp-q-clock");
+      const t = [ ...btn.childNodes ].filter(n => n !== clockEl).map(n => n.textContent || "").join("").trim();
+      const m = t.match(/^(\d{1,2}):(\d{2})$/);
+      if (m) {
+        clearLimboClock(btn);
+        const real = Math.max(0, Math.floor((Date.now() - CSRP._qStart) / 1e3));
+        if (Math.abs(+m[1] * 60 + +m[2] - real) <= 2) continue;
+        const node = [ ...btn.childNodes ].find(n => n.nodeType === 3 && /\d{1,2}:\d{2}/.test(n.nodeValue));
+        if (node) node.nodeValue = node.nodeValue.replace(/\d{1,2}:\d{2}/, elapsedText());
+        continue;
+      }
+      if (/not available|unavailable/i.test(t)) showLimboClock(btn); else clearLimboClock(btn);
     }
+  }
+  function showLimboClock(btn) {
+    btn.classList.add("csrp-q-limbo");
+    let clock = btn.querySelector(":scope > .csrp-q-clock");
+    if (!clock) {
+      clock = document.createElement("span");
+      clock.className = "csrp-q-clock";
+      btn.appendChild(clock);
+    }
+    clock.textContent = elapsedText();
+  }
+  function clearLimboClock(btn) {
+    if (!btn.classList.contains("csrp-q-limbo")) return;
+    btn.classList.remove("csrp-q-limbo");
+    const clock = btn.querySelector(":scope > .csrp-q-clock");
+    if (clock) clock.remove();
   }
   function fixUserLinks() {
     document.querySelectorAll('a[href^="/user/"]').forEach(a => {
@@ -161,7 +194,8 @@
   async function uiLoop() {
     if (uiBusy) return;
     if (CSRP.store.get("masterEnabled") === false) {
-      document.querySelectorAll(".csrp-badge-wrap, .csrp-tip-body, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv, #csrp-open-trades, #csrp-open-cases, #csrp-lb-search, .csrp-lb-empty, .csrp-lb-remote, .csrp-st-btn, .csrp-report-btn, .csrp-tier-badge, #csrp-queue-panel").forEach(n => n.remove());
+      document.querySelectorAll(".csrp-badge-wrap, .csrp-tip-body, .csrp-wp, .csrp-mo, .csrp-tag-chip, #csrp-watch-inv, #csrp-open-trades, #csrp-open-cases, #csrp-lb-search, .csrp-lb-empty, .csrp-lb-remote, .csrp-st-btn, .csrp-report-btn, .csrp-tier-badge, #csrp-queue-panel, .csrp-q-clock").forEach(n => n.remove());
+      document.querySelectorAll("button.csrp-q-limbo").forEach(n => n.classList.remove("csrp-q-limbo"));
       CSRP.cases.unmountOverlay();
       document.querySelectorAll('div.grid.grid-cols-5.items-center[style*="display"]').forEach(r => {
         r.style.display = "";

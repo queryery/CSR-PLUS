@@ -3188,6 +3188,35 @@ div.rounded-2xl:hover > .csrp-kick,
     background-position: 140% 0
   }
 }
+.csrp-play button.rounded-full.bg-theme-primary.px-12.csrp-q-limbo {
+  filter: none!important;
+  opacity: 1!important;
+  cursor: default!important;
+  color: transparent!important
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12.csrp-q-limbo > :not(.csrp-q-clock) {
+  visibility: hidden
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12 .csrp-q-clock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font-family: var(--tac-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  pointer-events: none
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12 .csrp-q-clock::before {
+  content: "IN QUEUE";
+  opacity: .7;
+  font-size: .72rem;
+  letter-spacing: .22em
+}
 .csrp-play .rounded-md.px-12.py-2.text-center {
   display: inline-flex;
   gap: 8px;

@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.1.3 — Free banners, video banners, queue & lobby fixes
+
+**Banners**
+- Banners are now free for everyone. No Pro or Premium needed to upload one,
+  and that includes MP4 and WebM video banners. Upload limit is 20 MB.
+- Fixed video banners not showing up. They now play on your profile, cards
+  and in the lobby, muted and looping.
+- Fixed larger video banners staying hidden on your own profile even after
+  they uploaded fine.
+- Video banners load faster and play smoother — they fully buffer up front,
+  no longer re-download on every view, and run on their own GPU layer so they
+  don't stutter or drag the card.
+
+**Queue**
+- You now stay listed as searching even when the tab is in the background.
+  Before, switching to another tab dropped you from the CSR+ queue list.
+- Opening a new tab while queued now restores your queue state and the timer.
+- Being invited to a party on another tab no longer hides you from the lobby
+  until you switch back — you show up for everyone straight away.
+- The queue list holds up through long (30+ minute) queues thanks to a
+  background heartbeat that keeps working while the tab is idle.
+
+**Lobby & match**
+- Win probability now shows on match load again, including for players on
+  default Discord avatars.
+- Ready tag no longer sits in the wrong place when a player has a banner.
+- Fixed the ready countdown showing a garbled time.
+- Tightened ready detection and fixed a lobby flicker.
+
+**Effects**
+- Animated card effects render correctly over bright banners and look cleaner.
+
+**Other**
+- Title chip is capped shorter so it can't crowd your name.
+- Smaller popup fixes.
+
 ## 0.1.2 — Lobby fixed & polished, Firefox fixes
 
 **Lobby — works in anyone's party, cleans up after itself**

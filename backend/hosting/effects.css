@@ -1,0 +1,135 @@
+/* CSR+ remote effects. Each id styles .csrp-pc-overlay.csrp-ovl-<id> (site)
+   and .pc-overlay.ovl-<id> (Studio), registered in effects.json. Keyframes
+   use the csrx- prefix. */
+
+/* Matrix rain */
+.csrp-pc-overlay.csrp-ovl-matrix,
+.pc-overlay.ovl-matrix {
+  mix-blend-mode: plus-lighter;
+}
+.csrp-pc-overlay.csrp-ovl-matrix::before,
+.pc-overlay.ovl-matrix::before,
+.csrp-pc-overlay.csrp-ovl-matrix::after,
+.pc-overlay.ovl-matrix::after {
+  content: "";
+  position: absolute;
+  inset: -55% 0;
+  background-repeat: repeat;
+  will-change: background-position;
+}
+.csrp-pc-overlay.csrp-ovl-matrix::before,
+.pc-overlay.ovl-matrix::before {
+  background-image: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--e1, #37ff8b) 92%, #fff) 0 6px,
+    color-mix(in srgb, var(--e1, #37ff8b) 55%, transparent) 6px 11px,
+    transparent 11px 30px
+  );
+  background-size: 16px 120px;
+  -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 16px);
+  mask-image: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 16px);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--e1, #37ff8b) 80%, transparent));
+  opacity: .9;
+  animation: csrxMatrixFallA 1.15s linear infinite;
+}
+.csrp-pc-overlay.csrp-ovl-matrix::after,
+.pc-overlay.ovl-matrix::after {
+  background-image: repeating-linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--e1, #37ff8b) 70%, #fff) 0 4px,
+    color-mix(in srgb, var(--e1, #37ff8b) 30%, transparent) 4px 8px,
+    transparent 8px 38px
+  );
+  background-size: 16px 150px;
+  -webkit-mask-image: repeating-linear-gradient(90deg, transparent 0 8px, #000 8px 11px, transparent 11px 16px);
+  mask-image: repeating-linear-gradient(90deg, transparent 0 8px, #000 8px 11px, transparent 11px 16px);
+  opacity: .55;
+  animation: csrxMatrixFallB 1.9s linear infinite;
+}
+@keyframes csrxMatrixFallA {
+  from { background-position: 0 0; }
+  to   { background-position: 0 120px; }
+}
+@keyframes csrxMatrixFallB {
+  from { background-position: 0 0; }
+  to   { background-position: 0 150px; }
+}
+
+/* Fireflies */
+.csrp-pc-overlay.csrp-ovl-fireflies,
+.pc-overlay.ovl-fireflies {
+  mix-blend-mode: plus-lighter;
+}
+.csrp-pc-overlay.csrp-ovl-fireflies::before,
+.pc-overlay.ovl-fireflies::before,
+.csrp-pc-overlay.csrp-ovl-fireflies::after,
+.pc-overlay.ovl-fireflies::after {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  background-repeat: repeat;
+  background-image:
+    radial-gradient(3px 3px at 18% 34%, color-mix(in srgb, var(--e1, #ffd66b) 96%, #fff) 32%, color-mix(in srgb, var(--e1, #ffd66b) 40%, transparent) 58%, transparent 74%),
+    radial-gradient(2.4px 2.4px at 64% 70%, color-mix(in srgb, var(--e1, #ffd66b) 92%, #fff) 32%, transparent 72%),
+    radial-gradient(2px 2px at 84% 26%, color-mix(in srgb, var(--e2, #b9ff6b) 92%, #fff) 32%, transparent 72%),
+    radial-gradient(2.6px 2.6px at 36% 82%, color-mix(in srgb, var(--e2, #b9ff6b) 88%, #fff) 32%, transparent 72%);
+  background-size: 240px 200px;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--e1, #ffd66b) 80%, transparent));
+  animation: csrxFireflyWander 12s ease-in-out infinite alternate, csrxFireflyGlow 2.8s ease-in-out infinite;
+}
+.csrp-pc-overlay.csrp-ovl-fireflies::after,
+.pc-overlay.ovl-fireflies::after {
+  background-size: 180px 160px;
+  opacity: .55;
+  animation: csrxFireflyWander 16s ease-in-out infinite alternate-reverse, csrxFireflyGlow 3.6s ease-in-out infinite 1.1s;
+}
+@keyframes csrxFireflyWander {
+  0%   { background-position: 0 0; }
+  33%  { background-position: 32px -24px; }
+  66%  { background-position: -20px -46px; }
+  100% { background-position: 24px -72px; }
+}
+@keyframes csrxFireflyGlow {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1; }
+}
+
+/* Pulse wave */
+.csrp-pc-overlay.csrp-ovl-pulsewave,
+.pc-overlay.ovl-pulsewave {
+  mix-blend-mode: plus-lighter;
+}
+.csrp-pc-overlay.csrp-ovl-pulsewave::before,
+.pc-overlay.ovl-pulsewave::before,
+.csrp-pc-overlay.csrp-ovl-pulsewave::after,
+.pc-overlay.ovl-pulsewave::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 42%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  border: 2px solid color-mix(in srgb, var(--e1, #7bdcff) 75%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--e1, #7bdcff) 55%, transparent);
+  animation: csrxPulseRing 3s cubic-bezier(.22, 1, .36, 1) infinite;
+}
+.csrp-pc-overlay.csrp-ovl-pulsewave::after,
+.pc-overlay.ovl-pulsewave::after {
+  border-color: color-mix(in srgb, var(--e2, #7b8cff) 70%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--e2, #7b8cff) 50%, transparent);
+  animation-delay: 1.5s;
+}
+@keyframes csrxPulseRing {
+  0%   { transform: translate(-50%, -50%) scale(0);   opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+}
+
+/* Intensity tuning for built-in effects */
+.csrp-pc-overlay.csrp-ovl-particles::after { opacity: .75; }
+.csrp-pc-overlay.csrp-ovl-rain::before { opacity: .72; }
+.csrp-pc-overlay.csrp-ovl-rain::after { opacity: .45; }
+.csrp-pc-overlay.csrp-ovl-bokeh::after { opacity: .7; }
+.csrp-pc-overlay.csrp-ovl-stars::before { filter: drop-shadow(0 0 3px rgba(255,255,255,.85)); }

@@ -130,10 +130,6 @@
       ...c,
       tier
     };
-    if (TIER_RANK[tier] < TIER_RANK.pro) {
-      out.banner = null;
-      out.bannerOn = false;
-    }
     if (tier !== "premium") {
       if (out.animName && out.animName !== "none") out.animName = "none";
       if (out.animAvatar && out.animAvatar !== "none") out.animAvatar = "none";
@@ -154,15 +150,31 @@
         pendingIds.add(id);
         scheduleFetch();
       }
-      if (!localCfg) return tier && tier !== "free" ? {
-        enabled: true,
-        tier,
-        __own: true
-      } : undefined;
-      return {
+      if (!localCfg) {
+        const cloud = e && e.cfg;
+        if (cloud && cloud.banner) return {
+          ...cloud,
+          enabled: true,
+          __own: true
+        };
+        return tier && tier !== "free" ? {
+          enabled: true,
+          tier,
+          __own: true
+        } : undefined;
+      }
+      const own = {
         ...gateLocalCfg(localCfg, tier || localCfg.tier || "free"),
         __own: true
       };
+      const cloud = e && e.cfg;
+      if (cloud && cloud.banner && (!own.banner || localCfg._bannerCloudOnly)) {
+        own.banner = cloud.banner;
+        own.bannerOn = localCfg._bannerCloudOnly ? true : own.bannerOn !== false;
+        own.bannerKind = cloud.bannerKind;
+        own.bannerMime = cloud.bannerMime;
+      }
+      return own;
     }
     const e = sharedCache.get(id);
     if (e && Date.now() - e.t < SHARED_TTL) return e.cfg || undefined;
@@ -237,9 +249,9 @@
     const rot = +s.rot || 0;
     if (rot) {
       img.style.transformOrigin = `${W / 2 - left}px ${H / 2 - top}px`;
-      img.style.transform = `rotate(${rot}deg)`;
+      img.style.transform = `rotate(${rot}deg) translateZ(0)`;
     } else {
-      img.style.transform = "";
+      img.style.transform = "translateZ(0)";
       img.style.transformOrigin = "";
     }
   }
@@ -305,7 +317,26 @@
     layer._csrpVo = io;
     visObservers.add(io);
   }
-  const isAnim = () => cfg.bannerKind === "anim" && /webm|mp4/.test(cfg.bannerMime || "");
+  const isAnim = () => cfg.bannerKind === "anim" && /webm|mp4/.test(cfg.bannerMime || "") || /\.(webm|mp4)([?#]|$)/i.test(cfg.banner || "") || /^data:video\//.test(cfg.banner || "");
+  function syncVideos() {
+    const now = Date.now() / 1e3;
+    document.querySelectorAll("video.csrp-pc-bimg").forEach(v => {
+      const d = v.duration;
+      if (!d || !isFinite(d) || v.paused || v.seeking || v.readyState < 3) return;
+      const want = now % d;
+      const drift = Math.abs(v.currentTime - want);
+      if (drift <= 1.2 || d - drift <= 1.2) return;
+      if (now - (v._csrpLastSeek || 0) < 4) return;
+      v._csrpLastSeek = now;
+      v.currentTime = want;
+    });
+  }
+  document.addEventListener("visibilitychange", () => {
+    const hidden = document.visibilityState !== "visible";
+    document.querySelectorAll("video.csrp-pc-bimg").forEach(v => {
+      if (hidden) v.pause(); else v.play().catch(() => {});
+    });
+  });
   function applyBanner(layer, key) {
     const s = surf(key);
     observeLayer(layer, key);
@@ -344,9 +375,12 @@
           muted: "true",
           loop: "true",
           playsinline: "true",
-          preload: "metadata"
+          autoplay: "true",
+          preload: "auto"
         });
         img.muted = true;
+        img.defaultMuted = true;
+        img.disablePictureInPicture = true;
         img.addEventListener("loadeddata", onReady);
       } else {
         img = h("img", {
@@ -395,6 +429,8 @@
   function setVars(el) {
     el.style.setProperty("--pc1", cfg.accent || "#e23a45");
     el.style.setProperty("--pc2", cfg.accent2 || "#8fb4ff");
+    el.style.setProperty("--e1", cfg.fxColor || cfg.accent || "#fff");
+    el.style.setProperty("--e2", cfg.fxColor2 || cfg.accent2 || "#8fb4ff");
     if (cfg.fxColor) el.style.setProperty("--fx1", cfg.fxColor); else el.style.removeProperty("--fx1");
     if (cfg.fxColor2) el.style.setProperty("--fx2", cfg.fxColor2); else el.style.removeProperty("--fx2");
   }
@@ -424,16 +460,23 @@
       img.classList.add("csrp-anim-av-" + cfg.animAvatar);
     }
   }
+  const OV_ID = /^[a-z0-9_-]{2,24}$/;
+  const validOverlay = o => typeof o === "string" && (OVERLAYS.includes(o) || OV_ID.test(o));
+  function stripOverlayClasses(el) {
+    [ ...el.classList ].forEach(c => {
+      if (c.startsWith("csrp-ov-")) el.classList.remove(c);
+    });
+  }
   function activeOverlays() {
     if (Array.isArray(cfg.overlays) && cfg.overlays.length) {
-      return cfg.overlays.filter(o => OVERLAYS.includes(o)).slice(0, 3);
+      return cfg.overlays.filter(validOverlay).slice(0, 3);
     }
-    return cfg.overlay && cfg.overlay !== "none" ? [ cfg.overlay ] : [];
+    return cfg.overlay && cfg.overlay !== "none" && validOverlay(cfg.overlay) ? [ cfg.overlay ] : [];
   }
   function ensureOverlay(el) {
     setVars(el);
     const want = activeOverlays();
-    for (const o of OVERLAYS) el.classList.remove("csrp-ov-" + o);
+    stripOverlayClasses(el);
     const layers = el.querySelectorAll(":scope > .csrp-pc-overlay");
     if (!want.length) {
       layers.forEach(l => l.remove());
@@ -489,7 +532,7 @@
       });
       anchor.appendChild(chip);
     }
-    chip.textContent = cfg.chip;
+    chip.textContent = String(cfg.chip).slice(0, 10);
     setVars(chip);
     chip.className = "csrp-pc-chip csrp-pcc-" + (cfg.chipStyle || "outline") + (mode === "block" ? " csrp-pc-chip-block" : "");
   }
@@ -588,7 +631,7 @@
     n.querySelectorAll(":scope > .csrp-pc-banner, :scope > .csrp-pc-fx, :scope > .csrp-pc-overlay, .csrp-pc-chip, .csrp-tier-badge").forEach(x => x.remove());
     n.querySelectorAll(".csrp-has-badge").forEach(x => x.classList.remove("csrp-has-badge"));
     n.classList.remove("csrp-pc-card", "csrp-pc-hasbn");
-    for (const o of OVERLAYS) n.classList.remove("csrp-ov-" + o);
+    stripOverlayClasses(n);
     for (const f of FLAIRS) n.classList.remove("csrp-pcf-" + f);
     n.querySelectorAll('[class*="csrp-pca-"]').forEach(a => {
       for (const s of AV_FRAMES) a.classList.remove("csrp-pca-" + s);
@@ -611,7 +654,7 @@
     document.querySelectorAll(".csrp-pc-card, .csrp-pc-hdr").forEach(n => {
       n.classList.remove("csrp-pc-card", "csrp-pc-hdr", "csrp-pc-hasbn");
       for (const f of FLAIRS) n.classList.remove("csrp-pcf-" + f);
-      for (const o of OVERLAYS) n.classList.remove("csrp-ov-" + o);
+      stripOverlayClasses(n);
     });
     document.querySelectorAll('[class*="csrp-pcn-"], [class*="csrp-pca-"], [class*="csrp-anim-"]').forEach(n => {
       for (const s of NAME_STYLES) n.classList.remove("csrp-pcn-" + s);
@@ -636,6 +679,9 @@
     } catch {}
     try {
       tickLobby();
+    } catch {}
+    try {
+      syncVideos();
     } catch {}
   }
   CSRP.profileCustom = {

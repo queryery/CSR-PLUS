@@ -68,7 +68,7 @@
     return out;
   }
   function slotName(slot) {
-    const el = slot.querySelector("span");
+    const el = slot.querySelector('span:not([class*="csrp-"])');
     return el ? (el.textContent || "").trim() : "";
   }
   function centerOwner(ownerSlot) {
@@ -111,6 +111,15 @@
       delete n.dataset.csrpId;
     });
   }
+  function enterSlot(slot, i) {
+    const wrap = slot.closest(".flex.justify-center") || slot;
+    wrap.classList.add("csrp-slot-in");
+    wrap.style.animationDelay = i * 70 + "ms";
+    setTimeout(() => {
+      wrap.classList.remove("csrp-slot-in");
+      wrap.style.animationDelay = "";
+    }, 750 + i * 70);
+  }
   function onSlotClick(e) {
     const slot = e.currentTarget;
     if (!slot.classList.contains("csrp-lobby-card")) return;
@@ -134,12 +143,15 @@
     }
     const owner = lobbyOwnerName();
     const sig = slots.map(slotName).join("|") + "@" + (owner || "");
-    if (sig !== lobbySig) {
+    const changed = sig !== lobbySig;
+    if (changed) {
       resetLobby();
       lobbySig = sig;
     }
     let ownerSlot = null;
-    for (const slot of slots) {
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      if (changed) enterSlot(slot, i);
       const img = slot.querySelector(LOBBY_AV);
       const nm = slotName(slot).toLowerCase();
       if (getComputedStyle(slot).position === "static") slot.style.position = "relative";
@@ -164,7 +176,7 @@
     if (ownerSlot) centerOwner(ownerSlot); else clearCenterOrder();
   }
   function markReady(slot) {
-    const check = slot.querySelector("svg.text-green-500");
+    const check = slot.querySelector("div.absolute svg.text-green-500");
     const ready = !!check;
     if (check) {
       const holder = check.closest("div.absolute");

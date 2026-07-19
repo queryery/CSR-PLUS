@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "overlays": [
+    { "id": "matrix", "label": "Matrix rain" },
+    { "id": "fireflies", "label": "Fireflies" },
+    { "id": "pulsewave", "label": "Pulse wave" }
+  ]
+}

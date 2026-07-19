@@ -82,10 +82,68 @@
       }
     });
   }
-  async function tierOf(uid) {
+  async function pubProfile(uid) {
     const d = await proApi("/pub/profiles?ids=" + encodeURIComponent(uid));
-    const p = d && d.profiles && d.profiles[uid];
-    return p && p.tier || "free";
+    return d && d.profiles && d.profiles[uid] || null;
+  }
+  function applyCosmetics(card, p) {
+    if (!p) return;
+    const e1 = p.fxColor || p.accent || "#fff", e2 = p.fxColor2 || p.accent2 || "#8fb4ff";
+    for (const [k, v] of [ [ "--pc1", p.accent ], [ "--pc2", p.accent2 ], [ "--e1", e1 ], [ "--e2", e2 ] ]) if (v) card.style.setProperty(k, v);
+    card.classList.add("csrp-pc-card");
+    card.style.position = "relative";
+    card.style.overflow = "hidden";
+    if (p.banner) {
+      const s = p.surf && p.surf.profile || {};
+      if (s.on !== false) {
+        const vid = p.bannerKind === "anim" || /\.(webm|mp4)([?#]|$)/i.test(p.banner);
+        const bn = el("div", "csrp-pc-banner");
+        bn.style.cssText = "position:absolute;inset:0;z-index:0;pointer-events:none";
+        const m = vid ? document.createElement("video") : document.createElement("img");
+        if (vid) {
+          m.muted = true;
+          m.loop = true;
+          m.autoplay = true;
+          m.playsInline = true;
+        }
+        m.src = p.banner;
+        m.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${s.x ?? 50}% ${s.y ?? 50}%;transform:scale(${s.scale || 1}) rotate(${s.rot || 0}deg)`;
+        const dim = el("div");
+        dim.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,${Math.min(.85, (p.bannerDim ?? 30) / 100 + .25)})`;
+        bn.append(m, dim);
+        card.prepend(bn);
+        card.querySelectorAll(":scope > :not(.csrp-pc-banner)").forEach(n => {
+          if (getComputedStyle(n).position === "static") n.style.position = "relative";
+        });
+      }
+    }
+    const name = card.querySelector(".ps-name");
+    if (name) {
+      if (p.nameStyle && p.nameStyle !== "none") name.classList.add("csrp-pcn-" + p.nameStyle);
+      if (p.animName && p.animName !== "none") name.classList.add("csrp-anim-name-" + p.animName);
+    }
+    const av = card.querySelector(".ps-av");
+    if (av) {
+      if (p.avatarFrame && p.avatarFrame !== "none") av.classList.add("csrp-pca-" + p.avatarFrame);
+      if (p.animAvatar && p.animAvatar !== "none") av.classList.add("csrp-anim-av-" + p.animAvatar);
+    }
+    const ovs = (Array.isArray(p.overlays) && p.overlays.length ? p.overlays : p.overlay && p.overlay !== "none" ? [ p.overlay ] : []).slice(0, 3);
+    for (const o of ovs) {
+      if (!/^[a-z0-9_-]{2,24}$/.test(o)) continue;
+      card.classList.add("csrp-ov-" + o);
+      const l = el("div", "csrp-pc-overlay csrp-ovl-" + o);
+      card.appendChild(l);
+    }
+    try {
+      chrome.storage.local.get([ "csrpFx" ], d => {
+        if (d.csrpFx && d.csrpFx.css && !document.getElementById("csrp-remote-fx")) {
+          const st = document.createElement("style");
+          st.id = "csrp-remote-fx";
+          st.textContent = d.csrpFx.css;
+          document.head.appendChild(st);
+        }
+      });
+    } catch {}
   }
   function tierBadgeHtml(tier) {
     if (tier !== "pro" && tier !== "premium") return "";
@@ -255,10 +313,12 @@
       snd("click");
       window.open(chrome.runtime.getURL(`report/report.html?id=${encodeURIComponent(id)}`), "_blank", "noopener");
     });
-    tierOf(id).then(tier => {
-      const html = tierBadgeHtml(tier);
+    pubProfile(id).then(p => {
       const row = $("#ps-tier-row");
-      if (row) row.innerHTML = html;
+      if (row) row.innerHTML = tierBadgeHtml(p && p.tier || "free");
+      try {
+        applyCosmetics(card, p);
+      } catch {}
     });
   }
   function periodRows() {

@@ -1897,7 +1897,9 @@ div:has(> .csrp-st-btn) > button:not(.csrp-st-btn) {
   pointer-events: none
 }
 .csrp-pc-banner video.csrp-pc-bimg {
-  object-fit: cover
+  object-fit: cover;
+  will-change: transform;
+  backface-visibility: hidden
 }
 .csrp-tier-badge {
   display: inline-flex;
@@ -2363,7 +2365,7 @@ div:has(> .csrp-st-btn) > button:not(.csrp-st-btn) {
 .csrp-pc-hasbn {
   overflow: hidden
 }
-.csrp-pc-hasbn > :not(.csrp-pc-banner):not(.csrp-pc-fx) {
+.csrp-pc-hasbn > :not(.csrp-pc-banner):not(.csrp-pc-fx):not(.csrp-ready-tag):not(.csrp-kick):not(.csrp-pc-overlay) {
   position: relative;
   z-index: 1
 }
@@ -2538,7 +2540,11 @@ div:has(> .csrp-st-btn) > button:not(.csrp-st-btn) {
   padding: 2px 9px;
   border-radius: 999px;
   margin-left: 6px;
-  white-space: nowrap
+  white-space: nowrap;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0
 }
 .csrp-pc-chip.csrp-pc-chip-block {
   display: flex;
@@ -2885,6 +2891,224 @@ div.rounded-2xl:hover > .csrp-kick,
   opacity: .15!important;
   pointer-events: none
 }
+.csrp-kick svg {
+  transition: transform .22s var(--tac-ease, cubic-bezier(.22,1,.36,1))
+}
+.csrp-kick:hover svg {
+  transform: rotate(90deg)
+}
+.csrp-play .csrp-slot-in {
+  animation: csrpSlotIn .55s var(--tac-ease) both
+}
+@keyframes csrpSlotIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(.96);
+    filter: blur(5px)
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none
+  }
+}
+.csrp-play div.rounded-2xl.csrp-lobby-owner {
+  animation: csrpLeaderBreath 3.4s ease-in-out infinite
+}
+@keyframes csrpLeaderBreath {
+  0%, 100% {
+    box-shadow: 0 22px 54px rgba(0,0,0,.55),0 0 28px rgba(226,58,69,.18),inset 0 1px 0 rgba(255,255,255,.05)
+  }
+  50% {
+    box-shadow: 0 22px 54px rgba(0,0,0,.55),0 0 46px rgba(226,58,69,.34),inset 0 1px 0 rgba(255,255,255,.05)
+  }
+}
+.csrp-play div.rounded-2xl svg.text-yellow-500 {
+  filter: drop-shadow(0 0 6px rgba(255,200,60,.75));
+  animation: csrpCrownBob 2.8s ease-in-out infinite
+}
+@keyframes csrpCrownBob {
+  0%, 100% {
+    transform: translateY(0)
+  }
+  50% {
+    transform: translateY(-1.5px)
+  }
+}
+.csrp-play div.rounded-2xl.csrp-ready,
+.csrp-play div.rounded-2xl:has(.text-green-500) {
+  animation: csrpReadyEdge 2.2s ease-in-out infinite
+}
+@keyframes csrpReadyEdge {
+  0%, 100% {
+    box-shadow: 0 16px 40px rgba(0,0,0,.44),0 0 18px rgba(86,214,138,.14),inset 0 0 0 1px rgba(86,214,138,.1)
+  }
+  50% {
+    box-shadow: 0 16px 40px rgba(0,0,0,.44),0 0 32px rgba(86,214,138,.32),inset 0 0 0 1px rgba(86,214,138,.24)
+  }
+}
+.csrp-play .csrp-ready-tag {
+  animation: csrpTagPop .35s var(--tac-ease) both
+}
+@keyframes csrpTagPop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(.8)
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%)
+  }
+}
+.csrp-play div[role=button].rounded-2xl {
+  position: relative
+}
+.csrp-play div[role=button].rounded-2xl::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(226,58,69,.4);
+  clip-path: polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  opacity: 0;
+  pointer-events: none;
+  animation: csrpSlotIdle 4.6s ease-in-out infinite
+}
+@keyframes csrpSlotIdle {
+  0%, 100% {
+    opacity: 0
+  }
+  50% {
+    opacity: .45
+  }
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg,transparent 32%,rgba(255,255,255,.22) 50%,transparent 64%);
+  transform: translateX(-130%);
+  transition: transform .55s var(--tac-ease);
+  pointer-events: none
+}
+.csrp-play button.rounded-full.bg-theme-primary.px-12:hover::before {
+  transform: translateX(130%)
+}
+.csrp-play button.csrp-q-cool {
+  filter: saturate(.55) brightness(.8);
+  animation: csrpQCool .38s ease
+}
+@keyframes csrpQCool {
+  0%, 100% {
+    transform: translateX(0)
+  }
+  30% {
+    transform: translateX(-3px)
+  }
+  65% {
+    transform: translateX(3px)
+  }
+}
+.csrp-play .mb-4.mt-2.flex.flex-row.items-center.justify-center.gap-10::before {
+  animation: csrpBayPulse 7s ease-in-out infinite
+}
+@keyframes csrpBayPulse {
+  0%, 100% {
+    opacity: .75
+  }
+  50% {
+    opacity: 1
+  }
+}
+.csrp-play div.h-3\/4.w-3\/4.rounded-lg.border-2.bg-theme-black {
+  border-radius: 4px!important;
+  border: 1px solid var(--tac-line-2)!important;
+  background: var(--tac-panel)!important;
+  clip-path: polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,22px 100%,0 calc(100% - 22px));
+  box-shadow: 0 30px 80px rgba(0,0,0,.6),0 0 44px rgba(226,58,69,.08);
+  animation: csrpModalIn .32s var(--tac-ease) both
+}
+@keyframes csrpModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(.98)
+  }
+  to {
+    opacity: 1;
+    transform: none
+  }
+}
+.csrp-play div.h-3\/4.w-3\/4.rounded-lg h2 {
+  font-family: var(--tac-mono);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: 1.25rem!important;
+  padding-left: 11px;
+  border-left: 3px solid var(--tac)
+}
+.csrp-play div.h-3\/4.w-3\/4.rounded-lg button.group svg {
+  transition: transform .25s var(--tac-ease),color .2s
+}
+.csrp-play div.h-3\/4.w-3\/4.rounded-lg button.group:hover svg {
+  color: #ff6b76;
+  transform: rotate(90deg) scale(1.05)
+}
+.csrp-play input[placeholder="Search..."] {
+  border-radius: 3px!important;
+  border: 1px solid var(--tac-line-2)!important;
+  background: rgba(255,255,255,.03)!important;
+  font-family: var(--tac-mono);
+  letter-spacing: .04em;
+  transition: border-color .2s,box-shadow .2s
+}
+.csrp-play input[placeholder="Search..."]:focus {
+  outline: none;
+  border-color: rgba(226,58,69,.6)!important;
+  box-shadow: 0 0 0 1px rgba(226,58,69,.3),0 0 18px rgba(226,58,69,.15)
+}
+.csrp-play .scrollbar-hidden > .flex.flex-row.items-center.justify-between {
+  padding: 0 8px;
+  border-radius: 3px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  transition: background .18s
+}
+.csrp-play .scrollbar-hidden > .flex.flex-row.items-center.justify-between:hover {
+  background: rgba(255,255,255,.035)
+}
+.csrp-play .scrollbar-hidden img.rounded-full {
+  box-shadow: 0 0 0 1px var(--tac-line-2),0 4px 12px rgba(0,0,0,.4)
+}
+.csrp-play .scrollbar-hidden p.text-green-600 {
+  font-family: var(--tac-mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(86,214,138,.5)
+}
+.csrp-play button.w-40.rounded-full.border-2 {
+  border-radius: 3px!important;
+  border: 1px solid var(--tac-line-2)!important;
+  font-family: var(--tac-mono);
+  text-transform: uppercase;
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  clip-path: polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+  background: rgba(255,255,255,.02);
+  transition: border-color .2s,background .2s,color .2s,transform .15s var(--tac-ease)
+}
+.csrp-play button.w-40.rounded-full.border-2:hover {
+  border-color: rgba(226,58,69,.65)!important;
+  background: rgba(226,58,69,.12);
+  color: #ff8d95;
+  transform: translateY(-1px)
+}
+@media (prefers-reduced-motion: reduce) {
+  .csrp-play *,
+  .csrp-play ::before,
+  .csrp-play ::after {
+    animation: none!important;
+    transition: none!important
+  }
+}
 .csrp-ready-tag {
   position: absolute;
   bottom: 8px;
@@ -3156,4 +3380,34 @@ div.rounded-2xl:hover > .csrp-kick,
 .csrp-qp-empty .csrp-qp-n {
   background: rgba(255,255,255,.08);
   color: rgba(255,255,255,.55)
+}
+.csrp-pc-banner {
+  contain: paint
+}
+video.csrp-pc-bimg {
+  transform: translateZ(0);
+  backface-visibility: hidden
+}
+.csrp-pc-overlay.csrp-ovl-particles::after {
+  opacity: .75
+}
+.csrp-pc-overlay.csrp-ovl-rain::before {
+  opacity: .72
+}
+.csrp-pc-overlay.csrp-ovl-rain::after {
+  opacity: .45
+}
+.csrp-pc-overlay.csrp-ovl-bokeh::after {
+  opacity: .7
+}
+.csrp-pc-overlay.csrp-ovl-stars::before {
+  filter: drop-shadow(0 0 3px rgba(255,255,255,.85))
+}
+@keyframes csrpTwinkle {
+  0%, 100% {
+    opacity: .62
+  }
+  50% {
+    opacity: 1
+  }
 }

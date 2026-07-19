@@ -73,6 +73,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     });
     return true;
   }
+  if (msg.type === "csrp:fx") {
+    const FX_BASE = "https://csr-plus-331c8.web.app";
+    Promise.all([
+      fetch(FX_BASE + "/effects.css", { cache: "no-cache" }).then(r => r.ok ? r.text() : "").catch(() => ""),
+      fetch(FX_BASE + "/effects.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]).then(([css, manifest]) => {
+      sendResponse({ ok: true, css: String(css || "").slice(0, 262144), manifest });
+    }).catch(() => sendResponse({ ok: false }));
+    return true;
+  }
   if (msg.type === "csrp:notify") {
     try {
       chrome.notifications.create("csrp-" + Date.now(), {
@@ -160,6 +170,55 @@ chrome.notifications && chrome.notifications.onClicked.addListener(() => {
     });
   });
 });
+
+const BEAT_ALARM = "csrpQueueBeat";
+
+const BEAT_STALE_MS = 12e4;
+
+function syncQueueAlarm(active) {
+  if (!chrome.alarms) return;
+  try {
+    if (active) chrome.alarms.create(BEAT_ALARM, {
+      periodInMinutes: 1
+    }); else chrome.alarms.clear(BEAT_ALARM);
+  } catch {}
+}
+
+try {
+  chrome.storage.local.get([ "csrpQueue" ], d => {
+    syncQueueAlarm(!!(d && d.csrpQueue && d.csrpQueue.q));
+  });
+  chrome.storage.onChanged.addListener((c, area) => {
+    if (area !== "local" || !c.csrpQueue) return;
+    syncQueueAlarm(!!(c.csrpQueue.newValue && c.csrpQueue.newValue.q));
+  });
+  chrome.alarms && chrome.alarms.onAlarm.addListener(a => {
+    if (a.name !== BEAT_ALARM) return;
+    chrome.storage.local.get([ "csrpQueue", "csrpProToken", "csrpDeviceId" ], d => {
+      const s = d && d.csrpQueue;
+      if (!s || !s.q || Date.now() - (s.t || 0) > BEAT_STALE_MS) {
+        syncQueueAlarm(false);
+        return;
+      }
+      const headers = {
+        "content-type": "application/json"
+      };
+      const tok = d.csrpProToken;
+      if (tok && tok.token && tok.exp && tok.exp * 1e3 > Date.now() + 3e4) headers["Authorization"] = "Bearer " + tok.token;
+      const body = {
+        d: d.csrpDeviceId || "",
+        v: chrome.runtime.getManifest().version,
+        q: true
+      };
+      if (s.n) body.sn = String(s.n).slice(0, 40);
+      fetch(PRO_BASE + "/beat", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body)
+      }).catch(() => {});
+    });
+  });
+} catch (e) {}
 
 let _fbQueue = {
   users: [],

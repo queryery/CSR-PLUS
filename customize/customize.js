@@ -147,8 +147,10 @@
     };
     if (out.nameStyle === "glow") out.nameStyle = "gradient";
     if (!Array.isArray(out.overlays)) out.overlays = [];
-    out.overlays = [ ...new Set(out.overlays.filter(o => OVERLAY_VALUES.includes(o))) ].slice(0, MAX_OVERLAYS);
-    if (!out.overlays.length && out.overlay && out.overlay !== "none" && OVERLAY_VALUES.includes(out.overlay)) {
+    const OV_ID = /^[a-z0-9_-]{2,24}$/;
+    const okOv = o => typeof o === "string" && (OVERLAY_VALUES.includes(o) || OV_ID.test(o));
+    out.overlays = [ ...new Set(out.overlays.filter(okOv)) ].slice(0, MAX_OVERLAYS);
+    if (!out.overlays.length && out.overlay && out.overlay !== "none" && okOv(out.overlay)) {
       out.overlays = [ out.overlay ];
     }
     out.overlay = "none";
@@ -267,7 +269,6 @@
     const copy = {
       ...cfg,
       banner: null,
-      bannerOn: false,
       _bannerCloudOnly: true
     };
     return copy;
@@ -392,7 +393,7 @@
     });
   }
   let cfgCaps = {
-    free: 0,
+    free: 20 * 1048576,
     pro: 20 * 1048576,
     premium: 40 * 1048576
   };
@@ -866,7 +867,7 @@
       kanji: e.target.value.slice(0, 4)
     }));
     $("#c-chip").addEventListener("input", e => set({
-      chip: e.target.value.slice(0, 18)
+      chip: e.target.value.slice(0, 10)
     }));
     window.addEventListener("resize", queueRescale);
     for (const [elId, key] of [ [ "#c-name", "nameStyle" ], [ "#c-flair", "cardFlair" ], [ "#c-avatar", "avatarFrame" ], [ "#c-chipstyle", "chipStyle" ], [ "#c-anim-name", "animName" ], [ "#c-anim-avatar", "animAvatar" ] ]) {
@@ -1174,27 +1175,6 @@
       if (PREMIUM_CHIPS.includes(c.chipStyle)) patch.chipStyle = "outline";
       if (c.fillMode === "color") patch.fillMode = "blur";
     }
-    if (tier === "free") {
-      if (c.banner) patch.banner = null;
-      if (c.bannerOn) patch.bannerOn = false;
-      if (c.surf) {
-        const surf = {};
-        let touched = false;
-        for (const k of SURFACES) {
-          if (c.surf[k]) {
-            surf[k] = {
-              ...c.surf[k],
-              on: false
-            };
-            if (c.surf[k].on) touched = true;
-          }
-        }
-        if (touched) patch.surf = {
-          ...c.surf,
-          ...surf
-        };
-      }
-    }
     return Object.keys(patch).length ? patch : null;
   }
   function pro(path, {method = "GET", body = null, token = null, timeoutMs = 0} = {}) {
@@ -1404,9 +1384,60 @@
       if (ok) proSignOut();
     });
   }
+  function loadRemoteEffects() {
+    const applyFx = fx => {
+      if (!fx) return;
+      if (fx.css) {
+        let st = document.getElementById("csrp-remote-fx");
+        if (!st) {
+          st = document.createElement("style");
+          st.id = "csrp-remote-fx";
+          document.head.appendChild(st);
+        }
+        if (st.textContent !== fx.css) st.textContent = fx.css;
+      }
+      const list = fx.manifest && Array.isArray(fx.manifest.overlays) ? fx.manifest.overlays : [];
+      const box = $("#c-overlay");
+      let added = false;
+      for (const o of list) {
+        if (!o || !o.id || !/^[a-z0-9_-]{2,24}$/.test(o.id)) continue;
+        if (!OVERLAY_VALUES.includes(o.id)) OVERLAY_VALUES.push(o.id);
+        if (box && !box.querySelector(`button[data-v="${o.id}"]`)) {
+          const b = document.createElement("button");
+          b.dataset.v = o.id;
+          b.className = "prem";
+          b.textContent = o.label || o.id;
+          box.appendChild(b);
+          added = true;
+        }
+      }
+      if (added) paint();
+    };
+    try {
+      if (!extStorage) return;
+      chrome.storage.local.get([ "csrpFx" ], d => {
+        if (d.csrpFx) applyFx(d.csrpFx);
+        chrome.runtime.sendMessage({
+          type: "csrp:fx"
+        }, resp => {
+          if (chrome.runtime.lastError || !resp || !resp.ok) return;
+          const fx = {
+            css: resp.css || "",
+            manifest: resp.manifest || null,
+            ts: Date.now()
+          };
+          chrome.storage.local.set({
+            csrpFx: fx
+          });
+          applyFx(fx);
+        });
+      });
+    } catch {}
+  }
   load(async storedId => {
     bind();
     bindAccount();
+    loadRemoteEffects();
     paint();
     rescale();
     loadProSession().then(() => {

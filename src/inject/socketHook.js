@@ -118,7 +118,7 @@
   }
   function readPartyData(fiber) {
     return searchValue(fiber, v => {
-      const t = v.teamData || v.lobbyData || v.lobby || v.party || v.team;
+      const t = v.group || v.teamData || v.lobbyData || v.lobby || v.party || v.team;
       if (!t || typeof t !== "object") return null;
       const members = t.members || t.players || t.users;
       if (!Array.isArray(members)) return null;
@@ -127,6 +127,41 @@
         name: typeof t.name === "string" ? t.name : null
       };
     });
+  }
+  function findGroupCtx(fiber) {
+    return searchValue(fiber, v => v && typeof v.leaveGroup === "function" && "group" in v ? v : null);
+  }
+  let soloSince = 0;
+  let leaveCooldown = 0;
+  function maybeAutoLeaveSolo(fiber) {
+    if (document.visibilityState !== "visible") {
+      soloSince = 0;
+      return;
+    }
+    const ctx = findGroupCtx(fiber);
+    const g = ctx && ctx.group;
+    if (!g || !Array.isArray(g.members)) {
+      soloSince = 0;
+      return;
+    }
+    const inQueue = !!(ctx.queueState && ctx.queueState.channel);
+    const pending = (g.invited || []).filter(id => !g.members.includes(id));
+    const solo = g.members.length <= 1 && pending.length === 0 && !inQueue;
+    const now = Date.now();
+    if (!solo) {
+      soloSince = 0;
+      return;
+    }
+    if (!soloSince) {
+      soloSince = now;
+      return;
+    }
+    if (now - soloSince < 12e3 || now < leaveCooldown) return;
+    leaveCooldown = now + 3e4;
+    soloSince = 0;
+    try {
+      ctx.leaveGroup();
+    } catch {}
   }
   let myIdSent = false;
   let hadParty = false;
@@ -148,6 +183,18 @@
         detail: data
       }));
     }
+    try {
+      maybeAutoLeaveSolo(fiber);
+    } catch {}
+    try {
+      const qc = findGroupCtx(fiber);
+      if (qc) window.dispatchEvent(new CustomEvent("csrp:queuedata", {
+        detail: {
+          inQueue: !!(qc.queueState && qc.queueState.channel),
+          accepted: !!(qc.queueState && qc.queueState.accepted)
+        }
+      }));
+    } catch {}
     const party = readPartyData(fiber);
     if (party) {
       hadParty = party.size >= 2;

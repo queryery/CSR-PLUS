@@ -84,19 +84,20 @@ const DEFAULT_CONFIG = {
     premium: 4
   },
   bannerMaxBytes: {
-    free: 0,
+    free: 20 * 1024 * 1024,
     pro: 20 * 1024 * 1024,
     premium: 40 * 1024 * 1024
   },
   animatedBanner: {
-    pro: false,
+    free: true,
+    pro: true,
     premium: true
   },
   reportVideoMaxBytes: 50 * 1024 * 1024,
-  minVersion: "0.1.1",
+  minVersion: "0.1.3",
   updateRequired: true,
   updateUrl: "https://github.com/queryery/CSR-PLUS/releases/latest",
-  updateMessage: "CSR+ 0.1.2 is here — the lobby now stays styled in any party, a clean kick control, solid ready states and Firefox fixes. Update to keep using CSR+.",
+  updateMessage: "CSR+ 0.1.3 is here! Update to keep using CSR+.",
   premium: {
     nameStyles: [ "rainbow", "glitch", "metal" ],
     cardFlairs: [ "holo", "aurora" ],
@@ -134,11 +135,7 @@ async function getConfig() {
 function mergeConfig(base, over) {
   const out = JSON.parse(JSON.stringify(base));
   if (over.prices && typeof over.prices === "object") Object.assign(out.prices, pickNums(over.prices, [ "pro", "premium" ]));
-  if (over.bannerMaxBytes && typeof over.bannerMaxBytes === "object") Object.assign(out.bannerMaxBytes, pickNums(over.bannerMaxBytes, [ "free", "pro", "premium" ]));
-  if (over.animatedBanner && typeof over.animatedBanner === "object") {
-    if (typeof over.animatedBanner.pro === "boolean") out.animatedBanner.pro = over.animatedBanner.pro;
-    if (typeof over.animatedBanner.premium === "boolean") out.animatedBanner.premium = over.animatedBanner.premium;
-  }
+  if (over.bannerMaxBytes && typeof over.bannerMaxBytes === "object") Object.assign(out.bannerMaxBytes, pickNums(over.bannerMaxBytes, ["pro", "premium"]));
   if (Number.isFinite(+over.reportVideoMaxBytes)) out.reportVideoMaxBytes = clampNum(over.reportVideoMaxBytes, 0, 200 * 1024 * 1024);
   if (typeof over.minVersion === "string" && /^\d+(\.\d+){0,3}$/.test(over.minVersion)) out.minVersion = over.minVersion;
   if (typeof over.updateRequired === "boolean") out.updateRequired = over.updateRequired;
@@ -309,7 +306,7 @@ function sanitizeCustomization(body) {
     if (!FILL_MODES.includes(b.fillMode)) throw new Error("bad fillMode");
     out.fillMode = b.fillMode;
   }
-  if (b.chip != null) out.chip = String(b.chip).slice(0, 24);
+  if (b.chip != null) out.chip = String(b.chip).slice(0, 10);
   if (b.kanji != null) out.kanji = String(b.kanji).slice(0, 6);
   if (b.animName != null) {
     if (!ANIM_NAMES.includes(b.animName)) throw new Error("bad animName");
@@ -354,8 +351,8 @@ function publicView(d) {
   if (!d) return null;
   const tier = resolveTier(d);
   const bannerApproved = d.bannerEnabled && d.bannerStatus === "approved" && d.bannerUrl;
-  const bannerOk = bannerApproved && TIER_RANK[tier] >= TIER_RANK.pro;
-  const animOk = bannerOk && d.bannerKind === "anim" && tier === "premium";
+  const bannerOk = bannerApproved;
+  const animOk = bannerOk && d.bannerKind === "anim";
   return {
     tier,
     accent: d.accent || null,
@@ -363,7 +360,7 @@ function publicView(d) {
     nameStyle: d.nameStyle || "none",
     cardFlair: d.cardFlair || "none",
     avatarFrame: d.avatarFrame || "none",
-    chip: d.chip || null,
+    chip: d.chip ? String(d.chip).slice(0, 10) : null,
     chipStyle: d.chipStyle || "outline",
     kanji: d.kanji || null,
     fillMode: d.fillMode || "blur",
@@ -484,7 +481,7 @@ async function handleMe(req, res, claims) {
       nameStyle: d.nameStyle || "none",
       cardFlair: d.cardFlair || "none",
       avatarFrame: d.avatarFrame || "none",
-      chip: d.chip || null,
+      chip: d.chip ? String(d.chip).slice(0, 10) : null,
       chipStyle: d.chipStyle || "outline",
       kanji: d.kanji || null,
       bannerEnabled: !!d.bannerEnabled,
@@ -541,7 +538,6 @@ async function handleBannerUpload(req, res, claims) {
   const snap = await db.doc(`profiles/${claims.sub}`).get();
   const d = snap.exists ? snap.data() : {};
   const tier = resolveTier(d);
-  if (!tierAtLeast(d, "pro")) return bad(res, 402, "CSR+ Pro subscription required");
   if (d.moderationBanned) return bad(res, 403, "customization disabled for this account");
   if (!await rateLimit(`${claims.sub}_banner`, 10)) return bad(res, 429, "too many uploads, try later");
   const cfg = await getConfig();
@@ -731,7 +727,7 @@ async function saveBanner(key, buf, contentType) {
   await file.save(buf, {
     contentType,
     metadata: {
-      cacheControl: "public, max-age=300"
+      cacheControl: "public, max-age=2592000, immutable"
     }
   });
   await file.makePublic();
@@ -896,7 +892,7 @@ async function trackActive(uid, version) {
 
 const ACTIVE_WINDOW_MS = 15 * 60 * 1e3;
 
-const QUEUE_WINDOW_MS = 45 * 1e3;
+const QUEUE_WINDOW_MS = 180 * 1e3;
 
 async function handleBeat(req, res) {
   const raw = req.body && req.body.d || "";

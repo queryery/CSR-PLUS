@@ -96,10 +96,54 @@
   document.addEventListener("visibilitychange", playRecheck);
   setInterval(playRecheck, 700);
   playRecheck();
+  let lastQueueClick = 0;
+  document.addEventListener("click", e => {
+    const btn = e.target && e.target.closest ? e.target.closest("button.rounded-full.bg-theme-primary.px-12") : null;
+    if (!btn) return;
+    const now = Date.now();
+    if (now - lastQueueClick < 900) {
+      e.preventDefault();
+      e.stopPropagation();
+      btn.classList.add("csrp-q-cool");
+      setTimeout(() => btn.classList.remove("csrp-q-cool"), 450);
+      return;
+    }
+    lastQueueClick = now;
+  }, true);
+  document.addEventListener("click", e => {
+    const a = e.target && e.target.closest ? e.target.closest('a[href^="/user/"], a[href^="/app/user/"]') : null;
+    if (!a) return;
+    if (!a.closest("div.rounded-lg.border-2.bg-theme-black")) return;
+    const m = (a.getAttribute("href") || "").match(/user\/(\d{5,25})/);
+    if (!m) return;
+    e.preventDefault();
+    e.stopPropagation();
+    CSRP.notes?.openProfile(m[1]);
+  }, true);
+  function syncQueueTimer() {
+    if (!CSRP._inQueue || !CSRP._qStart) return;
+    if (CSRP.dom.findMatchFoundModal && CSRP.dom.findMatchFoundModal()) return;
+    for (const btn of document.querySelectorAll("button.rounded-full.bg-theme-primary.px-12")) {
+      const m = (btn.textContent || "").trim().match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) continue;
+      const real = Math.max(0, Math.floor((Date.now() - CSRP._qStart) / 1e3));
+      if (Math.abs(+m[1] * 60 + +m[2] - real) <= 2) continue;
+      const txt = String(Math.floor(real / 60)).padStart(2, "0") + ":" + String(real % 60).padStart(2, "0");
+      const node = [ ...btn.childNodes ].find(n => n.nodeType === 3 && /\d{1,2}:\d{2}/.test(n.nodeValue));
+      if (node) node.nodeValue = node.nodeValue.replace(/\d{1,2}:\d{2}/, txt);
+    }
+  }
+  function fixUserLinks() {
+    document.querySelectorAll('a[href^="/user/"]').forEach(a => {
+      a.setAttribute("href", "/app" + a.getAttribute("href"));
+    });
+  }
   function fastLoop() {
     if (CSRP.store.get("masterEnabled") === false) return;
     try {
       fastPlayClass();
+      fixUserLinks();
+      syncQueueTimer();
       CSRP.autoAccept.tick();
       CSRP.mapBan.tick();
       CSRP.serverCopy.tick();
@@ -148,6 +192,38 @@
   function applyTheme(cfg) {
     document.documentElement.setAttribute("data-csrp-theme", cfg.theme || "mask");
   }
+  function applyRemoteFx(css) {
+    if (!css) return;
+    let st = document.getElementById("csrp-remote-fx");
+    if (!st) {
+      st = document.createElement("style");
+      st.id = "csrp-remote-fx";
+      (document.head || document.documentElement).appendChild(st);
+    }
+    if (st.textContent !== css) st.textContent = css;
+  }
+  function loadRemoteFx() {
+    try {
+      chrome.storage.local.get([ "csrpFx" ], d => {
+        const fx = d.csrpFx;
+        if (fx && fx.css) applyRemoteFx(fx.css);
+        if (fx && Date.now() - (fx.ts || 0) < 36e5) return;
+        chrome.runtime.sendMessage({
+          type: "csrp:fx"
+        }, resp => {
+          if (chrome.runtime.lastError || !resp || !resp.ok) return;
+          applyRemoteFx(resp.css);
+          chrome.storage.local.set({
+            csrpFx: {
+              css: resp.css || "",
+              manifest: resp.manifest || null,
+              ts: Date.now()
+            }
+          });
+        });
+      });
+    } catch {}
+  }
   async function boot() {
     try {
       await CSRP.store.load();
@@ -159,6 +235,7 @@
     applyTheme(CSRP.store.get());
     CSRP.sound.init(CSRP.store.get());
     injectHook();
+    loadRemoteFx();
     CSRP.api.friends().then(f => {
       if (Array.isArray(f)) CSRP._friendsCache = f;
     }).catch(() => {});
@@ -168,26 +245,72 @@
         CSRP._myName = u.name || null;
       }
     }).catch(() => {});
-    try {
-      const saved = JSON.parse(sessionStorage.getItem("csrpInQueue") || "null");
-      if (saved && Date.now() - saved.t < 9e4) CSRP._inQueue = !!saved.q;
-    } catch {}
+    CSRP._qStart = 0;
     function persistQueue() {
       try {
-        sessionStorage.setItem("csrpInQueue", JSON.stringify({
-          q: CSRP._inQueue,
-          t: Date.now()
-        }));
+        chrome.storage.local.set({
+          csrpQueue: {
+            q: CSRP._inQueue,
+            start: CSRP._qStart,
+            n: CSRP._myName || null,
+            t: Date.now()
+          }
+        });
       } catch {}
     }
-    const beat = () => {
-      if (document.visibilityState !== "visible") return;
+    try {
+      chrome.storage.local.get([ "csrpQueue" ], d => {
+        const s = d.csrpQueue;
+        if (s && s.q && Date.now() - (s.t || 0) < 6e5) {
+          CSRP._inQueue = true;
+          CSRP._qStart = s.start || Date.now();
+          scheduleBeat();
+          beat();
+        }
+      });
+    } catch {}
+    try {
+      chrome.storage.onChanged.addListener((c, area) => {
+        if (area !== "local" || !c.csrpQueue || !c.csrpQueue.newValue) return;
+        const s = c.csrpQueue.newValue;
+        if (!!s.q !== CSRP._inQueue) {
+          CSRP._inQueue = !!s.q;
+          CSRP._qStart = s.q ? s.start || Date.now() : 0;
+          scheduleBeat();
+        } else if (s.q && s.start && Math.abs((s.start || 0) - CSRP._qStart) > 1500) {
+          CSRP._qStart = Math.min(CSRP._qStart || s.start, s.start);
+        }
+      });
+    } catch {}
+    let lastSocketQ = 0;
+    function setQueueState(q) {
+      if (q === CSRP._inQueue) {
+        if (q && !CSRP._qStart) {
+          CSRP._qStart = Date.now();
+          persistQueue();
+        }
+        return;
+      }
+      CSRP._inQueue = q;
+      CSRP._qStart = q ? CSRP._qStart || Date.now() : 0;
+      persistQueue();
+      scheduleBeat();
+      beat(true);
+    }
+    window.addEventListener("csrp:queuedata", e => {
+      const d = e.detail || {};
+      lastSocketQ = Date.now();
+      setQueueState(!!d.inQueue);
+    });
+    const beat = force => {
+      if (!force && !CSRP._inQueue && document.visibilityState !== "visible") return;
       try {
         CSRP.pro?.track({
           name: CSRP._myName,
           inQueue: CSRP._inQueue
         });
       } catch {}
+      if (CSRP._inQueue) persistQueue();
     };
     beat();
     let beatTimer = null;
@@ -197,16 +320,10 @@
     }
     scheduleBeat();
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") beat();
+      if (document.visibilityState === "visible" || CSRP._inQueue) beat();
     });
     setInterval(() => {
-      const q = detectQueue();
-      if (q !== CSRP._inQueue) {
-        CSRP._inQueue = q;
-        persistQueue();
-        scheduleBeat();
-        beat();
-      }
+      if (Date.now() - lastSocketQ > 1e4) setQueueState(detectQueue());
       try {
         window.dispatchEvent(new CustomEvent("csrp:pull"));
       } catch {}

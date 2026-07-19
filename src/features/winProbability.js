@@ -3,9 +3,23 @@
   const CSRP = window.CSRP = window.CSRP || {};
   const {h} = CSRP.dom;
   let mounted = null;
-  async function aggsFor(cards) {
-    const results = await Promise.all(cards.filter(c => c.id).map(c => CSRP.playerBadges.getAgg(c.id)));
+  async function aggsFor(ids) {
+    const results = await Promise.all(ids.map(id => CSRP.playerBadges.getAgg(id).catch(() => null)));
     return results.filter(Boolean);
+  }
+  function teamIds(cols) {
+    const domA = cols[0].cards.map(c => c.id).filter(Boolean);
+    const domB = cols[1].cards.map(c => c.id).filter(Boolean);
+    const md = CSRP._matchData;
+    if (md && Array.isArray(md.team1) && Array.isArray(md.team2) && md.team1.length >= 2 && md.team2.length >= 2) {
+      const t1 = md.team1.map(String);
+      const t2 = md.team2.map(String);
+      const s1 = new Set(t1);
+      const s2 = new Set(t2);
+      const swap = domA.some(id => s2.has(id)) || domB.some(id => s1.has(id));
+      return swap ? [ t2, t1 ] : [ t1, t2 ];
+    }
+    return [ domA, domB ];
   }
   function render(pA, titleA, titleB) {
     const a = Math.round(pA * 100);
@@ -32,6 +46,10 @@
     const [c1, c2] = cols;
     if (c1.cards.length < 2 || c2.cards.length < 2) return;
     if (mounted && !mounted.isConnected) mounted = null;
+    const [idsA, idsB] = teamIds(cols);
+    if (idsA.length < 2 || idsB.length < 2) return;
+    const [aggA, aggB] = await Promise.all([ aggsFor(idsA), aggsFor(idsB) ]);
+    if (aggA.length < 2 || aggB.length < 2) return;
     if (!mounted) {
       mounted = h("div", {
         class: "csrp-wp"
@@ -57,17 +75,15 @@
       host.insertBefore(mounted, grid);
     }
     fitToColumns(c1.el, c2.el);
-    const [aggA, aggB] = await Promise.all([ aggsFor(c1.cards), aggsFor(c2.cards) ]);
-    if (aggA.length < 2 || aggB.length < 2) return;
     const p = CSRP.stats.winProbability(aggA, aggB);
     let titleA = shortTitle(c1.title) || "Team A";
     let titleB = shortTitle(c2.title) || "Team B";
-    const my = CSRP._myId;
+    const my = CSRP._myId && String(CSRP._myId);
     if (my) {
-      if (c1.cards.some(c => c.id === my)) {
+      if (idsA.includes(my)) {
         titleA = "Your Team";
         titleB = "Enemy Team";
-      } else if (c2.cards.some(c => c.id === my)) {
+      } else if (idsB.includes(my)) {
         titleA = "Enemy Team";
         titleB = "Your Team";
       }

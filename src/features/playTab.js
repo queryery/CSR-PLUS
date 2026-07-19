@@ -33,12 +33,17 @@
       }
     });
   } catch {}
+  window.addEventListener("csrp:queuedata", () => {
+    try {
+      render();
+    } catch {}
+  });
   function findPlayAnchor() {
     for (const btn of document.querySelectorAll("button.rounded-full.bg-theme-primary.px-12")) {
       const t = (btn.textContent || "").trim();
-      if (/join queue|leave queue|searching|in queue|\d{1,2}:\d{2}/i.test(t)) return btn;
+      if (/join queue|leave queue|searching|in queue|ready|\d{1,2}:\d{2}/i.test(t)) return btn;
     }
-    return null;
+    return document.querySelector(".mb-4.mt-2.flex.flex-row.items-center.justify-center.gap-10");
   }
   function refreshStats() {
     if (fetching || !CSRP.pro || !CSRP.pro.stats) return;
@@ -57,8 +62,18 @@
     });
   }
   function currentQueue() {
-    if (pushedQueue && Date.now() - lastPush < PUSH_FRESH_MS) return pushedQueue.users || [];
-    return lastStats && lastStats.queue || [];
+    let list = (pushedQueue && Date.now() - lastPush < PUSH_FRESH_MS ? pushedQueue.users : lastStats && lastStats.queue) || [];
+    list = list.slice();
+    const myId = CSRP._myId && String(CSRP._myId);
+    if (myId) {
+      const has = list.some(u => String(u.id) === myId);
+      if (CSRP._inQueue && !has) list.unshift({
+        id: myId,
+        name: CSRP._myName || "You"
+      });
+      if (!CSRP._inQueue && has) list = list.filter(u => String(u.id) !== myId);
+    }
+    return list;
   }
   function render() {
     const anchor = findPlayAnchor();
@@ -109,7 +124,7 @@
       class: "csrp-qp-none"
     }, "No CSR+ users searching right now — only people with the extension show up here.") ]);
   }
-  let asked = false;
+  let lastAsk = 0;
   function tick() {
     const anchor = findPlayAnchor();
     if (!anchor) {
@@ -117,8 +132,8 @@
       if (stale) stale.remove();
       return;
     }
-    if (!asked) {
-      asked = true;
+    if (Date.now() - lastAsk > 1e4) {
+      lastAsk = Date.now();
       requestQueueOnce();
     }
     refreshStats();
